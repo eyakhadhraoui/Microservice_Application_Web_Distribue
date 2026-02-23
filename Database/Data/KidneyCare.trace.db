@@ -1,0 +1,18 @@
+2026-02-19 00:49:06.145737+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "INFECTION" not found (this database is empty); SQL statement:
+select i1_0.id,i1_0.detection_date,i1_0.teatment,i1_0.severity,i1_0.type from infection i1_0 [42104-240]
+2026-02-19 00:50:14.322498+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "INFECTION" not found (this database is empty); SQL statement:
+select i1_0.id,i1_0.detection_date,i1_0.teatment,i1_0.severity,i1_0.type from infection i1_0 [42104-240]
+2026-02-19 00:51:01.175028+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "INFECTION" not found (this database is empty); SQL statement:
+select i1_0.id,i1_0.detection_date,i1_0.teatment,i1_0.severity,i1_0.type from infection i1_0 [42104-240]
+2026-02-19 00:51:09.400274+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "INFECTION" not found (this database is empty); SQL statement:
+select i1_0.id,i1_0.detection_date,i1_0.teatment,i1_0.severity,i1_0.type from infection i1_0 [42104-240]
+2026-02-19 00:51:25.394145+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "INFECTION" not found (this database is empty); SQL statement:
+select i1_0.id,i1_0.detection_date,i1_0.teatment,i1_0.severity,i1_0.type from infection i1_0 [42104-240]
+2026-02-19 00:58:22.431912+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "INFECTION" not found (this database is empty); SQL statement:
+select i1_0.id,i1_0.detection_date,i1_0.teatment,i1_0.severity,i1_0.type from infection i1_0 [42104-240]
