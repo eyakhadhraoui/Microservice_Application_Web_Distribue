@@ -42,4 +42,10 @@ public class VaccinationRestController {
     public void delete(@PathVariable int id) {
         vaccinationService.delete(id);
     }
+
+    @PutMapping("/{id}")
+    public Vaccination update(@PathVariable int id, @RequestBody Vaccination vaccination) {
+        vaccination.setId(id);
+        return vaccinationService.save(vaccination);
+    }
 }

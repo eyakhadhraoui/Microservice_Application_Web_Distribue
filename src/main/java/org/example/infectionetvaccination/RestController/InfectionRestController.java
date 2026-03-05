@@ -13,40 +13,30 @@ public class InfectionRestController {
 
     private final InfectionService infectionService;
 
-
-
-    @GetMapping("/exercises")
-    public List<Exercise> getAllExercises() {
-        return infectionService.getExercises();
-    }
-
-    @GetMapping("/exercises/{id}")
-    public Exercise getExerciseById(@PathVariable("id") int id) {
-        return infectionService.getExerciseById(id);
-    }
-
-
     public InfectionRestController(InfectionService infectionService) {
         this.infectionService = infectionService;
     }
 
+    @GetMapping("/exercises")
+    public List<Exercise> getAllExercises() { return infectionService.getExercises(); }
+
+    @GetMapping("/exercises/{id}")
+    public Exercise getExerciseById(@PathVariable("id") int id) { return infectionService.getExerciseById(id); }
+
     @PostMapping
-    public Infection create(@RequestBody Infection infection) {
-        return infectionService.save(infection);
-    }
+    public Infection create(@RequestBody Infection infection) { return infectionService.save(infection); }
 
     @GetMapping
-    public List<Infection> getAll() {
-        return infectionService.findAll();
-    }
+    public List<Infection> getAll() { return infectionService.findAll(); }
 
     @GetMapping("/{id}")
-    public Infection getById(@PathVariable int id) {
-        return infectionService.findById(id).orElseThrow();
+    public Infection getById(@PathVariable int id) { return infectionService.findById(id).orElseThrow(); }
+
+    @PutMapping("/{id}")
+    public Infection update(@PathVariable int id, @RequestBody Infection infection) {
+        return infectionService.update(id, infection);
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable int id) {
-        infectionService.delete(id);
-    }
+    public void delete(@PathVariable int id) { infectionService.delete(id); }
 }
