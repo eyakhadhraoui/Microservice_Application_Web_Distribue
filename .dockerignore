@@ -1,0 +1,8 @@
+var/cache
+var/log
+vendor
+.git
+.idea
+.env.local
+.env.*.local
+tests

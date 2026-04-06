@@ -12,9 +12,16 @@ security:
             # Ensure dev tools and static assets are always allowed
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
+        # Login / register : pas d’authenticator Bearer (évite 401/500 si le firewall traite mal la requête sans token)
+        api_auth_public:
+            pattern: ^/api/auth
+            security: false
         main:
             lazy: true
             provider: users_in_memory
+            stateless: true
+            custom_authenticators:
+                - App\Security\KeycloakBearerAuthenticator
 
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -24,8 +31,8 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/auth, roles: PUBLIC_ACCESS }
+        - { path: ^/api/users, roles: ROLE_USER }
 
 when@test:
     security:

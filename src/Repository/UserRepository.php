@@ -14,30 +14,35 @@ class UserRepository extends ServiceEntityRepository
 
     public function findByRole(string $role): array
     {
+        $roleNorm = strtolower($role);
+
         return $this->createQueryBuilder('u')
             ->where('u.role = :role')
             ->andWhere('u.isActive = true')
-            ->setParameter('role', $role)
+            ->setParameter('role', $roleNorm)
             ->orderBy('u.lastName', 'ASC')
             ->getQuery()
-            ->getArrayResult();
+            ->getResult();
     }
 
+    /** @return User[] */
     public function findActiveUsers(): array
     {
         return $this->createQueryBuilder('u')
             ->where('u.isActive = true')
             ->orderBy('u.createdAt', 'DESC')
             ->getQuery()
-            ->getArrayResult();
+            ->getResult();
     }
 
+    /** @return User[] */
     public function searchUsers(string $query): array
     {
         return $this->createQueryBuilder('u')
-            ->where('u.firstName LIKE :q OR u.lastName LIKE :q OR u.email LIKE :q')
+            ->where('u.username LIKE :q OR u.firstName LIKE :q OR u.lastName LIKE :q OR u.email LIKE :q')
             ->setParameter('q', '%' . $query . '%')
+            ->orderBy('u.lastName', 'ASC')
             ->getQuery()
-            ->getArrayResult();
+            ->getResult();
     }
 }

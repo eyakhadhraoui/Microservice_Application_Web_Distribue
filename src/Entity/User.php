@@ -17,6 +17,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?int $id = null;
 
+    /** Identifiant de connexion (Keycloak / login), distinct de l’email. */
+    #[ORM\Column(length: 100, unique: true)]
+    #[Assert\NotBlank]
+    private ?string $username = null;
+
     #[ORM\Column(length: 100)]
     #[Assert\NotBlank]
     private ?string $firstName = null;
@@ -34,7 +39,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     #[ORM\Column(length: 20)]
-    #[Assert\Choice(choices: ['MEDECIN', 'INFIRMIER', 'NUTRITIONNISTE', 'PATIENT', 'ADMIN'])]
+    #[Assert\Choice(choices: ['medecin','patient'])]
     private ?string $role = null;
 
     // Champs communs
@@ -57,9 +62,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $service = null;  // Service hospitalier
 
-    // Champs spécifiques PATIENT
-    #[ORM\Column(type: 'date', nullable: true)]
-    private ?\DateTimeInterface $birthDate = null;
+    // Champs spécifiques patient
+    #[ORM\Column(type: 'date_immutable', nullable: true)]
+    private ?\DateTimeImmutable $birthDate = null;
 
     #[ORM\Column(length: 10, nullable: true)]
     #[Assert\Choice(choices: ['M', 'F'])]
@@ -109,6 +114,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     // --- Getters & Setters ---
     public function getId(): ?int { return $this->id; }
 
+    public function getUsername(): ?string { return $this->username; }
+    public function setUsername(string $username): static { $this->username = $username; return $this; }
+
     public function getFirstName(): ?string { return $this->firstName; }
     public function setFirstName(string $firstName): static { $this->firstName = $firstName; return $this; }
 
@@ -142,8 +150,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getService(): ?string { return $this->service; }
     public function setService(?string $service): static { $this->service = $service; return $this; }
 
-    public function getBirthDate(): ?\DateTimeInterface { return $this->birthDate; }
-    public function setBirthDate(?\DateTimeInterface $birthDate): static { $this->birthDate = $birthDate; return $this; }
+    public function getBirthDate(): ?\DateTimeImmutable { return $this->birthDate; }
+    public function setBirthDate(?\DateTimeImmutable $birthDate): static { $this->birthDate = $birthDate; return $this; }
 
     public function getGender(): ?string { return $this->gender; }
     public function setGender(?string $gender): static { $this->gender = $gender; return $this; }

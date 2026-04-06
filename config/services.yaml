@@ -7,6 +7,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    keycloak.base_url: '%env(KEYCLOAK_BASE_URL)%'
+    keycloak.realm: '%env(KEYCLOAK_REALM)%'
 
 services:
     # default configuration for services in *this* file
@@ -18,6 +20,29 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+
+    App\Security\KeycloakBearerAuthenticator:
+        arguments:
+            $keycloakBaseUrl: '%keycloak.base_url%'
+            $realm: '%keycloak.realm%'
+
+    App\Service\KeycloakTokenService:
+        arguments:
+            $keycloakBaseUrl: '%keycloak.base_url%'
+            $realm: '%keycloak.realm%'
+            $clientId: '%env(KEYCLOAK_CLIENT_ID)%'
+            $clientSecret: '%env(KEYCLOAK_CLIENT_SECRET)%'
+
+    App\Service\KeycloakPatientAdminService:
+        arguments:
+            $keycloakBaseUrl: '%keycloak.base_url%'
+            $realm: '%keycloak.realm%'
+            $adminUsername: '%env(KEYCLOAK_ADMIN_USERNAME)%'
+            $adminPassword: '%env(KEYCLOAK_ADMIN_PASSWORD)%'
+
+    App\Service\NephroPatientProfileClient:
+        arguments:
+            $gatewayBaseUrl: '%env(NEPHRO_GATEWAY_BASE_URL)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
