@@ -1,10 +1,10 @@
-package com.esprit.microservice.api;
+package com.esprit.microservice.aigateway;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ApiApplicationTests {
+class AiGatewayApplicationTests {
 
     @Test
     void contextLoads() {

@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.esprit.microservice</groupId>
-    <artifactId>API</artifactId>
+    <artifactId>ai-gateway</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>API</name>
-    <description>API</description>
+    <name>ai-gateway</name>
+    <description>API Gateway (Spring Cloud Gateway + Eureka + JWT Keycloak)</description>
 
     <properties>
         <java.version>17</java.version>
@@ -48,6 +48,19 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+        </dependency>
+
     </dependencies>
 
     <dependencyManagement>
