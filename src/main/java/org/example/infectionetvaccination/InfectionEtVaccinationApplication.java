@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableFeignClients
 @CrossOrigin(origins = "http://localhost:4200")
 public class InfectionEtVaccinationApplication {
 

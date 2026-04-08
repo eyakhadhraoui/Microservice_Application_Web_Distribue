@@ -15,8 +15,8 @@ public class Vaccination {
     private Date vaccination_date;
     private String patientName;
     private Date booster_date;
-    private boolean taken = false;         // ← add
-    private boolean booster_taken = false; // ← add
+    private boolean taken = false;
+    private boolean booster_taken = false;
 
     @ManyToOne
     @JoinColumn(name = "infection_id")
