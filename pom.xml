@@ -8,11 +8,11 @@
         <version>4.0.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.esprit.microservice</groupId>
-    <artifactId>EurekaServer</artifactId>
+    <groupId>com.example</groupId>
+    <artifactId>eureka-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>EurekaServer</name>
-    <description>EurekaServer</description>
+    <name>eureka-server</name>
+    <description>Serveur Netflix Eureka (registre des microservices — démo)</description>
     <url/>
     <licenses>
         <license/>
@@ -29,6 +29,8 @@
     <properties>
         <java.version>17</java.version>
         <spring-cloud.version>2025.1.0</spring-cloud.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
     <dependencies>
         <dependency>
@@ -55,12 +57,25 @@
     </dependencyManagement>
 
     <build>
+        <finalName>eureka-server</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <!-- ce plugin crée le fat jar exécutable -->
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
             </plugin>
         </plugins>
     </build>
+
 
 </project>
