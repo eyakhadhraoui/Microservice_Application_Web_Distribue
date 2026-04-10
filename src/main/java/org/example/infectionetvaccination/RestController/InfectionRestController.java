@@ -35,4 +35,7 @@ public class InfectionRestController {
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable int id) { infectionService.delete(id); }
+
+
+
 }
