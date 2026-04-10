@@ -15,6 +15,7 @@ Plateforme médicale distribuée basée sur une architecture **microservices Spr
 | Auth | Keycloak (JWT) |
 | User Service | Symfony |
 | BDD Médicale | MySQL |
+| BDD Médicale | H2 |
 | BDD Utilisateurs | PostgreSQL |
 | Conteneurs | Docker / Docker Compose |
 
@@ -29,12 +30,12 @@ kidneyCare/
 │   └── keycloak/import/        # Configuration Keycloak
 ├── demo/                       # Eureka Server
 ├── api-gateway/                # API Gateway Spring Cloud
-├── NEPHRO/                     # Service dossier médical
-├── prescription-service/
-├── consultation-service/
-├── infection-service/
-├── hospitalisation-service/
-├── user-service/               # Symfony (PostgreSQL)
+├── NEPHRO/                     # Service dossier médical+MySQL
+├── prescription-service/       #Service prescription+MySQL
+├── consultation-service/       #Service consultation+H2
+├── infection-service/          #Service infection+H2
+├── hospitalisation-service/    #Service hospitalisation+H2 
+├── user-service/               # Symfony+PostgreSQL
 └── frontend-angular/           # Application Angular
 ```
 
