@@ -3,6 +3,7 @@ package org.example.infectionetvaccination.Entity;
 
 import jakarta.persistence.*;
 
+import java.time.temporal.Temporal;
 import java.util.Date;
 import java.util.List;
 
@@ -70,4 +71,15 @@ public class Vaccination {
     public String getPatientName() { return patientName; }           // ← ADD
     public void setPatientName(String patientName) { this.patientName = patientName; } // ← ADD
 
+    public Object getInfectionId() {
+        return null;
+    }
+
+    public Temporal getVaccinationDate() {
+        return null;
+    }
+
+    public Boolean isBoosterTaken() {
+        return null;
+    }
 }

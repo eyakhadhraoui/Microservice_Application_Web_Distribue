@@ -1,8 +1,10 @@
 package org.example.infectionetvaccination.Service;
 
 
+import org.example.infectionetvaccination.DTO.PrescriptionDTO;
 import org.example.infectionetvaccination.Entity.Infection;
 
+import org.example.infectionetvaccination.PrescriptionClient;
 import org.example.infectionetvaccination.Repository.InfectionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,9 @@ public class InfectionService {
     }
 
 
+    @Autowired
+    private PrescriptionClient prescriptionClient;
+
 
     public Infection save(Infection infection) { return infectionRepository.save(infection); }
     public List<Infection> findAll() { return infectionRepository.findAll(); }
@@ -35,4 +40,21 @@ public class InfectionService {
         existing.setPatientName(updated.getPatientName());
         return infectionRepository.save(existing);
     }
+
+    public List<PrescriptionDTO> getAllPrescriptions() {
+        return prescriptionClient.getAllPrescriptions();
+    }
+
+    public PrescriptionDTO getPrescriptionById(Long id) {
+        return prescriptionClient.getById(id);
+    }
+
+    public List<PrescriptionDTO> getPatientPrescriptions(Long patientId) {
+        return prescriptionClient.getByPatient(patientId);
+    }
+
+    public PrescriptionDTO createPrescription(PrescriptionDTO dto) {
+        return prescriptionClient.createPrescription(dto);
+    }
+
 }

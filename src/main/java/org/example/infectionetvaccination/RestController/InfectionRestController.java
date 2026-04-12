@@ -1,6 +1,7 @@
 package org.example.infectionetvaccination.RestController;
 
 
+import org.example.infectionetvaccination.DTO.PrescriptionDTO;
 import org.example.infectionetvaccination.Entity.Infection;
 import org.example.infectionetvaccination.Service.InfectionService;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,26 @@ public class InfectionRestController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable int id) { infectionService.delete(id); }
 
+
+    @GetMapping("/prescriptions")
+    public List<PrescriptionDTO> getAllPrescriptions() {
+        return infectionService.getAllPrescriptions();
+    }
+
+    @GetMapping("/prescriptions/{id}")
+    public PrescriptionDTO getPrescriptionById(@PathVariable Long id) {
+        return infectionService.getPrescriptionById(id);
+    }
+
+    @GetMapping("/patient/{patientId}/prescriptions")
+    public List<PrescriptionDTO> getPatientPrescriptions(@PathVariable Long patientId) {
+        return infectionService.getPatientPrescriptions(patientId);
+    }
+
+    @PostMapping("/prescriptions")
+    public PrescriptionDTO createPrescription(@RequestBody PrescriptionDTO dto) {
+        return infectionService.createPrescription(dto);
+    }
 
 
 }
