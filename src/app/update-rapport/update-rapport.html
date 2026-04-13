@@ -1,0 +1,260 @@
+<!-- ══ NAVBAR ══ -->
+<div class="navbar">
+  <div class="logo">🫘 KidneyCare</div>
+  <div class="nav-menu">
+    <a class="nav-item" routerLink="/home">Dashboard</a>
+    <a class="nav-item" routerLink="/back/consultations">Consultations</a>
+    <a class="nav-item" routerLink="/back/rapports/new">Rapports</a>
+  </div>
+  <div class="user-avatar">Dr</div>
+</div>
+
+<div class="container">
+
+  <div class="sidebar">
+    <div class="sidebar-section">Navigation</div>
+    <a class="sidebar-item" routerLink="/home"                routerLinkActive="active">🏠 Tableau de bord</a>
+    <a class="sidebar-item" routerLink="/back"                routerLinkActive="active">👥 Patients</a>
+    <a class="sidebar-item" routerLink="/history"             routerLinkActive="active">📋 Historique</a>
+    <div class="sidebar-section">Médical</div>
+    <a class="sidebar-item" routerLink="/back/consultations" routerLinkActive="active">👨‍⚕️ Consultations</a>
+    <a class="sidebar-item" routerLink="/ajouter-rendezvous"   routerLinkActive="active">📅 Nv. Rendez-vous</a>
+    <a class="sidebar-item sb-active"                          routerLink="/back/rapports/new">📄 Nv. Rapport</a>
+    <a class="sidebar-item" routerLink="/ajouter-indicateur-vital">📊 Ajouter Indicateur</a>
+    <a class="sidebar-item " routerLink="/ajouter-constante-vitale">🔬 Ajouter Constante</a>
+    <a class="sidebar-item logout-item"                        (click)="logout()">🚪 Déconnexion</a>
+  </div>
+
+  <div class="main-content">
+
+    <div class="breadcrumb">
+      <a routerLink="/home">Accueil</a>
+      <span class="bc-sep">›</span>
+      <a routerLink="/back/consultations">Rapports</a>
+      <span class="bc-sep">›</span>
+      <span>Modifier Rapport #{{ rapportId }}</span>
+    </div>
+
+    <div class="page-header">
+      <div class="page-header-icon">✏️</div>
+      <div>
+        <h1>Modifier le Rapport</h1>
+        <p class="subtitle">Mise à jour du rapport #{{ rapportId }}</p>
+      </div>
+    </div>
+
+    <div class="update-badge">✏️ Mode modification — Les données sont pré-remplies</div>
+
+    <!-- SKELETON -->
+    <ng-container *ngIf="isFetching">
+      <div class="skeleton-card">
+        <div class="skeleton-line h-title"></div>
+        <div class="skeleton-line h-field"></div>
+        <div class="skeleton-line h-field"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton-line h-title"></div>
+        <div class="skeleton-line h-text"></div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="!isFetching">
+
+      <!-- PROGRESSION -->
+      <div class="progress-card">
+        <div class="progress-info">
+          <span class="progress-title">Progression du formulaire</span>
+          <span class="progress-status" [class.ready]="formProgress === 100">
+            {{ formProgress === 100 ? '✅ Prêt à enregistrer' : '⚠ Champs obligatoires manquants' }}
+          </span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" [style.width]="formProgress + '%'"></div>
+        </div>
+        <div class="progress-steps">
+          <span [class.step-done]="rapport.dateRapport">📅 Date</span>
+          <span [class.step-done]="selectedConsultationId">🩺 Consultation</span>
+          <span [class.step-done]="rapport.contenu.length >= 20">📝 Contenu</span>
+        </div>
+      </div>
+
+      <form (ngSubmit)="saveRapport()" #rapportForm="ngForm" novalidate>
+
+        <!-- BLOC 1 : INFORMATIONS GÉNÉRALES -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon bg-blue">📋</div>
+            <div>
+              <h3>Informations Générales</h3>
+              <p class="card-desc">Date du rapport et consultation de référence</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+
+              <!-- Date -->
+              <div class="form-group">
+                <label class="form-label">Date du Rapport <span class="req">*</span></label>
+                <div class="input-wrapper">
+                  <span class="input-icon">📅</span>
+                  <input
+                    type="date"
+                    [(ngModel)]="rapport.dateRapport"
+                    name="dateRapport"
+                    required
+                    #dateRef="ngModel"
+                    [max]="today"
+                    class="form-control with-icon"
+                    [class.ctrl-error]="dateRef.touched && dateRef.invalid"
+                    [class.ctrl-valid]="dateRef.touched && dateRef.valid"
+                    (change)="calcProgress()"
+                  />
+                  <span class="ctrl-feedback" *ngIf="dateRef.touched && dateRef.valid">✓</span>
+                </div>
+                <div class="field-msg error" *ngIf="dateRef.touched && dateRef.invalid">
+                  <span>⚠</span> La date du rapport est obligatoire
+                </div>
+              </div>
+
+              <!-- Consultation associée -->
+              <div class="form-group">
+                <label class="form-label">Consultation Associée <span class="req">*</span></label>
+                <div class="input-wrapper">
+                  <span class="input-icon">🩺</span>
+                  <select
+                    [(ngModel)]="selectedConsultationId"
+                    name="consultationId"
+                    required
+                    #consultRef="ngModel"
+                    class="form-control with-icon"
+                    [class.ctrl-error]="consultRef.touched && consultRef.invalid"
+                    [class.ctrl-valid]="consultRef.touched && consultRef.valid"
+                    (change)="onConsultationChange()"
+                  >
+                    <option [ngValue]="null">— Choisir une consultation —</option>
+                    <option *ngFor="let c of consultationsList" [ngValue]="c.idConsultation">
+                      {{ c.dateConsultation | date:'dd/MM/yyyy' }} — {{ c.diagnostic | slice:0:45 }}
+                    </option>
+                  </select>
+                  <span class="ctrl-feedback" *ngIf="consultRef.touched && consultRef.valid">✓</span>
+                </div>
+                <div class="field-msg error" *ngIf="consultRef.touched && consultRef.invalid">
+                  <span>⚠</span> Veuillez sélectionner une consultation
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Aperçu consultation -->
+            <div class="dossier-preview" *ngIf="getSelectedConsultation(); let c">
+              <div class="dossier-avatar">🔬</div>
+              <div class="dossier-info">
+                <div class="dossier-name">{{ c.diagnostic }}</div>
+                <div class="dossier-meta">
+                  📅 {{ c.dateConsultation | date:'dd MMMM yyyy' }}
+                  <span *ngIf="c.notes"> — {{ c.notes | slice:0:50 }}…</span>
+                </div>
+              </div>
+              <span class="dossier-badge">POST-GREFFE</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- BLOC 2 : CONTENU & RECOMMANDATIONS -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon bg-green">📝</div>
+            <div>
+              <h3>Contenu & Recommandations</h3>
+              <p class="card-desc">Résultats cliniques, observations et prescriptions</p>
+            </div>
+          </div>
+          <div class="card-body">
+
+            <!-- Contenu -->
+            <div class="form-group">
+              <label class="form-label">
+                Contenu du Rapport <span class="req">*</span>
+                <span class="label-hint">(min. 20 caractères)</span>
+              </label>
+              <textarea
+                [(ngModel)]="rapport.contenu"
+                name="contenu"
+                required
+                minlength="20"
+                maxlength="2000"
+                #contenuRef="ngModel"
+                rows="7"
+                placeholder="Décrivez l'état du patient, les examens effectués, les résultats observés..."
+                class="form-control"
+                [class.ctrl-error]="contenuRef.touched && contenuRef.invalid"
+                [class.ctrl-valid]="contenuRef.touched && contenuRef.valid"
+                (input)="calcProgress()"
+              ></textarea>
+              <div class="field-footer">
+                <div>
+                  <div class="field-msg error" *ngIf="contenuRef.touched && contenuRef.errors?.['required']">
+                    <span>⚠</span> Le contenu est obligatoire
+                  </div>
+                  <div class="field-msg error" *ngIf="contenuRef.touched && contenuRef.errors?.['minlength']">
+                    <span>⚠</span> Minimum 20 caractères ({{ rapport.contenu.length }} saisies)
+                  </div>
+                  <div class="field-msg success" *ngIf="contenuRef.touched && contenuRef.valid">
+                    ✓ Contenu valide
+                  </div>
+                </div>
+                <span class="char-count"
+                  [class.char-warn]="rapport.contenu.length > 1800"
+                  [class.char-over]="rapport.contenu.length >= 2000">
+                  {{ rapport.contenu.length }}&thinsp;/&thinsp;2000
+                </span>
+              </div>
+            </div>
+
+            <!-- Recommandations -->
+            <div class="form-group">
+              <label class="form-label">
+                Recommandations
+                <span class="label-hint">(optionnel — max. 1000 caractères)</span>
+              </label>
+              <textarea
+                [(ngModel)]="rapport.recommendations"
+                name="recommendations"
+                maxlength="1000"
+                rows="4"
+                placeholder="Prescriptions, suivi à prévoir, conseils au patient..."
+                class="form-control"
+              ></textarea>
+              <div class="field-footer">
+                <span></span>
+                <span class="char-count" [class.char-warn]="rapport.recommendations.length > 900">
+                  {{ rapport.recommendations.length }}&thinsp;/&thinsp;1000
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="form-actions">
+          <a class="btn-back" routerLink="/back/consultations">← Retour</a>
+          <button type="button" class="btn-secondary" (click)="resetForm()">🔄 Restaurer</button>
+          <button type="submit" class="btn-primary" [disabled]="rapportForm.invalid || isLoading">
+            <span class="btn-spinner" *ngIf="isLoading"></span>
+            <span *ngIf="!isLoading">✏️ Enregistrer les modifications</span>
+            <span *ngIf="isLoading">Enregistrement…</span>
+          </button>
+        </div>
+
+      </form>
+    </ng-container>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrapper" [class.toast-visible]="toastVisible">
+  <div class="toast" [ngClass]="toastType">{{ toastMessage }}</div>
+</div>

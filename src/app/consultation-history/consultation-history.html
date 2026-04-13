@@ -1,0 +1,106 @@
+
+<div class="consultation-container">
+  
+  <!-- Header -->
+  <div class="page-header">
+    <h1>📋 Consultation History</h1>
+    <p>Complete medical consultation records for <strong>{{ childName }}</strong></p>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="stats-section">
+    <div class="stat-card">
+      <div class="stat-number">{{ consultations.length }}</div>
+      <div class="stat-label">Total Consultations</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ consultations[0]?.date | date: 'dd MMM yyyy' }}</div>
+      <div class="stat-label">Last Visit</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ consultations[0]?.doctor }}</div>
+      <div class="stat-label">Primary Doctor</div>
+    </div>
+  </div>
+
+  <!-- Consultations Timeline -->
+  <div class="consultations-list">
+    
+    <div *ngIf="filteredConsultations.length === 0" class="no-results">
+      <p>No consultation records found.</p>
+    </div>
+
+    <div *ngFor="let consultation of filteredConsultations" class="consultation-card">
+      
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="header-left">
+          <h3>{{ consultation.reason }}</h3>
+          <span class="specialty-badge">{{ consultation.specialty }}</span>
+        </div>
+        <div class="header-right">
+          <span class="date">📅 {{ consultation.date | date: 'dd MMM yyyy' }}</span>
+        </div>
+      </div>
+      
+      <!-- Card Body -->
+      <div class="card-body">
+        
+        <div class="detail-section">
+          <div class="detail-row">
+            <span class="label">👨‍⚕️ Doctor:</span>
+            <span class="value">{{ consultation.doctor }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="label">🔍 Diagnosis:</span>
+            <span class="value diagnosis-text">{{ consultation.diagnosis }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="label">💊 Treatment:</span>
+            <span class="value">{{ consultation.treatment }}</span>
+          </div>
+
+          <!-- Prescriptions -->
+          <div *ngIf="consultation.prescriptions && consultation.prescriptions.length > 0" 
+               class="prescriptions-section">
+            <span class="label">📝 Prescriptions:</span>
+            <ul class="prescriptions-list">
+              <li *ngFor="let prescription of consultation.prescriptions">
+                {{ prescription }}
+              </li>
+            </ul>
+          </div>
+          
+          <!-- Follow-up -->
+          <div *ngIf="consultation.followUp" class="detail-row follow-up">
+            <span class="label">📆 Follow-up:</span>
+            <span class="value">{{ consultation.followUp }}</span>
+          </div>
+
+          <!-- Notes -->
+          <div *ngIf="consultation.notes" class="notes-section">
+            <span class="label">📌 Notes:</span>
+            <p class="notes-text">{{ consultation.notes }}</p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Card Actions -->
+      <div class="card-actions">
+        <button (click)="downloadConsultation(consultation.id)" class="btn-action btn-download">
+          📥 Download Report
+        </button>
+        <button (click)="printConsultation(consultation.id)" class="btn-action btn-print">
+          🖨️ Print
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

@@ -1,0 +1,760 @@
+<div class="dossiers-container">
+
+  <!-- Header: Doctor's Area + add record button -->
+  <div class="header-modern">
+    <div class="header-content">
+      <span class="header-badge">Doctor's Area</span>
+      <div class="header-icon">📁</div>
+      <div>
+        <h1 class="header-title">Medical Records</h1>
+        <p class="header-subtitle">Pediatric Nephrology • {{ filteredDossiers.length }} / {{ dossiers.length }} {{ dossiers.length === 1 ? 'record' : 'records' }}</p>
+      </div>
+    </div>
+    <button class="btn-add-dossier-modern" (click)="openCreateDossierPopup()" title="Create a new record">
+      <span class="btn-icon-plus">+</span>
+      <span class="btn-text">New Record</span>
+    </button>
+  </div>
+
+  <!-- Search and filters bar -->
+  <div class="filters-bar" *ngIf="!loading && !error && dossiers.length > 0">
+    <div class="filter-group">
+      <label class="filter-label">Search</label>
+      <input type="text" class="filter-input" placeholder="Record ID, patient, doctor, notes..."
+             [(ngModel)]="searchText">
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">From</label>
+      <input type="date" class="filter-input" [(ngModel)]="filterDateFrom">
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">To</label>
+      <input type="date" class="filter-input" [(ngModel)]="filterDateTo">
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Diagnosis</label>
+      <select class="filter-select" [(ngModel)]="filterDiagnostic">
+        <option value="">All</option>
+        <option *ngFor="let d of diagnostics" [value]="d.value">{{ d.libelle }}</option>
+      </select>
+    </div>
+    <button type="button" class="btn-clear-filters" (click)="clearFilters()">Reset</button>
+  </div>
+
+  <!-- Loading message -->
+  <div *ngIf="loading" class="loading-message">
+    <div class="spinner"></div>
+    <p>Loading records...</p>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="error" class="error-message">
+    <span class="error-icon">⚠️</span>
+    <p>{{ error }}</p>
+    <button class="btn-retry" (click)="ngOnInit()">Retry</button>
+  </div>
+
+  <!-- No records message -->
+  <div *ngIf="!loading && !error && dossiers.length === 0" class="no-dossiers">
+    <div class="no-dossiers-icon">📋</div>
+    <h3>No medical records</h3>
+    <p>Click the + button to create your first record</p>
+  </div>
+
+  <!-- No results after filters -->
+  <div *ngIf="!loading && !error && dossiers.length > 0 && filteredDossiers.length === 0" class="no-dossiers">
+    <div class="no-dossiers-icon">🔍</div>
+    <h3>No records match the criteria</h3>
+    <p>Change the search or filters and try again.</p>
+    <button class="btn-retry" (click)="clearFilters()">Reset filters</button>
+  </div>
+
+  <!-- Modern records grid -->
+  <div class="dossiers-grid-modern" *ngIf="!loading && !error && filteredDossiers.length > 0">
+    <div class="dossier-card-modern" *ngFor="let dossier of filteredDossiers">
+      
+      <!-- Card header with diagnosis badge -->
+      <div class="card-header-modern">
+        <div class="card-header-top">
+          <span class="dossier-id-badge">#{{ dossier.idDossierMedical }}</span>
+          <span class="diagnostic-badge-modern" [ngClass]="getDiagnosticClass(dossier.diagnostic)">
+            {{ getDiagnosticLibelle(dossier.diagnostic) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Card body -->
+      <div class="card-body-modern">
+        <!-- Patient info -->
+        <div class="patient-section">
+          <div class="patient-avatar-modern">
+            <span class="avatar-text">{{ dossier.idPatient }}</span>
+          </div>
+          <div class="patient-info-modern">
+            <h3 class="patient-name-modern">{{ dossier.patientNom || ('Patient #' + dossier.idPatient) }}</h3>
+            <p class="patient-diagnostic">🩺 {{ getDiagnosticLibelle(dossier.diagnostic) || 'Unspecified diagnosis' }}</p>
+          </div>
+        </div>
+
+        <!-- Record details -->
+        <div class="dossier-details-modern">
+          <div class="detail-item-modern">
+            <span class="detail-icon">📅</span>
+            <div class="detail-content">
+              <span class="detail-label">Creation date</span>
+              <span class="detail-value">{{ formatDate(dossier.dateCreation) }}</span>
+            </div>
+          </div>
+          <div class="detail-item-modern">
+            <span class="detail-icon">👨‍⚕️</span>
+            <div class="detail-content">
+              <span class="detail-label">Doctor</span>
+              <span class="detail-value">{{ dossier.medecinNom || ('Dr. #' + dossier.idMedecin) }}</span>
+            </div>
+          </div>
+          <div class="detail-item-modern" *ngIf="dossier.notes">
+            <span class="detail-icon">📝</span>
+            <div class="detail-content">
+              <span class="detail-label">Notes</span>
+              <span class="detail-value">{{ dossier.notes | slice:0:60 }}{{ dossier.notes.length > 60 ? '...' : '' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card actions -->
+      <div class="card-footer-modern">
+        <button class="btn-action-modern btn-primary" (click)="openSuivisListPopup(dossier)">
+          <span class="btn-icon">📋</span>
+          <span>View Follow-ups</span>
+        </button>
+        <button class="btn-action-modern btn-tests-lab" (click)="openTestsLabPopup(dossier)">
+          <span class="btn-icon">🧪</span>
+          <span>Lab tests</span>
+        </button>
+        <button class="btn-action-modern btn-secondary" (click)="openSuiviPopup(dossier)">
+          <span class="btn-icon">➕</span>
+          <span>Add Follow-up</span>
+        </button>
+        <button class="btn-action-modern btn-image" (click)="openImagePopupFromDossier(dossier)">
+          <span class="btn-icon">📷</span>
+          <span>Images</span>
+        </button>
+        <div class="card-menu">
+          <button class="btn-menu-item" (click)="editDossier(dossier)" title="Edit">
+            <span>✏️</span>
+          </button>
+          <button class="btn-menu-item btn-danger" (click)="confirmDeleteDossier(dossier)" title="Delete">
+            <span>🗑️</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- POPUP CREATE/EDIT RECORD -->
+<!-- ========================================== -->
+<div class="popup-overlay" *ngIf="showCreateDossierPopup" (click)="closeCreateDossierPopup()">
+  <div class="popup-content popup-form-modern" (click)="$event.stopPropagation()">
+    <div class="form-popup-header form-header-dossier">
+      <div class="form-popup-header-inner">
+        <div class="form-popup-icon">📁</div>
+        <div>
+          <h2>{{ editMode ? 'Edit record' : 'New medical record' }}</h2>
+          <p class="form-popup-subtitle">Enter patient and diagnosis information</p>
+        </div>
+      </div>
+      <button type="button" class="close-btn-modern" (click)="closeCreateDossierPopup()" aria-label="Close">✕</button>
+    </div>
+
+    <form class="popup-form-body" [formGroup]="dossierForm" (ngSubmit)="submitCreateDossier()">
+      
+      <section class="form-section">
+        <h3 class="form-section-title">Identifiers</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="idPatient">Patient *</label>
+            <select class="form-control form-control-modern" id="idPatient" formControlName="idPatient" required>
+              <option value="">— Select a patient —</option>
+              <option *ngFor="let p of patients" [value]="p.idPatient">#{{ p.idPatient }} — {{ p.firstName }} {{ p.lastName }} ({{ p.username }})</option>
+            </select>
+            <span class="error-text" *ngIf="dossierForm.get('idPatient')?.invalid && dossierForm.get('idPatient')?.touched">Patient required</span>
+            <p class="form-hint" *ngIf="loadingPatients">Loading patients...</p>
+            <p class="form-hint" *ngIf="!loadingPatients && patients.length === 0">No registered patients. Patients register via the home page (Register).</p>
+          </div>
+          <div class="form-group">
+            <label for="idMedecin">Doctor *</label>
+            <div class="medecin-display" *ngIf="currentMedecin && !editMode">
+              <span class="medecin-name">{{ currentMedecin.nom }}{{ currentMedecin.prenom ? ' ' + currentMedecin.prenom : '' }}</span>
+              <span class="medecin-hint">{{ currentMedecin.idMedecin }}</span>
+            </div>
+            <div class="medecin-display" *ngIf="editMode && selectedDossier">
+              <span class="medecin-name">{{ selectedDossier.medecinNom  }}</span>
+            </div>
+            <input type="hidden" formControlName="idMedecin">
+            <span class="error-text" *ngIf="!currentMedecin && !editMode && showCreateDossierPopup">Loading doctor...</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="dateCreation">Creation date *</label>
+          <input type="date" class="form-control form-control-modern" id="dateCreation" formControlName="dateCreation" required>
+          <span class="error-text" *ngIf="dossierForm.get('dateCreation')?.invalid && dossierForm.get('dateCreation')?.touched">Date required</span>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3 class="form-section-title">Diagnosis &amp; follow-up</h3>
+        <div class="form-group">
+          <label for="diagnostic">Diagnosis *</label>
+          <select class="form-control form-control-modern" id="diagnostic" formControlName="diagnostic" required>
+            <option value="">— Select a diagnosis —</option>
+            <option *ngFor="let diag of diagnostics" [value]="diag.value">{{ diag.libelle }}</option>
+          </select>
+          <span class="error-text" *ngIf="dossierForm.get('diagnostic')?.invalid && dossierForm.get('diagnostic')?.touched">Diagnosis required</span>
+        </div>
+        <div class="form-group">
+          <label for="notes">Notes</label>
+          <textarea class="form-control form-control-modern" id="notes" formControlName="notes" placeholder="Additional notes (max 2000 characters)..." rows="3" maxlength="2000"></textarea>
+          <span class="error-text" *ngIf="dossierForm.get('notes')?.errors?.['maxlength']">Maximum 2000 characters.</span>
+          <span class="form-hint">{{ (dossierForm.get('notes')?.value?.length || 0) }}/2000</span>
+        </div>
+      </section>
+
+      <div class="form-actions form-actions-modern">
+        <button type="button" class="btn-cancel-modern" (click)="closeCreateDossierPopup()" [disabled]="submitting">Cancel</button>
+        <button type="submit" class="btn-submit-modern" [disabled]="dossierForm.invalid || submitting">
+          <span *ngIf="!submitting">{{ editMode ? 'Save' : 'Create record' }}</span>
+          <span *ngIf="submitting">Saving...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- POPUP ADD FOLLOW-UP -->
+<!-- ========================================== -->
+<div class="popup-overlay" *ngIf="showSuiviPopup" (click)="closeSuiviPopup()">
+  <div class="popup-content popup-form-modern" (click)="$event.stopPropagation()">
+    <div class="form-popup-header form-header-suivi">
+      <div class="form-popup-header-inner">
+        <div class="form-popup-icon">📝</div>
+        <div>
+          <h2>New follow-up</h2>
+          <p class="form-popup-subtitle" *ngIf="selectedDossier">Record #{{ selectedDossier.idDossierMedical }} — {{ selectedDossier.patientNom || ('Patient ' + selectedDossier.idPatient) }}</p>
+        </div>
+      </div>
+      <button type="button" class="close-btn-modern" (click)="closeSuiviPopup()" aria-label="Close">✕</button>
+    </div>
+
+    <form class="popup-form-body" [formGroup]="suiviForm" (ngSubmit)="submitSuivi()">
+      <section class="form-section">
+        <h3 class="form-section-title">Date &amp; observations</h3>
+        <div class="form-group">
+          <label for="dateSuivi">Follow-up date *</label>
+          <input type="date" class="form-control form-control-modern" id="dateSuivi" formControlName="dateSuivi">
+          <span class="error-text" *ngIf="suiviForm.get('dateSuivi')?.invalid && suiviForm.get('dateSuivi')?.touched">Date required.</span>
+        </div>
+        <div class="form-group">
+          <label for="notes">Notes * (min 3, max 2000 characters)</label>
+          <textarea class="form-control form-control-modern" id="notes" formControlName="notes" rows="3" placeholder="Observations and follow-up notes..." maxlength="2000"></textarea>
+          <span class="error-text" *ngIf="suiviForm.get('notes')?.errors?.['required'] && suiviForm.get('notes')?.touched">Notes required.</span>
+          <span class="error-text" *ngIf="suiviForm.get('notes')?.errors?.['minlength'] && suiviForm.get('notes')?.touched">At least 3 characters.</span>
+          <span class="error-text" *ngIf="suiviForm.get('notes')?.errors?.['maxlength']">Maximum 2000 characters.</span>
+        </div>
+        <div class="form-group suivi-ocr-section">
+          <h4 class="form-subsection-title">Follow-up scan (OCR)</h4>
+          <p class="form-hint-ocr">Scan a document (image or PDF) to fill the notes with the extracted text only.</p>
+          <input type="file" id="suivi-ocr-input" class="form-control form-control-modern" accept=".pdf,image/jpeg,image/png,image/gif,image/bmp,image/tiff,image/webp" (change)="onOcrFileChange($event)">
+          <div class="suivi-file-chosen" *ngIf="ocrSuiviFileName">
+            <span class="file-name">📄 {{ ocrSuiviFileName }}</span>
+            <button type="button" class="btn-clear-file" (click)="clearOcrFile()" title="Remove">✕</button>
+          </div>
+          <button type="button" class="btn-ocr-modern" (click)="runOcr()" [disabled]="!ocrSuiviFile || ocrLoading">
+            <span *ngIf="!ocrLoading">Extract text (OCR)</span>
+            <span *ngIf="ocrLoading">Extracting...</span>
+          </button>
+        </div>
+      </section>
+      <section class="form-section">
+        <h3 class="form-section-title">Goal &amp; status</h3>
+        <div class="form-group">
+          <label for="objectif">Therapeutic goal * (min 2, max 500 characters)</label>
+          <textarea class="form-control form-control-modern" id="objectif" formControlName="objectif" rows="2" placeholder="Treatment goal..." maxlength="500"></textarea>
+          <span class="error-text" *ngIf="suiviForm.get('objectif')?.errors?.['required'] && suiviForm.get('objectif')?.touched">Goal required.</span>
+          <span class="error-text" *ngIf="suiviForm.get('objectif')?.errors?.['minlength'] && suiviForm.get('objectif')?.touched">At least 2 characters.</span>
+          <span class="error-text" *ngIf="suiviForm.get('objectif')?.errors?.['maxlength']">Maximum 500 characters.</span>
+        </div>
+        <div class="form-group">
+          <label for="resultat">Follow-up status *</label>
+          <select class="form-control form-control-modern" id="resultat" formControlName="resultat" required>
+            <option value="">— Select status —</option>
+            <option *ngFor="let s of resultat" [value]="s.value">{{ s.libelle }}</option>
+          </select>
+          <span class="error-text" *ngIf="suiviForm.get('resultat')?.invalid && suiviForm.get('resultat')?.touched">Status required</span>
+        </div>
+      </section>
+      <section class="form-section">
+        <h3 class="form-section-title">Attachment (optional)</h3>
+        <div class="form-group">
+          <label for="suivi-file-input">You can add a PDF file or image (jpg, png, gif, webp) — not required.</label>
+          <input type="file" id="suivi-file-input" class="form-control form-control-modern" accept=".pdf,image/jpeg,image/png,image/gif,image/webp" (change)="onSuiviFileChange($event)">
+          <div class="suivi-file-chosen" *ngIf="selectedSuiviFileName">
+            <span class="file-name">📎 {{ selectedSuiviFileName }}</span>
+            <button type="button" class="btn-clear-file" (click)="clearSuiviFile()" title="Remove file">✕</button>
+          </div>
+        </div>
+      </section>
+      <div class="form-actions form-actions-modern">
+        <button type="button" class="btn-cancel-modern" (click)="closeSuiviPopup()" [disabled]="submitting">Cancel</button>
+        <button type="submit" class="btn-submit-modern" [disabled]="suiviForm.invalid || submitting">
+          <span *ngIf="!submitting">Save follow-up</span>
+          <span *ngIf="submitting">Saving...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- POPUP LISTE DES SUIVIS - VERSION AMÉLIORÉE -->
+<!-- ========================================== -->
+<div class="popup-overlay" *ngIf="showSuivisListPopup" (click)="closeSuivisListPopup()">
+  <div class="popup-content popup-content-large" (click)="$event.stopPropagation()">
+    
+    <!-- Header Amélioré avec Gradient -->
+    <div class="popup-header-enhanced">
+      <div class="header-left">
+        <div class="header-icon-circle">📋</div>
+        <div class="header-info">
+          <h2>Follow-up History</h2>
+          <div class="header-badges" *ngIf="selectedDossier">
+            <span class="info-badge patient">
+              <i>👤</i> {{ selectedDossier.patientNom || ('Patient ' + selectedDossier.idPatient) }}
+            </span>
+            <span class="info-badge dossier">
+              <i>📁</i> Record {{ selectedDossier.idDossierMedical }}
+            </span>
+            <span class="info-badge count" *ngIf="suivis.length > 0">
+              <i>📊</i> {{ suivis.length }} follow-up(s)
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="header-right-actions">
+        <button class="btn-add-suivi-header" (click)="openSuiviPopup(selectedDossier!)" *ngIf="selectedDossier">
+          <span class="btn-icon">➕</span>
+          <span>Add Follow-up</span>
+        </button>
+        <button class="close-btn-modern" (click)="closeSuivisListPopup()">
+          <span>✕</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="popup-body-scroll">
+    <!-- Message de chargement moderne -->
+    <div *ngIf="loading" class="loading-modern">
+      <div class="spinner-modern"></div>
+      <p>Loading follow-ups...</p>
+      <span class="loading-subtext">Please wait</span>
+    </div>
+
+    <!-- Message d'erreur moderne -->
+    <div *ngIf="error && !loading" class="error-modern">
+      <div class="error-icon-big">⚠️</div>
+      <h3>Loading error</h3>
+      <p>{{ error }}</p>
+      <button class="btn-retry-modern" (click)="loadSuivis(selectedDossier?.idDossierMedical!)">
+        🔄 Retry
+      </button>
+    </div>
+
+    <!-- Images médicales du dossier (liées au dossier, pas au suivi) -->
+    <div class="dossier-images-section" *ngIf="selectedDossierId != null && !loading && !error">
+      <div class="images-header">
+        <span class="images-icon">📷</span>
+        <span class="images-title">Record medical images ({{ (dossierImages[selectedDossierId] || []).length }})</span>
+        <button type="button" class="btn-add-image-inline" (click)="openImagePopupFromDossierContext()">📷 Add image</button>
+      </div>
+      <div class="images-grid" *ngIf="(dossierImages[selectedDossierId] || []).length > 0">
+        <div class="image-card" *ngFor="let image of (dossierImages[selectedDossierId] || [])">
+          <div class="image-thumbnail">
+            <img [src]="getImageUrl(image.cheminImage || '')" [alt]="getImageTypeLabel(image.typeImage)" (error)="onImageError($event)">
+            <div class="image-overlay">
+              <button class="btn-view-image" (click)="viewImage(image)" type="button">👁️ View</button>
+              <button class="btn-delete-image" (click)="deleteImage(image.idImage!, selectedDossierId!)" type="button">🗑️</button>
+            </div>
+          </div>
+          <div class="image-info">
+            <div class="image-type">{{ getImageTypeLabel(image.typeImage) }}</div>
+            <div class="image-date">📅 {{ formatDateShort(image.dateCapture) }}</div>
+          </div>
+        </div>
+      </div>
+      <p *ngIf="(dossierImages[selectedDossierId] || []).length === 0" class="no-images-message">No medical images for this record.</p>
+    </div>
+
+    <!-- Notes internes (médecin uniquement, non visibles par le patient) -->
+    <div class="notes-internes-section" *ngIf="selectedDossierId != null && !loading && !error">
+      <div class="section-header-inline">
+        <span class="section-icon">🔒</span>
+        <span class="section-title">Internal notes (doctor only)</span>
+      </div>
+      <div *ngIf="loadingNotes" class="loading-inline"><div class="spinner-small"></div></div>
+      <div *ngIf="!loadingNotes && (notesByDossierId[selectedDossierId] || []).length > 0" class="notes-internes-list">
+        <div class="note-interne-card" *ngFor="let n of notesByDossierId[selectedDossierId]">
+          <div class="note-interne-date">{{ formatDateFull(n.dateCreation ?? '') }}</div>
+          <div class="note-interne-contenu">{{ n.contenu }}</div>
+          <button type="button" class="btn-note-delete" (click)="deleteNoteInterne(n)" title="Delete">🗑️</button>
+        </div>
+      </div>
+      <div *ngIf="!loadingNotes" class="notes-internes-add">
+        <textarea [(ngModel)]="newNoteInterneText" placeholder="Add internal note (not visible to patient)..." rows="2" maxlength="2000"></textarea>
+        <button type="button" class="btn-add-note" (click)="addNoteInterne()" [disabled]="!(newNoteInterneText || '').trim() || addingNote">{{ addingNote ? 'Adding...' : 'Add' }}</button>
+      </div>
+    </div>
+
+    <!-- Messagerie médecin–patient -->
+    <div class="messages-section" *ngIf="selectedDossierId != null && !loading && !error">
+      <div class="section-header-inline">
+        <span class="section-icon">💬</span>
+        <span class="section-title">Messages with patient</span>
+      </div>
+      <div *ngIf="loadingMessages" class="loading-inline"><div class="spinner-small"></div></div>
+      <div *ngIf="!loadingMessages && (messagesByDossierId[selectedDossierId] || []).length > 0" class="messages-list">
+        <div class="message-bubble" *ngFor="let m of messagesByDossierId[selectedDossierId]" [class.from-medecin]="m.typeExpediteur === 'MEDECIN'" [class.from-patient]="m.typeExpediteur === 'PATIENT'">
+          <span class="message-meta">{{ m.typeExpediteur === 'MEDECIN' ? 'Doctor' : 'Patient' }} · {{ formatDateFull(m.dateEnvoi ?? '') }}</span>
+          <div class="message-contenu">{{ m.contenu }}</div>
+        </div>
+      </div>
+      <div *ngIf="!loadingMessages" class="messages-send">
+        <textarea [(ngModel)]="newMessageText" placeholder="Write a message to the patient..." rows="2" maxlength="2000"></textarea>
+        <button type="button" class="btn-send-message" (click)="sendMessage()" [disabled]="!(newMessageText || '').trim() || sendingMessage">{{ sendingMessage ? 'Sending...' : 'Send' }}</button>
+      </div>
+    </div>
+
+    <!-- Liste des suivis avec Timeline -->
+    <div class="suivis-timeline-container" *ngIf="!loading && !error && suivis.length > 0">
+      
+      <!-- ⭐ UNE SEULE BOUCLE ngFor ICI ⭐ -->
+      <div class="timeline-item" *ngFor="let suivi of suivis; let i = index; let isLast = last">
+        
+        <!-- Point Timeline avec Couleur Dynamique -->
+        <div class="timeline-point" [ngClass]="getStatusClass(suivi.resultat ?? '')">
+          <span class="point-icon">{{ getStatusIcon(suivi.resultat ?? '') }}</span>
+        </div>
+        
+        <!-- Ligne de connexion -->
+        <div class="timeline-line" *ngIf="!isLast"></div>
+        
+        <!-- Carte du Suivi -->
+        <div class="suivi-card-modern">
+          
+          <!-- Header de la carte -->
+          <div class="card-header-modern">
+            <div class="header-left-section">
+              <span class="suivi-number">Follow-up #{{ i + 1 }}</span>
+              <span class="suivi-status-badge" [ngClass]="'badge-' + getStatusClass(suivi.resultat ?? '')">
+                {{ getStatusLabel(suivi.resultat ?? '') }}
+              </span>
+            </div>
+            <div class="header-right-section">
+              <span class="suivi-date">
+                <i>📅</i> {{ formatDateFull(suivi.dateSuivi) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Corps de la carte -->
+          <div class="card-body-modern">
+            
+            <!-- Section Notes -->
+            <div class="info-block" *ngIf="suivi.notes">
+              <div class="info-label">
+                <span class="label-icon">📝</span>
+                <span class="label-text">Follow-up notes</span>
+              </div>
+              <div class="info-value notes-content">
+                {{ suivi.notes }}
+              </div>
+            </div>
+
+            <!-- Section Objectif -->
+            <div class="info-block" *ngIf="suivi.objectif">
+              <div class="info-label">
+                <span class="label-icon">🎯</span>
+                <span class="label-text">Therapeutic goal</span>
+              </div>
+              <div class="info-value objectif-content">
+                {{ suivi.objectif }}
+              </div>
+            </div>
+
+            <!-- Section Résultat -->
+            <div class="info-row" *ngIf="suivi.resultat">
+              <div class="info-label-inline">
+                <span class="label-icon">📊</span>
+                <span>Result</span>
+              </div>
+              <span class="status-pill" [ngClass]="'pill-' + getStatusClass(suivi.resultat)">
+                {{ suivi.resultat }}
+              </span>
+            </div>
+
+            <!-- Section Statut -->
+            <div class="info-row" *ngIf="suivi.statut">
+              <div class="info-label-inline">
+                <span class="label-icon">✅</span>
+                <span>Status</span>
+              </div>
+              <span class="status-pill pill-secondary">
+                {{ suivi.statut }}
+              </span>
+            </div>
+
+            <!-- Pièce jointe (PDF ou image) -->
+            <div class="info-block" *ngIf="suivi.cheminPieceJointe">
+              <div class="info-label">
+                <span class="label-icon">📎</span>
+                <span class="label-text">Attachment</span>
+              </div>
+              <div class="info-value">
+                <a [href]="getSuiviPieceJointeUrl(suivi.cheminPieceJointe)" target="_blank" rel="noopener" class="link-piece-jointe">
+                  View file (PDF / image)
+                </a>
+              </div>
+            </div>
+
+          </div> <!-- FIN card-body-modern -->
+
+          <!-- Footer de la carte -->
+          <div class="card-footer-modern">
+            <div class="footer-left">
+              <span class="footer-timestamp">
+                <i>🕐</i> Last updated: {{ formatDateShort(suivi.dateSuivi) }}
+              </span>
+            </div>
+            <div class="footer-right">
+              <button type="button" class="btn-delete-suivi" (click)="deleteSuivi(suivi)" title="Delete follow-up">
+                🗑️ Delete
+              </button>
+              <button class="btn-add-image-inline" (click)="openImagePopupFromDossier(selectedDossier!)" type="button">
+                📷 Add image to record
+              </button>
+            </div>
+          </div>
+
+        </div> <!-- FIN suivi-card-modern -->
+
+      </div> <!-- FIN timeline-item -->
+
+    </div> <!-- FIN suivis-timeline-container -->
+
+    <!-- Empty follow-ups message -->
+    <div *ngIf="!loading && !error && suivis.length === 0" class="empty-state-modern">
+      <p class="empty-hint">Click <strong>« Add Follow-up »</strong> in the header to create the first follow-up.</p>
+      <div class="empty-icon-container">
+        <div class="empty-icon-circle">
+          <span>📋</span>
+        </div>
+      </div>
+      <h3>No follow-ups recorded</h3>
+      <p>This record has no medical follow-ups yet.</p>
+      <p class="empty-hint">Click <strong>« Add Follow-up »</strong> above to create the first follow-up.</p>
+    </div>
+
+    </div><!-- .popup-body-scroll -->
+  </div>
+</div>
+
+<!-- POPUP ADD MEDICAL IMAGE -->
+<!-- ========================================== -->
+<div class="popup-overlay" *ngIf="showImagePopup" (click)="closeImagePopup()">
+  <div class="popup-content popup-form-modern" (click)="$event.stopPropagation()">
+    <div class="form-popup-header form-header-image">
+      <div class="form-popup-header-inner">
+        <div class="form-popup-icon">📷</div>
+        <div>
+          <h2>New medical image</h2>
+          <p class="form-popup-subtitle">
+            Record #{{ selectedDossier?.idDossierMedical ?? selectedDossierForImage?.idDossierMedical ?? '—' }}
+          </p>
+        </div>
+      </div>
+      <button type="button" class="close-btn-modern" (click)="closeImagePopup()" aria-label="Close">✕</button>
+    </div>
+
+    <form class="popup-form-body" [formGroup]="imageForm" (ngSubmit)="submitImage()">
+      
+      <section class="form-section">
+        <h3 class="form-section-title">Image file</h3>
+        <div class="form-group">
+          <label>Image to attach *</label>
+          <div class="file-upload-zone" [class.has-file]="selectedFile" (click)="triggerFileInput()">
+            <input type="file" id="imageFile" accept="image/*" (change)="onFileSelected($event)" class="file-input-hidden" #fileInputRef>
+            <div class="file-upload-content" *ngIf="!imagePreview">
+              <span class="file-upload-icon">📁</span>
+              <span class="file-upload-text">{{ selectedFile ? selectedFile.name : 'Drag an image here or click to browse' }}</span>
+              <span class="file-upload-hint">PNG, JPG — max. 10 MB</span>
+            </div>
+            <div class="file-upload-preview" *ngIf="imagePreview">
+              <img [src]="imagePreview" alt="Preview">
+              <span class="preview-badge">Preview</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3 class="form-section-title">Type &amp; date</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="typeImage">Image type *</label>
+            <select class="form-control form-control-modern" id="typeImage" formControlName="typeImage" required>
+              <option value="">— Select —</option>
+              <option *ngFor="let type of typesImage" [value]="type.value">{{ type.libelle }}</option>
+            </select>
+            <span class="error-text" *ngIf="imageForm.get('typeImage')?.invalid && imageForm.get('typeImage')?.touched">Image type required.</span>
+          </div>
+          <div class="form-group">
+            <label for="dateCapture">Capture date *</label>
+            <input type="date" class="form-control form-control-modern" id="dateCapture" formControlName="dateCapture" required>
+            <span class="error-text" *ngIf="imageForm.get('dateCapture')?.invalid && imageForm.get('dateCapture')?.touched">Date required.</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="description">Description (max 500 characters)</label>
+          <textarea class="form-control form-control-modern" id="description" formControlName="description" rows="2" placeholder="Optional description..." maxlength="500"></textarea>
+          <span class="error-text" *ngIf="imageForm.get('description')?.errors?.['maxlength']">Maximum 500 characters.</span>
+        </div>
+      </section>
+
+      <div class="form-actions form-actions-modern">
+        <button type="button" class="btn-cancel-modern" (click)="closeImagePopup()" [disabled]="submitting">Cancel</button>
+        <button type="submit" class="btn-submit-modern" [disabled]="imageForm.invalid || !selectedFile || submitting">
+          <span *ngIf="!submitting">Save image</span>
+          <span *ngIf="submitting">Uploading...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- POPUP LAB TESTS (by record) -->
+<!-- ========================================== -->
+<div class="popup-overlay" *ngIf="showTestsLabPopup" (click)="closeTestsLabPopup()">
+  <div class="popup-content popup-content-large" (click)="$event.stopPropagation()">
+    <div class="form-popup-header form-header-dossier">
+      <div class="form-popup-header-inner">
+        <div class="form-popup-icon">🧪</div>
+        <div>
+          <h2>Laboratory tests</h2>
+          <p class="form-popup-subtitle" *ngIf="selectedDossierForTests">Record #{{ selectedDossierForTests.idDossierMedical }}</p>
+        </div>
+      </div>
+      <button type="button" class="close-btn-modern" (click)="closeTestsLabPopup()">✕</button>
+    </div>
+    <div class="popup-body-scroll">
+      <div *ngIf="loadingTestsLab" class="loading-modern"><div class="spinner-modern"></div><p>Loading test results...</p></div>
+      <div *ngIf="!loadingTestsLab && testsLabList.length === 0" class="empty-state-modern">
+        <h3>No laboratory tests</h3>
+        <p>Test results are entered by the patient from the portal.</p>
+      </div>
+      <div *ngIf="!loadingTestsLab && testsLabList.length > 0" class="tests-lab-list">
+        <div class="bilan-row" *ngFor="let r of testsLabList">
+          <div class="bilan-row-top">
+            <div class="bilan-row-info">
+              <span class="bilan-row-title">{{ r.nomTest || r.codeTest || 'Test #' + r.idResultatLaboratoire }}</span>
+              <span class="bilan-row-date">{{ formatDateBack(r.dateResultat) }}</span>
+              <span class="bilan-row-value">{{ formatValeur(r) }}</span>
+              <div class="bilan-row-rapports" *ngIf="rapportsByBilanId[r.idResultatLaboratoire!]?.length">
+                <span class="rapport-count">📄 {{ rapportsByBilanId[r.idResultatLaboratoire!].length }} report(s)</span>
+              </div>
+            </div>
+            <button type="button" class="btn-action-modern btn-primary" (click)="openRapportForm(r)">
+              <span class="btn-icon">📄</span>
+              <span>Create report</span>
+            </button>
+          </div>
+          <div class="bilan-rapports-cards" *ngIf="rapportsByBilanId[r.idResultatLaboratoire!]?.length">
+            <div class="rapport-card-inline" *ngFor="let rap of rapportsByBilanId[r.idResultatLaboratoire!]">
+              <div class="rapport-card-date">{{ formatDate(rap.dateRapport) }}</div>
+              <div *ngIf="rap.contenu" class="rapport-paragraph"><strong>Content:</strong><span class="rapport-text">{{ rap.contenu }}</span></div>
+              <div *ngIf="rap.conclusion" class="rapport-paragraph"><strong>Conclusion:</strong><span class="rapport-text">{{ rap.conclusion }}</span></div>
+              <div *ngIf="rap.recommandations" class="rapport-paragraph"><strong>Recommendations:</strong><span class="rapport-text">{{ rap.recommandations }}</span></div>
+              <div class="rapport-card-actions">
+                <button type="button" class="btn-bilan-pdf btn-export-pdf" (click)="exportRapportPdf(rap)">💾 Save as PDF</button>
+                <button *ngIf="rap.cheminPdf && rap.idRapportBilan" type="button" class="btn-bilan-pdf" (click)="openBilanPdf(rap.idRapportBilan)">📄 View PDF</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP CREATE REPORT (RapportBilan) for a test result -->
+<!-- ========================================== -->
+<div class="popup-overlay" *ngIf="showRapportFormPopup" (click)="closeRapportForm()">
+  <div class="popup-content popup-form-modern" (click)="$event.stopPropagation()">
+    <div class="form-popup-header form-header-suivi">
+      <div class="form-popup-header-inner">
+        <div class="form-popup-icon">📄</div>
+        <div>
+          <h2>Create test report</h2>
+          <p class="form-popup-subtitle" *ngIf="selectedBilanForRapport">{{ selectedBilanForRapport.nomTest || selectedBilanForRapport.codeTest }}</p>
+        </div>
+      </div>
+      <button type="button" class="close-btn-modern" (click)="closeRapportForm()">✕</button>
+    </div>
+    <div class="rapport-error" *ngIf="rapportError">{{ rapportError }}</div>
+    <form #rapportForm="ngForm" (ngSubmit)="submitRapport(rapportForm)" class="popup-form-body">
+      <div class="form-group">
+        <label>Report date *</label>
+        <input type="date" name="dateRapport" [(ngModel)]="rapportDefaultDate" #dateRapportRef="ngModel" required>
+        <span class="error-text" *ngIf="dateRapportRef.invalid && dateRapportRef.touched">Report date required.</span>
+      </div>
+      <div class="form-group">
+        <label>Content (max 3000 characters)</label>
+        <textarea name="contenu" ngModel #contenuRef="ngModel" rows="3" maxlength="3000" placeholder="Suggestion: Analysis of test results, patient clinical context, comparison with reference values. Summary of measured parameters and their interpretation."></textarea>
+        <span class="field-suggestion">Suggestion: describe the analysis and clinical context.</span>
+      </div>
+      <div class="form-group">
+        <label>Conclusion (max 1500 characters)</label>
+        <textarea name="conclusion" ngModel #conclusionRef="ngModel" rows="2" maxlength="1500" placeholder="Suggestion: Results within normal range. / Abnormal results, follow-up recommended. / Results consistent with diagnosis. Recheck in 30 days."></textarea>
+        <span class="field-suggestion">Suggestion: within normal range or follow-up recommended.</span>
+      </div>
+      <div class="form-group">
+        <label>Recommendations (max 1500 characters)</label>
+        <textarea name="recommandations" ngModel #recommandationsRef="ngModel" rows="2" maxlength="1500" placeholder="Suggestion: Recheck in 3 months. / Continue treatment. / Specialist consultation recommended. / Repeat test if symptoms persist."></textarea>
+        <span class="field-suggestion">Suggestion: schedule follow-up, continue treatment.</span>
+      </div>
+      <div class="form-group signature-group">
+        <label>Signature électronique (optionnel)</label>
+        <div class="signature-pad-wrapper">
+          <canvas #signatureCanvasRef
+            class="signature-canvas"
+            (mousedown)="onSignatureStart($event)"
+            (mousemove)="onSignatureMove($event)"
+            (mouseup)="onSignatureEnd($event)"
+            (mouseleave)="onSignatureEnd($event)"
+            (touchstart)="onSignatureStart($event)"
+            (touchmove)="onSignatureMove($event)"
+            (touchend)="onSignatureEnd($event)"
+          ></canvas>
+          <button type="button" class="btn-clear-signature" (click)="clearSignature()">Effacer la signature</button>
+        </div>
+        <span class="field-suggestion">Sign in the box above. The signature and date will be added to the report/PDF.</span>
+      </div>
+      <div class="form-actions form-actions-modern">
+        <button type="button" class="btn-cancel-modern" (click)="closeRapportForm()">Cancel</button>
+        <button type="submit" class="btn-submit-modern" [disabled]="rapportForm.invalid || rapportSubmitting">{{ rapportSubmitting ? 'Creating...' : 'Create report' }}</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,286 @@
+<div class="dashboard-grid">
+
+    <!-- Notification : test(s) ajouté(s) -->
+    <div class="new-tests-notification" *ngIf="newTestsCount > 0 && showNewTestNotification">
+        <span class="new-tests-message">
+            <ng-container *ngIf="isFirstVisit">
+                <ng-container *ngIf="newTestsCount === 1">One test is recorded</ng-container>
+                <ng-container *ngIf="newTestsCount > 1">{{ newTestsCount }} tests are recorded</ng-container>
+                in the system.
+            </ng-container>
+            <ng-container *ngIf="!isFirstVisit">
+                <ng-container *ngIf="newTestsCount === 1">A new test has been added</ng-container>
+                <ng-container *ngIf="newTestsCount > 1">{{ newTestsCount }} new tests have been added</ng-container>
+                since your last visit.
+            </ng-container>
+        </span>
+        <button type="button" class="new-tests-dismiss" (click)="dismissNewTestNotification()" aria-label="Close">×</button>
+    </div>
+
+    <!-- SECTION STATS BACK OFFICE (données réelles) -->
+    <div class="stats-section-title">📊 Back Office Statistics</div>
+
+    <div class="stats-error-banner" *ngIf="errorStats">
+        <span>{{ errorStats }}</span>
+        <button type="button" class="btn-retry" (click)="loadStats()">Retry</button>
+    </div>
+
+    <!-- 4 cartes stats (sans Alertes) -->
+    <div class="dashboard-stats-row">
+        <div class="card card-stat card-stat-primary" [class.stat-loading-card]="loadingStats">
+            <div class="card-header">
+                <div class="stat-content">
+                    <div class="stat-label">Medical records</div>
+                    <div class="stat-value stat-value-num">{{ stats.dossiersMedicaux }}</div>
+                    <div class="stat-trend">Total in database</div>
+                </div>
+                <div class="card-icon card-icon-dossiers">📁</div>
+            </div>
+        </div>
+        <div class="card card-stat card-stat-success" [class.stat-loading-card]="loadingStats">
+            <div class="card-header">
+                <div class="stat-content">
+                    <div class="stat-label">Follow-ups</div>
+                    <div class="stat-value stat-value-num">{{ stats.suivis }}</div>
+                    <div class="stat-trend">Follow-up entries</div>
+                </div>
+                <div class="card-icon card-icon-suivis">📋</div>
+            </div>
+        </div>
+        <div class="card card-stat card-stat-info" [class.stat-loading-card]="loadingStats">
+            <div class="card-header">
+                <div class="stat-content">
+                    <div class="stat-label">Lab test types</div>
+                    <div class="stat-value stat-value-num">{{ stats.typesTestsLabo }}</div>
+                    <div class="stat-trend">Reference</div>
+                </div>
+                <div class="card-icon card-icon-tests">🧪</div>
+            </div>
+        </div>
+        <div class="card card-stat card-stat-warning" [class.stat-loading-card]="loadingStats">
+            <div class="card-header">
+                <div class="stat-content">
+                    <div class="stat-label">Lab results</div>
+                    <div class="stat-value stat-value-num">{{ stats.resultatsLabo }}</div>
+                    <div class="stat-trend">Recorded analyses</div>
+                </div>
+                <div class="card-icon card-icon-resultats">🔬</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CALENDRIER -->
+    <div class="card card-calendar">
+        <div class="card-header">
+            <div class="card-title">📅 Février 2026</div>
+            <div class="calendar-nav">
+                <button>‹</button>
+                <button>›</button>
+            </div>
+        </div>
+
+        <div class="calendar-mini">
+            <div class="calendar-weekdays">
+                <div class="calendar-weekday">S</div>
+                <div class="calendar-weekday">M</div>
+                <div class="calendar-weekday">T</div>
+                <div class="calendar-weekday">W</div>
+                <div class="calendar-weekday">T</div>
+                <div class="calendar-weekday">F</div>
+                <div class="calendar-weekday">S</div>
+            </div>
+            <div class="calendar-days">
+                <div class="calendar-day other-month">26</div>
+                <div class="calendar-day other-month">27</div>
+                <div class="calendar-day other-month">28</div>
+                <div class="calendar-day other-month">29</div>
+                <div class="calendar-day other-month">30</div>
+                <div class="calendar-day other-month">31</div>
+                <div class="calendar-day">1</div>
+                <div class="calendar-day">2</div>
+                <div class="calendar-day">3</div>
+                <div class="calendar-day">4</div>
+                <div class="calendar-day">5</div>
+                <div class="calendar-day">6</div>
+                <div class="calendar-day">7</div>
+                <div class="calendar-day">8</div>
+                <div class="calendar-day">9</div>
+                <div class="calendar-day">10</div>
+                <div class="calendar-day">11</div>
+                <div class="calendar-day">12</div>
+                <div class="calendar-day">13</div>
+                <div class="calendar-day today">14</div>
+                <div class="calendar-day">15</div>
+                <div class="calendar-day">16</div>
+                <div class="calendar-day">17</div>
+                <div class="calendar-day">18</div>
+                <div class="calendar-day">19</div>
+                <div class="calendar-day">20</div>
+                <div class="calendar-day">21</div>
+                <div class="calendar-day">22</div>
+                <div class="calendar-day">23</div>
+                <div class="calendar-day">24</div>
+                <div class="calendar-day">25</div>
+                <div class="calendar-day">26</div>
+                <div class="calendar-day">27</div>
+                <div class="calendar-day">28</div>
+                <div class="calendar-day">29</div>
+            </div>
+        </div>
+
+        <div class="rdv-list">
+            <div style="font-size: 12px; font-weight: 700; color: #2d3748; margin-bottom: 8px;">Today</div>
+            <div class="rdv-item">
+                <div class="rdv-time">09:00</div>
+                <div class="rdv-patient">Emma Johnson</div>
+            </div>
+            <div class="rdv-item">
+                <div class="rdv-time">14:30</div>
+                <div class="rdv-patient">Liam Adams</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRAPHIQUE SURVIE GREFFON -->
+    <div class="card card-chart">
+        <div class="card-title">📈 Graft Survival</div>
+        <div class="card-subtitle">Monthly follow-up</div>
+        <div class="chart-container">
+            <div class="chart-bar" style="height: 85%;"></div>
+            <div class="chart-bar" style="height: 90%;"></div>
+            <div class="chart-bar" style="height: 75%;"></div>
+            <div class="chart-bar" style="height: 95%;"></div>
+            <div class="chart-bar" style="height: 88%;"></div>
+            <div class="chart-bar" style="height: 92%;"></div>
+        </div>
+    </div>
+
+    <!-- DONUT PAR DIAGNOSTIC (devant celui par type de test) -->
+    <div class="card card-chart">
+        <div class="card-title">📊 Records by diagnosis</div>
+        <div class="donut-chart donut-diagnostic" [style.background]="donutGradientDiagnostic">
+            <div class="donut-center">
+                <div class="donut-value">{{ totalDossiersDonut }}</div>
+                <div class="donut-label">Global</div>
+            </div>
+        </div>
+        <div class="donut-legend" *ngIf="diagnosticStats.length > 0">
+            <div class="donut-legend-item" *ngFor="let s of diagnosticStats">
+                <span class="donut-legend-color" [style.background]="s.color"></span>
+                <span class="donut-legend-label">{{ s.label }}</span>
+                <span class="donut-legend-value">{{ s.count }}</span>
+            </div>
+        </div>
+        <div class="donut-empty" *ngIf="!loadingDonutDiagnostic && diagnosticStats.length === 0">
+            No records
+        </div>
+    </div>
+
+    <!-- DONUT PAR TYPE DE TEST -->
+    <div class="card card-chart">
+        <div class="card-title">📊 Results by test type</div>
+        <div class="donut-chart donut-diagnostic" [style.background]="donutGradient">
+            <div class="donut-center">
+                <div class="donut-value">{{ totalDonut }}</div>
+                <div class="donut-label">Global</div>
+            </div>
+        </div>
+        <div class="donut-legend" *ngIf="donutStats.length > 0">
+            <div class="donut-legend-item" *ngFor="let s of donutStats">
+                <span class="donut-legend-color" [style.background]="s.color"></span>
+                <span class="donut-legend-label">{{ s.label }}</span>
+                <span class="donut-legend-value">{{ s.count }}</span>
+            </div>
+        </div>
+        <div class="donut-empty" *ngIf="!loadingDonut && donutStats.length === 0">
+            No results
+        </div>
+    </div>
+
+    <!-- ACTIONS RAPIDES -->
+    <div class="card card-actions">
+        <div class="card-title" style="margin-bottom: 16px;">🎯 Quick Actions - Pediatric Nephrology</div>
+        <div class="action-buttons">
+            <div class="action-btn">
+                <div class="action-btn-icon" style="background: linear-gradient(135deg, #4299e1 0%, #667eea 100%); color: white;">🧪</div>
+                <div>
+                    <div class="action-btn-text">Lab Request</div>
+                    <div class="action-btn-desc">Biology, Creatinine, GFR</div>
+                </div>
+            </div>
+            <div class="action-btn">
+                <div class="action-btn-icon" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white;">📸</div>
+                <div>
+                    <div class="action-btn-text">Imaging</div>
+                    <div class="action-btn-desc">Echo, MRI, CT</div>
+                </div>
+            </div>
+            <div class="action-btn">
+                <div class="action-btn-icon" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white;">💊</div>
+                <div>
+                    <div class="action-btn-text">Prescription</div>
+                    <div class="action-btn-desc">Immunosuppressants</div>
+                </div>
+            </div>
+            <div class="action-btn">
+                <div class="action-btn-icon" style="background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%); color: white;">📋</div>
+                <div>
+                    <div class="action-btn-text">Post-Transplant Follow-up</div>
+                    <div class="action-btn-desc">Report, Complications</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PATIENTS RÉCENTS -->
+    <div class="card card-patients">
+        <div class="card-header">
+            <div class="card-title">👥 Recent Post-Transplant Patients</div>
+            <a href="#" style="font-size: 12px; color: #5a67d8; text-decoration: none;">View all →</a>
+        </div>
+
+        <div class="patient-card" *ngFor="let patient of patients">
+            <div class="patient-avatar">{{ patient.initials }}</div>
+            <div class="patient-info">
+                <div class="patient-name">{{ patient.name }}</div>
+                <div class="patient-meta">{{ patient.age }} yrs • Graft: {{ patient.graft }}</div>
+            </div>
+            <div class="patient-badge">{{ patient.status }}</div>
+        </div>
+    </div>
+
+    <!-- MÉTRIQUES CLÉS -->
+    <div class="card card-metrics">
+        <div class="card-title" style="margin-bottom: 16px;">📊 Key Metrics</div>
+        
+        <div class="metrics-list">
+            <div class="metric-item">
+                <div class="metric-label">1-Year Graft Survival</div>
+                <div class="metric-value" style="color: #48bb78;">94.2%</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-label">Average GFR</div>
+                <div class="metric-value">68 mL/min</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-label">Acute Rejections</div>
+                <div class="metric-value">2 cas</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-label">Average Creatinine</div>
+                <div class="metric-value">62 µmol/L</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-label">Treatment Compliance</div>
+                <div class="metric-value" style="color: #48bb78;">89%</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-label">Average Proteinuria</div>
+                <div class="metric-value">0.15 g/L</div>
+            </div>
+        </div>
+    </div>
+
+  
+
+</div>

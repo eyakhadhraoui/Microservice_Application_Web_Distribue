@@ -1,0 +1,508 @@
+<!-- ajouter-rapport.html -->
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f4f6f9; color: #2d3748;
+  }
+
+  /* ── NAVBAR ── */
+  .navbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 70px;
+    background: white; padding: 0 32px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08); z-index: 1100;
+  }
+  .logo { font-size: 20px; font-weight: 700; color: #5a67d8; }
+  .nav-menu { display: flex; gap: 8px; }
+  .nav-item {
+    padding: 10px 20px; text-decoration: none; color: #4a5568;
+    border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+  }
+  .nav-item:hover { background: #e6f0ff; color: #5a67d8; }
+  .nav-item.nav-active { background: #e6f0ff; color: #5a67d8; font-weight: 700; }
+  .user-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #38a169);
+    color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;
+  }
+
+  /* ── LAYOUT ── */
+  .container { display: flex; padding-top: 70px; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed; top: 70px; left: 0; width: 220px;
+    height: calc(100vh - 70px); background: white;
+    padding: 20px 12px; box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    overflow-y: auto; z-index: 1000;
+  }
+  .sidebar-section {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    color: #a0aec0; letter-spacing: 1px;
+    padding: 16px 14px 8px; margin-top: 4px;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; margin-bottom: 4px; border-radius: 10px;
+    cursor: pointer; font-weight: 500; color: #4a5568;
+    font-size: 14px; text-decoration: none; transition: all 0.2s;
+  }
+  .sidebar-item:hover { background: #f0f4ff; color: #5a67d8; }
+  .sidebar-item.active,
+  .sidebar-item.sb-active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .content {
+    margin-left: 220px;
+    padding: 30px;
+    width: calc(100% - 220px);
+    min-height: calc(100vh - 70px);
+  }
+
+ 
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 28px;
+  }
+  .page-header h1 { font-size: 30px; color: #2d3748; margin-bottom: 6px; }
+  .subtitle { color: #718096; font-size: 15px; }
+
+  /* ── PROGRESS CARD ── */
+  .progress-card {
+    background: white; border-radius: 14px;
+    padding: 20px 24px; margin-bottom: 24px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+  }
+  .progress-info {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px;
+  }
+  .progress-title { font-weight: 600; color: #2d3748; font-size: 14px; }
+  .progress-status {
+    font-size: 13px; font-weight: 600;
+    color: #e53e3e; /* default: warning */
+  }
+  .progress-status.ready { color: #38a169; }
+  .progress-track {
+    width: 100%; height: 8px; background: #e2e8f0;
+    border-radius: 99px; overflow: hidden; margin-bottom: 12px;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, #667eea, #38a169);
+    transition: width 0.4s ease;
+  }
+  .progress-steps {
+    display: flex; gap: 20px; font-size: 13px; color: #a0aec0; font-weight: 500;
+  }
+  .progress-steps .step-done { color: #38a169; }
+
+  /* ── CARDS ── */
+  .card {
+    background: white; border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+    margin-bottom: 24px; overflow: hidden;
+  }
+  .card-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 24px; border-bottom: 2px solid #f0f4ff;
+  }
+  .card-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .bg-indigo { background: linear-gradient(135deg, #667eea22, #5a67d822); }
+  .bg-purple { background: linear-gradient(135deg, #48bb7822, #38a16922); }
+  .card-header h3 { font-size: 17px; color: #2d3748; margin-bottom: 3px; }
+  .card-desc { font-size: 13px; color: #718096; }
+  .card-body { padding: 24px; }
+
+  /* ── FORM ELEMENTS ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px; }
+  .form-group { margin-bottom: 20px; }
+  .form-label {
+    display: block; font-size: 13px; font-weight: 700;
+    color: #4a5568; margin-bottom: 8px; letter-spacing: 0.3px;
+  }
+  .req { color: #e53e3e; margin-left: 2px; }
+  .label-hint { font-size: 11px; font-weight: 400; color: #a0aec0; margin-left: 6px; }
+
+  .input-wrapper { position: relative; }
+  .input-icon {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; pointer-events: none; z-index: 1;
+  }
+
+  .form-control {
+    width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0;
+    border-radius: 10px; font-size: 14px; font-family: inherit;
+    transition: all 0.25s; background: white; color: #2d3748;
+    appearance: none;
+  }
+  .form-control.with-icon { padding-left: 42px; }
+  .form-control:focus { outline: none; border-color: #5a67d8; box-shadow: 0 0 0 3px rgba(90,103,216,0.15); }
+
+  /* Validation states */
+  .form-control.ctrl-error {
+    border-color: #e53e3e !important;
+    background: #fff5f5;
+    box-shadow: 0 0 0 3px rgba(229,62,62,0.12);
+  }
+  .form-control.ctrl-valid {
+    border-color: #38a169 !important;
+    background: #f0fff4;
+    box-shadow: 0 0 0 3px rgba(56,161,105,0.12);
+  }
+
+  .ctrl-feedback {
+    position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+    color: #38a169; font-weight: 700; font-size: 15px;
+  }
+
+  /* Messages */
+  .field-msg {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; margin-top: 6px;
+    padding: 6px 10px; border-radius: 6px;
+    animation: fadeIn 0.2s ease;
+  }
+  .field-msg.error {
+    color: #c53030;
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+  }
+  .field-msg.success {
+    color: #276749;
+    background: #f0fff4;
+    border: 1px solid #c6f6d5;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .textarea {
+    resize: vertical; min-height: 120px;
+    border-radius: 10px; padding: 14px;
+  }
+  .field-footer {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-top: 4px;
+  }
+  .char-count { font-size: 12px; color: #a0aec0; font-weight: 500; white-space: nowrap; }
+  .char-count.char-warn { color: #d69e2e; }
+  .char-count.char-over { color: #e53e3e; font-weight: 700; }
+
+  /* ── CONSULTATION PREVIEW ── */
+  .consult-preview {
+    background: linear-gradient(135deg, #f7faff, #eef2ff);
+    border: 2px solid #c3d0ff; border-radius: 12px;
+    padding: 18px; margin-top: 8px;
+  }
+  .preview-badge {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    color: #5a67d8; letter-spacing: 0.8px; margin-bottom: 14px;
+  }
+  .preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .preview-item { display: flex; flex-direction: column; gap: 3px; }
+  .preview-label { font-size: 11px; font-weight: 700; color: #667eea; }
+  .preview-value { font-size: 13px; color: #2d3748; }
+
+  /* ── ACTIONS ── */
+  .form-actions {
+    display: flex; justify-content: flex-end; gap: 12px;
+    padding: 20px 0 10px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea, #38a169);
+    color: white; border: none; padding: 13px 28px;
+    border-radius: 10px; font-weight: 700; cursor: pointer;
+    font-size: 14px; transition: all 0.3s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(56,161,105,0.4);
+  }
+  .btn-primary:disabled { background: #cbd5e0; cursor: not-allowed; transform: none; }
+  .btn-secondary {
+    background: #e2e8f0; color: #4a5568; border: none;
+    padding: 13px 24px; border-radius: 10px;
+    font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: #cbd5e0; }
+
+  .btn-spinner {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    animation: spin 0.7s linear infinite; display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TOAST ── */
+  .toast-wrapper {
+    position: fixed; bottom: 30px; right: 30px; z-index: 3000;
+    opacity: 0; transform: translateY(20px); pointer-events: none;
+    transition: all 0.35s ease;
+  }
+  .toast-wrapper.toast-visible { opacity: 1; transform: translateY(0); }
+  .toast {
+    padding: 14px 24px; border-radius: 10px; color: white;
+    font-weight: 600; font-size: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .toast-success { background: linear-gradient(135deg, #48bb78, #38a169); }
+  .toast-error   { background: linear-gradient(135deg, #f56565, #e53e3e); }
+
+  @media (max-width: 768px) {
+    .content { margin-left: 0; width: 100%; padding: 20px; }
+    .sidebar { display: none; }
+    .form-grid { grid-template-columns: 1fr; }
+    .preview-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+
+
+ 
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>📄 Nouveau Rapport</h1>
+        <p class="subtitle">Créer un rapport médical post-greffe</p>
+      </div>
+    </div>
+
+    <!-- ── BARRE DE PROGRESSION ── -->
+    <div class="progress-card">
+      <div class="progress-info">
+        <span class="progress-title">Progression du formulaire</span>
+        <span class="progress-status" [class.ready]="formProgress === 100">
+          {{ formProgress === 100 ? '✅ Prêt à enregistrer' : '⚠ Champs obligatoires manquants' }}
+        </span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" [style.width]="formProgress + '%'"></div>
+      </div>
+      <div class="progress-steps">
+        <span [class.step-done]="rapport.dateRapport">📅 Date</span>
+        <span [class.step-done]="selectedConsultationId">🩺 Consultation</span>
+        <span [class.step-done]="rapport.contenu.length >= 20">📝 Contenu</span>
+      </div>
+    </div>
+
+    <form (ngSubmit)="saveRapport()" #rapportForm="ngForm" novalidate>
+
+      <!-- ══ BLOC 1 : INFORMATIONS GÉNÉRALES ══ -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-indigo">📋</div>
+          <div>
+            <h3>Informations Générales</h3>
+            <p class="card-desc">Sélectionnez la consultation — la date se remplit automatiquement</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+
+            <!-- Consultation Associée (sélectionner en premier) -->
+            <div class="form-group">
+              <label class="form-label">
+                Consultation Associée
+                <span class="req">*</span>
+              </label>
+              <ng-container *ngIf="!loadingConsultations">
+                <div class="input-wrapper">
+                  <span class="input-icon">🩺</span>
+                  <select
+                    [(ngModel)]="selectedConsultationId"
+                    name="consultationId"
+                    required
+                    #consultRef="ngModel"
+                    class="form-control with-icon"
+                    [class.ctrl-error]="consultRef.touched && consultRef.invalid"
+                    [class.ctrl-valid]="consultRef.touched && consultRef.valid"
+                    (ngModelChange)="onConsultationChange()"
+                  >
+                    <option [ngValue]="null">— Choisir une consultation —</option>
+                    <option *ngFor="let c of consultationsList" [ngValue]="c.idConsultation">
+                      {{ c.dateConsultation | date:'dd/MM/yyyy' }} — {{ (c.diagnostic || '') | slice:0:45 }}
+                    </option>
+                  </select>
+                  <span class="ctrl-feedback" *ngIf="consultRef.touched && consultRef.valid">✓</span>
+                </div>
+                <div class="field-msg error" *ngIf="consultRef.touched && consultRef.invalid && !consultationsError">
+                  <span>⚠</span> Veuillez sélectionner une consultation
+                </div>
+              </ng-container>
+              <div *ngIf="loadingConsultations" style="padding:12px;color:#718096;font-size:14px;">
+                Chargement des consultations…
+              </div>
+              <div *ngIf="!loadingConsultations && consultationsError" class="field-msg error" style="margin-top:8px">
+                <span>⚠</span> {{ consultationsError }}
+                <button type="button" class="btn-secondary" (click)="loadConsultations()" style="margin-top:8px">🔄 Réessayer</button>
+              </div>
+              <div *ngIf="!loadingConsultations && !consultationsError && consultationsList.length === 0" class="field-msg error" style="margin-top:8px">
+                <span>⚠</span> Aucune consultation en base. Créez d'abord une consultation.
+              </div>
+            </div>
+
+            <!-- Date du Rapport (remplie automatiquement à partir de la consultation) -->
+            <div class="form-group">
+              <label class="form-label">
+                Date du Rapport
+                <span class="req">*</span>
+              </label>
+              <div class="input-wrapper">
+                <span class="input-icon">📅</span>
+                <input
+                  type="date"
+                  [(ngModel)]="rapport.dateRapport"
+                  (ngModelChange)="onDateChange()"
+                  name="dateRapport"
+                  required
+                  #dateRef="ngModel"
+                  [max]="today"
+                  class="form-control with-icon"
+                  [class.ctrl-error]="dateRef.touched && dateRef.invalid"
+                  [class.ctrl-valid]="dateRef.touched && dateRef.valid"
+                  (change)="calcProgress()"
+                />
+                <span class="ctrl-feedback" *ngIf="dateRef.touched && dateRef.valid">✓</span>
+              </div>
+              <div class="field-msg error" *ngIf="dateRef.touched && dateRef.invalid">
+                <span>⚠</span> La date du rapport est obligatoire
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Aperçu Consultation -->
+          <ng-container *ngIf="getSelectedConsultation(); let c">
+            <div class="consult-preview">
+              <div class="preview-badge">Aperçu consultation sélectionnée</div>
+              <div class="preview-grid">
+                <div class="preview-item">
+                  <span class="preview-label">📅 Date</span>
+                  <span class="preview-value">{{ c.dateConsultation | date:'dd MMMM yyyy' }}</span>
+                </div>
+                <div class="preview-item">
+                  <span class="preview-label">🔬 Diagnostic</span>
+                  <span class="preview-value">{{ c.diagnostic }}</span>
+                </div>
+                <div class="preview-item" *ngIf="c.notes" style="grid-column: span 2;">
+                  <span class="preview-label">📝 Notes</span>
+                  <span class="preview-value">{{ c.notes }}</span>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+        </div>
+      </div>
+
+      <!-- ══ BLOC 2 : CONTENU ══ -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-purple">📝</div>
+          <div>
+            <h3>Contenu & Recommandations</h3>
+            <p class="card-desc">Résultats cliniques, observations et prescriptions</p>
+          </div>
+        </div>
+        <div class="card-body">
+
+          <!-- Contenu du Rapport -->
+          <div class="form-group" style="margin-bottom: 24px;">
+            <label class="form-label">
+              Contenu du Rapport
+              <span class="req">*</span>
+              <span class="label-hint">(minimum 20 caractères)</span>
+            </label>
+            <textarea
+              [(ngModel)]="rapport.contenu"
+              name="contenu"
+              required
+              minlength="20"
+              maxlength="2000"
+              #contenuRef="ngModel"
+              rows="7"
+              placeholder="Décrivez l'état du patient, les examens effectués, les résultats observés, les paramètres biologiques..."
+              class="form-control textarea"
+              [class.ctrl-error]="contenuRef.touched && contenuRef.invalid"
+              [class.ctrl-valid]="contenuRef.touched && contenuRef.valid"
+              (input)="calcProgress()"
+            ></textarea>
+            <div class="field-footer">
+              <div>
+                <div class="field-msg error" *ngIf="contenuRef.touched && contenuRef.errors?.['required']">
+                  <span>⚠</span> Le contenu du rapport est obligatoire
+                </div>
+                <div class="field-msg error" *ngIf="contenuRef.touched && contenuRef.errors?.['minlength']">
+                  <span>⚠</span> Veuillez écrire au moins 20 caractères ({{ rapport.contenu.length }} saisies)
+                </div>
+                <div class="field-msg success" *ngIf="contenuRef.touched && contenuRef.valid">
+                  ✓ Contenu valide
+                </div>
+              </div>
+              <span class="char-count"
+                [class.char-warn]="rapport.contenu.length > 1800"
+                [class.char-over]="rapport.contenu.length > 2000">
+                {{ rapport.contenu.length }}&thinsp;/&thinsp;2000
+              </span>
+            </div>
+          </div>
+
+          <!-- Recommandations -->
+          <div class="form-group">
+            <label class="form-label">
+              Recommandations
+              <span class="label-hint">(optionnel — max. 1000 caractères)</span>
+            </label>
+            <textarea
+              [(ngModel)]="rapport.recommendations"
+              name="recommendations"
+              maxlength="1000"
+              #recoRef="ngModel"
+              rows="4"
+              placeholder="Prescriptions, suivi à prévoir, conseils au patient ou aux parents..."
+              class="form-control textarea"
+            ></textarea>
+            <div class="field-footer">
+              <span></span>
+              <span class="char-count" [class.char-warn]="rapport.recommendations.length > 900">
+                {{ rapport.recommendations.length }}&thinsp;/&thinsp;1000
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ══ ACTIONS ══ -->
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="resetForm()">
+          🔄 Réinitialiser
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="rapportForm.invalid || isLoading || loadingConsultations || consultationsList.length === 0">
+          <span class="btn-spinner" *ngIf="isLoading"></span>
+          <span *ngIf="!isLoading">✅ Enregistrer le Rapport</span>
+          <span *ngIf="isLoading">Enregistrement…</span>
+        </button>
+      </div>
+
+    </form>
+
+<!-- TOAST -->
+<div class="toast-wrapper" [class.toast-visible]="toastVisible">
+  <div class="toast" [ngClass]="toastType">{{ toastMessage }}</div>
+</div>

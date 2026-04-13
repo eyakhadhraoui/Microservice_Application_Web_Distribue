@@ -1,0 +1,73 @@
+<div class="sidebar">
+    <div class="sidebar-menu">
+
+        <!-- Main navigation -->
+        <a class="sidebar-item" routerLink="/back" routerLinkActive="active">
+            <span class="sidebar-item-icon">🏠</span>
+            <span>Dashboard</span>
+        </a>
+
+        <a class="sidebar-item" routerLink="/back/consultations" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
+            <span class="sidebar-item-icon">🩺</span>
+            <span>Consultations</span>
+        </a>
+
+        <a class="sidebar-item" routerLink="/back/consultations/new" routerLinkActive="active">
+            <span class="sidebar-item-icon">👨‍⚕️</span>
+            <span>Add Consultation</span>
+        </a>
+        <a class="sidebar-item" routerLink="/back/rendezvous/new" routerLinkActive="active">
+            <span class="sidebar-item-icon">📅</span>
+            <span>Add Appointment (RDV)</span>
+        </a>
+
+        <a class="sidebar-item" routerLink="/back/rapports/new" routerLinkActive="active">
+            <span class="sidebar-item-icon">📄</span>
+            <span>Add Report</span>
+        </a>
+
+        <a class="sidebar-item" routerLink="/back/users" routerLinkActive="active">
+            <span class="sidebar-item-icon">👥</span>
+            <span>Patients</span>
+        </a>
+
+        <a class="sidebar-item" routerLink="/back/utilisateurs-postgres" routerLinkActive="active">
+            <span class="sidebar-item-icon">🐘</span>
+            <span>Utilisateurs PostgreSQL</span>
+        </a>
+
+        <a class="sidebar-item" routerLink="/back/dossiers" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">
+            <span class="sidebar-item-icon">📁</span>
+            <span>Medical Records</span>
+        </a>
+
+       
+
+        <a class="sidebar-item" routerLink="/back/treatment" routerLinkActive="active">
+            <span class="sidebar-item-icon">💊</span>
+            <span>Traitements</span>
+        </a>
+
+        <!-- Dashboards cliniques -->
+        <a class="sidebar-item" routerLink="/back/consultation-detail" routerLinkActive="active">
+            <span class="sidebar-item-icon">📊</span>
+            <span>Consultation Dashboard</span>
+        </a>
+        <a class="sidebar-item" routerLink="/back/infections" routerLinkActive="active">
+            <span class="sidebar-item-icon">🦠</span>
+            <span>Infections &amp; vaccinations</span>
+        </a>
+
+        <a class="sidebar-item" routerLink="/back/dossiers" routerLinkActive="active">
+            <span class="sidebar-item-icon">🧪</span>
+            <span>Bilans labo</span>
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+        <button type="button" class="sidebar-item sidebar-item-logout" (click)="logout()">
+            <span class="sidebar-item-icon">🚪</span>
+            <span>Logout</span>
+        </button>
+    </div>
+</div>

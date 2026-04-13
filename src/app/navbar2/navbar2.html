@@ -1,0 +1,31 @@
+<!-- NAVBAR -->
+<div class="navbar-internal">
+    <div class="logo">
+        <div style="font-size: 28px;">🫘</div>
+        <span>KidneyCare</span>
+    </div>
+    
+    <button class="mobile-menu-toggle" (click)="toggleMobileMenu()" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+
+
+    <div class="user-section">
+        <div class="notification-icon">
+            <span style="font-size: 24px;">🔔</span>
+            <ng-container *ngIf="newTestsCount$ | async as count">
+                <span class="notification-badge" *ngIf="count > 0">{{ count }}</span>
+            </ng-container>
+        </div>
+        <div class="user-info" style="display: flex; align-items: center; gap: 12px;">
+            <div class="user-avatar">{{ initials || '?' }}</div>
+            <div>
+                <div style="font-weight: 600; font-size: 14px;">dr{{ displayName }}</div>
+                <div style="font-size: 12px; color: #718096;">{{ roleLabel || 'Utilisateur' }}</div>
+            </div>
+        </div>
+    </div>
+</div>

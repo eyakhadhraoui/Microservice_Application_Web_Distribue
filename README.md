@@ -1,180 +1,59 @@
-# 🏥 KidneyCare — Application Web Distribuée (Microservices)
+# MonProjet
 
-Plateforme médicale distribuée basée sur une architecture **microservices Spring Boot**, permettant la gestion des dossiers médicaux, prescriptions, consultations, hospitalisations et utilisateurs avec authentification sécurisée via Keycloak.
+This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.3.
 
----
+## Development server
 
-## 🛠️ Technologies utilisées
-
-| Catégorie | Technologie |
-|-----------|-------------|
-| Frontend | Angular |
-| Backend | Spring Boot (Java 17) |
-| Gateway | Spring Cloud Gateway |
-| Discovery | Eureka Server |
-| Auth | Keycloak (JWT) |
-| User Service | Symfony |
-| BDD Médicale | MySQL |
-| BDD Médicale | H2 |
-| BDD Utilisateurs | PostgreSQL |
-| Conteneurs | Docker / Docker Compose |
-
----
-
-## 📁 Structure du projet
-
-```
-kidneyCare/
-├── docker-compose.yml          # Orchestration des conteneurs
-├── docker/
-│   └── keycloak/import/        # Configuration Keycloak
-├── demo/                       # Eureka Server
-├── api-gateway/                # API Gateway Spring Cloud
-├── NEPHRO/                     # Service dossier médical+MySQL
-├── prescription-service/       #Service prescription+MySQL
-├── consultation-service/       #Service consultation+H2
-├── infection-service/          #Service infection+H2
-├── hospitalisation-service/    #Service hospitalisation+H2 
-├── user-service/               # Symfony+PostgreSQL
-└── frontend-angular/           # Application Angular
-```
-
----
-
-## ⚙️ Prérequis
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- Docker Compose v2
-- Connexion Internet active
-- *(optionnel)* Java 17, Maven, Node.js pour exécution locale
-
----
-
-## 🚀 Démarrage du projet
-
-### Lancer tous les services
+To start a local development server, run:
 
 ```bash
-docker compose up -d --build
+ng serve
 ```
 
-### Arrêter les services
+Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+
+## Code scaffolding
+
+Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
 
 ```bash
-docker compose down
+ng generate component component-name
 ```
 
----
+For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
 
-## 🌐 Accès aux services
-
-| Service | URL |
-|---------|-----|
-| Frontend Angular | http://localhost |
-| API Gateway | http://localhost:8095 |
-| Eureka Server | http://localhost:8761 |
-| Keycloak | http://localhost:8080 |
-| User Service | http://localhost:8000 |
-
----
-
-## 🔐 Sécurité (Keycloak + JWT)
-
-L'authentification est gérée par Keycloak.
-
-### Fonctionnement
-
-1. L'utilisateur se connecte via Keycloak
-2. Un token JWT est généré
-3. Le frontend envoie le token dans chaque requête (`Authorization: Bearer <token>`)
-4. La Gateway valide le token avant de router la requête
-
-### Rôles disponibles
-
-| Rôle | Description |
-|------|-------------|
-| `medecin` | Accès complet aux dossiers, prescriptions, consultations, hospitalisations |
-| `patient` | Consultation de son dossier, prescriptions et rendez-vous |
-
----
-
-## 🔗 API principales
-
-### 📁 Dossier Médical — `/nephro`
-
-```
-GET    /nephro/patients
-POST   /nephro/patients
-GET    /nephro/patients/{id}
-PUT    /nephro/patients/{id}
-DELETE /nephro/patients/{id}
+```bash
+ng generate --help
 ```
 
-### 💊 Prescription — `/prescription`
+## Building
 
-```
-GET    /prescription
-POST   /prescription
-```
+To build the project run:
 
-### 🩺 Consultation — `/consultation`
-
-```
-GET    /consultation
-POST   /consultation
+```bash
+ng build
 ```
 
-### 🏥 Hospitalisation — `/hospitalisation`
+This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
-```
-GET    /hospitalisation
-POST   /hospitalisation
-```
+## Running unit tests
 
-### 🦠 Infection — `/infection`
+To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
 
-```
-GET    /infection
-POST   /infection
+```bash
+ng test
 ```
 
-### 👤 Users — `/users`
+## Running end-to-end tests
 
-```
-GET    /users
-POST   /users
-```
+For end-to-end (e2e) testing, run:
 
----
-
-## 🗄️ Base de données
-
-| Base | Technologie | Données |
-|------|-------------|---------|
-| Données médicales | MySQL |DossierMedical Prescriptions |
-| Données médicales | H2 | Consultations, Hospitalisations, Infections |
-| Utilisateurs | PostgreSQL | Comptes, profils, rôles |
-
----
-
-## 🔄 Communication inter-services
-
-- Communication REST via API Gateway
-- Services enregistrés dans **Eureka Server**
-- Possibilité d'utiliser **Feign Client** pour la communication déclarative
-- Extension future avec **RabbitMQ** (messaging asynchrone)
-
----
-
-## 🔄 Workflow global
-
-```
-Utilisateur → Angular → Keycloak (JWT) → API Gateway → Eureka → Microservice → BDD
+```bash
+ng e2e
 ```
 
-1. L'utilisateur accède au frontend Angular
-2. Il se connecte via Keycloak → JWT généré
-3. Les requêtes passent par l'API Gateway (port 8095)
-4. La Gateway valide le token JWT
-5. Eureka résout l'adresse du microservice cible
-6. Le microservice traite la requête et persiste les données
+Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+
+## Additional Resources
+
+For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

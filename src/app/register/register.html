@@ -1,0 +1,126 @@
+<div class="register-page">
+  <div class="register-card">
+    <div class="register-header">
+      <h1 class="register-logo">KidneyCare</h1>
+      <p class="register-subtitle">Créez votre espace patient</p>
+      <div class="register-badge">Néphrologie · Post-greffe</div>
+    </div>
+
+    <div class="register-body">
+      <form class="register-form" (ngSubmit)="onSubmit()" #regForm="ngForm" novalidate>
+        <div class="register-row">
+          <div class="form-group">
+            <label>Nom d'utilisateur *</label>
+            <input
+              type="text"
+              name="username"
+              [(ngModel)]="model.username"
+              required
+              placeholder="Identifiant"
+              autocomplete="username"
+            />
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input
+              type="email"
+              name="email"
+              [(ngModel)]="model.email"
+              required
+              placeholder="email@exemple.com"
+              autocomplete="email"
+            />
+          </div>
+        </div>
+
+        <div class="register-row">
+          <div class="form-group">
+            <label>Prénom *</label>
+            <input
+              type="text"
+              name="firstName"
+              [(ngModel)]="model.firstName"
+              required
+              placeholder="Prénom"
+              autocomplete="given-name"
+            />
+          </div>
+          <div class="form-group">
+            <label>Nom *</label>
+            <input
+              type="text"
+              name="lastName"
+              [(ngModel)]="model.lastName"
+              required
+              placeholder="Nom"
+              autocomplete="family-name"
+            />
+          </div>
+        </div>
+
+        <div class="register-row">
+          <div class="form-group">
+            <label>Date de naissance *</label>
+            <input
+              type="date"
+              name="birthDate"
+              [(ngModel)]="model.birthDate"
+              required
+              autocomplete="bday"
+            />
+          </div>
+        </div>
+
+        <div class="register-row">
+          <div class="form-group">
+            <label>Mot de passe *</label>
+            <input
+              type="password"
+              name="password"
+              [(ngModel)]="model.password"
+              required
+              minlength="6"
+              placeholder="Min. 6 caractères"
+              autocomplete="new-password"
+            />
+          </div>
+          <div class="form-group">
+            <label>Confirmer *</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              [(ngModel)]="confirmPassword"
+              required
+              placeholder="Répéter"
+              autocomplete="new-password"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Rôle</label>
+          <select
+            name="role"
+            [(ngModel)]="model.role"
+          >
+            <option value="patient">Patient</option>
+            <option value="medecin">Médecin</option>
+          </select>
+        </div>
+
+        <div class="register-error" *ngIf="error">{{ error }}</div>
+        <div class="register-success" *ngIf="success">{{ success }}</div>
+
+        <button type="submit" class="btn-register" [disabled]="loading || regForm.invalid">
+          <span *ngIf="!loading">Créer mon compte</span>
+          <span *ngIf="loading" class="register-spinner"></span>
+        </button>
+      </form>
+
+      <p class="register-login-link">
+        Déjà un compte ?
+        <a routerLink="/login">Se connecter</a>
+      </p>
+    </div>
+  </div>
+</div>

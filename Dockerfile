@@ -1,14 +1,17 @@
-# Microservice dossier médical (Spring Boot 3, port 8089 par défaut).
-FROM eclipse-temurin:17-jdk-jammy AS build
+# Build Angular, sert les fichiers statiques avec nginx (SPA).
+# Pas de script d’entrée maison : évite CRLF Windows → « exec …: no such file or directory ».
+# L’ordre de démarrage est géré par docker-compose (depends_on ai-gateway: healthy).
+FROM node:22-bookworm-slim AS build
 WORKDIR /app
-ENV MAVEN_OPTS="-Dmaven.wagon.http.retryHandler.count=10 -Dmaven.wagon.http.retryHandler.requestSentEnabled=true -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
-COPY .mvn .mvn
-COPY mvnw pom.xml ./
-COPY src ./src
-RUN chmod +x mvnw && ./mvnw -B -DskipTests package
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build -- --configuration=production
 
-FROM eclipse-temurin:17-jre-jammy
-WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
-EXPOSE 8089
-ENTRYPOINT ["java", "-jar", "app.jar"]
+FROM nginx:1.27-alpine
+# Sortie @angular/build:application → dist/<nom-projet>/browser
+COPY --from=build /app/dist/mon-projet/browser /usr/share/nginx/html
+COPY nginx-ws-map.conf /etc/nginx/conf.d/00-ws-map.conf
+COPY nginx.docker.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+# ENTRYPOINT/CMD par défaut de l’image nginx : /docker-entrypoint.sh puis nginx

@@ -1,0 +1,110 @@
+<div class="calendrier-patient">
+  <header class="calendrier-header">
+    <h1>My calendar</h1>
+    <p class="calendrier-subtitle">
+      All follow-ups and medical images created by your doctor
+    </p>
+  </header>
+
+  <div *ngIf="loading" class="calendrier-loading">
+    <span class="loading-spinner" aria-hidden="true"></span>
+    <span>Loading calendar…</span>
+  </div>
+
+  <div *ngIf="error" class="calendrier-error">
+    <p>{{ error }}</p>
+    <button type="button" class="btn btn-primary" (click)="loadEvents()">Retry</button>
+  </div>
+
+  <ng-container *ngIf="!loading && !error">
+    <!-- Résumé -->
+    <div *ngIf="events.length > 0" class="calendrier-stats">
+      <div class="stat-card">
+        <span class="stat-value">{{ totalEvents }}</span>
+        <span class="stat-label">Events</span>
+      </div>
+      <div class="stat-card stat-suivi">
+        <span class="stat-value">{{ countSuivis }}</span>
+        <span class="stat-label">Follow-ups</span>
+      </div>
+      <div class="stat-card stat-image">
+        <span class="stat-value">{{ countImages }}</span>
+        <span class="stat-label">Images</span>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div *ngIf="events.length > 0" class="calendrier-filters">
+      <span class="filter-label">Show:</span>
+      <button type="button" class="filter-btn" [class.active]="filterType === 'all'" (click)="setFilter('all')">
+        All
+      </button>
+      <button type="button" class="filter-btn" [class.active]="filterType === 'SUIVI'" (click)="setFilter('SUIVI')">
+        Follow-ups
+      </button>
+      <button type="button" class="filter-btn" [class.active]="filterType === 'IMAGE_MEDICALE'" (click)="setFilter('IMAGE_MEDICALE')">
+        Images
+      </button>
+    </div>
+
+    <!-- Navigation mois + grille -->
+    <div class="calendrier-nav-wrap">
+      <div class="calendrier-nav">
+        <button type="button" class="btn btn-nav" (click)="prevMonth()" aria-label="Previous month">
+          <span aria-hidden="true">‹</span>
+        </button>
+        <span class="month-label">{{ monthLabel }}</span>
+        <button type="button" class="btn btn-nav" (click)="nextMonth()" aria-label="Next month">
+          <span aria-hidden="true">›</span>
+        </button>
+        <button type="button" class="btn btn-today" (click)="goToToday()">Today</button>
+      </div>
+
+      <!-- Mini grille du mois -->
+      <div class="month-mini-grid" *ngIf="events.length > 0">
+        <div class="grid-weekdays" aria-hidden="true">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div class="grid-days">
+          <button *ngFor="let cell of monthGrid" type="button" class="grid-cell"
+            [class.empty]="cell.day === 0"
+            [class.has-events]="cell.hasEvents"
+            [disabled]="cell.day === 0"
+            (click)="cell.hasEvents && scrollToDate(cell.dateKey)">
+            <span *ngIf="cell.day > 0">{{ cell.day }}</span>
+            <span *ngIf="cell.day > 0 && cell.hasEvents" class="grid-dot" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="events.length === 0" class="calendrier-empty">
+      <p>No follow-up or medical image yet.</p>
+      <p>Entries added by your doctor will appear here.</p>
+    </div>
+
+    <div *ngIf="events.length > 0 && allDatesWithEvents.length === 0" class="calendrier-empty filtré">
+      <p>No event matches the "{{ filterType === 'SUIVI' ? 'Follow-ups' : (filterType === 'IMAGE_MEDICALE' ? 'Images' : '') }}" filter.</p>
+    </div>
+
+    <div *ngIf="allDatesWithEvents.length > 0" class="calendrier-list">
+      <section *ngFor="let dateKey of allDatesWithEvents" [id]="'day-' + dateKey" class="day-block" [class.is-today]="isToday(dateKey)">
+        <h2 class="day-title">
+          <span>{{ formatDateLabel(dateKey) }}</span>
+          <span class="day-badge" *ngIf="isToday(dateKey)">Today</span>
+          <span class="day-count">{{ getEventCountForDate(dateKey) }} {{ getEventCountForDate(dateKey) > 1 ? 'events' : 'event' }}</span>
+        </h2>
+        <ul class="event-list">
+          <li *ngFor="let ev of getEventsForDate(dateKey)" class="event-item" [class.event-suivi]="ev.type === 'SUIVI'" [class.event-image]="ev.type === 'IMAGE_MEDICALE'">
+            <span class="event-icon" [attr.aria-hidden]="true">{{ getTypeIcon(ev.type) }}</span>
+            <div class="event-body">
+              <span class="event-type">{{ getTypeLabel(ev.type) }}</span>
+              <strong class="event-titre">{{ ev.titre }}</strong>
+              <p *ngIf="ev.description" class="event-desc">{{ ev.description }}</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </ng-container>
+</div>

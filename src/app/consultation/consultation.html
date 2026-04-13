@@ -1,0 +1,420 @@
+
+
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>👨‍⚕️ Nouvelle Consultation</h1>
+      <p class="subtitle">Enregistrer une consultation médicale post-greffe</p>
+    </div>
+  </div>
+
+  <!-- Barre de progression -->
+  <div class="progress-card">
+    <div class="progress-info">
+      <span class="progress-title">Progression du formulaire</span>
+      <span class="progress-status" [class.ready]="formProgress === 100">
+        {{ formProgress === 100 ? '✅ Prêt à enregistrer' : '⚠ Champs obligatoires manquants' }}
+      </span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" [style.width]="formProgress + '%'"></div>
+    </div>
+    <div class="progress-steps">
+      <span [class.step-done]="consultation.dateConsultation">📅 Date</span>
+      <span [class.step-done]="consultation.diagnostic.length >= 5">🔬 Diagnostic</span>
+      <span [class.step-done]="consultation.idDossiermedical">📁 Dossier</span>
+      <span [class.step-done]="selectedPatientId">👤 Patient</span>
+      <span [class.step-done]="selectedMedecinId">👨‍⚕️ Médecin</span>
+      <span [class.step-done]="selectedRendezvousId">📋 Rendez-vous</span>
+    </div>
+  </div>
+
+  <form (ngSubmit)="saveConsultation()" #consultForm="ngForm" novalidate>
+
+    <!-- BLOC 1 : INFORMATIONS GÉNÉRALES -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon bg-blue">📋</div>
+        <div>
+          <h3>Informations Générales</h3>
+          <p class="card-desc">Date et identifiant du dossier médical</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+
+          <!-- Date -->
+          <div class="form-group">
+            <label class="form-label">
+              Date de la Consultation <span class="req">*</span>
+            </label>
+            <div class="input-wrapper">
+              <span class="input-icon">📅</span>
+              <input
+                type="date"
+                [(ngModel)]="consultation.dateConsultation"
+                name="dateConsultation"
+                required
+                #dateRef="ngModel"
+                [max]="today"
+                class="form-control with-icon"
+                [class.ctrl-error]="dateRef.touched && dateRef.invalid"
+                [class.ctrl-valid]="dateRef.touched && dateRef.valid"
+                (change)="calcProgress()"
+              />
+              <span class="ctrl-feedback"
+                    *ngIf="dateRef.touched && dateRef.valid">✓</span>
+            </div>
+            <div class="field-msg error"
+                 *ngIf="dateRef.touched && dateRef.invalid">
+              <span>⚠</span> La date de consultation est obligatoire
+            </div>
+          </div>
+
+          <!-- ID Dossier -->
+          <div class="form-group">
+            <label class="form-label">
+              ID Dossier Médical <span class="req">*</span>
+            </label>
+            <div class="input-wrapper">
+              <span class="input-icon">📁</span>
+              <input
+                type="number"
+                [(ngModel)]="consultation.idDossiermedical"
+                name="idDossiermedical"
+                required
+                min="1"
+                #dossierRef="ngModel"
+                placeholder="Ex : 1042"
+                class="form-control with-icon"
+                [class.ctrl-error]="dossierRef.touched && dossierRef.invalid"
+                [class.ctrl-valid]="dossierRef.touched && dossierRef.valid"
+                (input)="calcProgress()"
+              />
+              <span class="ctrl-feedback"
+                    *ngIf="dossierRef.touched && dossierRef.valid">✓</span>
+            </div>
+            <div class="field-msg error"
+                 *ngIf="dossierRef.touched && dossierRef.errors?.['required']">
+              <span>⚠</span> L'identifiant du dossier est obligatoire
+            </div>
+            <div class="field-msg error"
+                 *ngIf="dossierRef.touched && dossierRef.errors?.['min']">
+              <span>⚠</span> L'identifiant doit être un nombre positif
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Aperçu dossier -->
+        <div class="dossier-preview"
+             *ngIf="consultation.idDossiermedical && dossierRef.valid">
+          <div class="dossier-avatar">🗂️</div>
+          <div class="dossier-info">
+            <div class="dossier-name">
+              Dossier médical #{{ consultation.idDossiermedical }}
+            </div>
+            <div class="dossier-meta">
+              Consultation du
+              {{ consultation.dateConsultation | date:'dd MMMM yyyy' }}
+            </div>
+          </div>
+          <span class="dossier-badge">POST-GREFFE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOC 1b : PATIENT & MÉDECIN -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon bg-blue">👤</div>
+        <div>
+          <h3>Patient &amp; Médecin</h3>
+          <p class="card-desc">
+            Sélection du patient (prénom, nom) et du médecin connecté
+          </p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+
+          <!-- ✅ SELECT PATIENT : firstName + lastName -->
+          <div class="form-group">
+            <label class="form-label">Patient <span class="req">*</span></label>
+            <div class="input-wrapper">
+              <span class="input-icon">👤</span>
+              <select
+                [(ngModel)]="selectedPatientId"
+                name="selectedPatientId"
+                #patientRef="ngModel"
+                class="form-control with-icon"
+                [class.ctrl-error]="patientRef.touched && !selectedPatientId"
+                [class.ctrl-valid]="patientRef.touched && !!selectedPatientId"
+                (change)="onPatientChange()"
+              >
+                <option [ngValue]="null">— Choisir un patient —</option>
+                <option *ngFor="let p of patientsList" [ngValue]="p.idPatient">
+                  {{ p.firstName }} {{ p.lastName }}
+                </option>
+              </select>
+              <span class="ctrl-feedback"
+                    *ngIf="patientRef.touched && selectedPatientId">✓</span>
+            </div>
+            <div class="field-msg error" *ngIf="patientsList.length === 0">
+              <span>⚠</span>
+              Aucun patient en base — enregistrez des patients d'abord
+            </div>
+          </div>
+
+          <!-- Médecin connecté : affichage en lecture seule (pas de choix manuel) -->
+          <div class="form-group">
+            <label class="form-label">Médecin <span class="req">*</span></label>
+
+            <!-- Cas normal : médecin connecté affiché en lecture seule -->
+            <div *ngIf="connectedMedecinName" class="medecin-connected-box">
+              <span class="input-icon">👨‍⚕️</span>
+              <div class="medecin-connected-text">
+                <strong>Dr. {{ connectedMedecinName }}</strong>
+                <span class="medecin-connected-badge">✓ Connecté</span>
+              </div>
+            </div>
+
+            <!-- Fallback : liste déroulante si pas de médecin connecté -->
+            <ng-container *ngIf="!connectedMedecinName">
+              <div class="input-wrapper">
+                <span class="input-icon">👨‍⚕️</span>
+                <select
+                  [(ngModel)]="selectedMedecinId"
+                  name="selectedMedecinId"
+                  #medecinRef="ngModel"
+                  class="form-control with-icon"
+                  [class.ctrl-error]="medecinRef.touched && !selectedMedecinId"
+                  [class.ctrl-valid]="medecinRef.touched && !!selectedMedecinId"
+                  (change)="onMedecinChange()"
+                >
+                  <option [ngValue]="null">— Choisir un médecin —</option>
+                  <option *ngFor="let m of medecinsList" [ngValue]="m.idMedecin">
+                    {{ m.prenom }} {{ m.nom }}
+                  </option>
+                </select>
+                <span class="ctrl-feedback" *ngIf="selectedMedecinId">✓</span>
+              </div>
+              <div class="field-msg error" *ngIf="medecinsList.length === 0">
+                <span>⚠</span> Aucun médecin en base — connectez-vous ou vérifiez le backend (port 8081)
+              </div>
+            </ng-container>
+          </div>
+
+        </div>
+
+        <!-- Aperçu patient sélectionné -->
+        <ng-container *ngIf="getSelectedPatient(); let p">
+          <div class="dossier-preview" style="margin-top:12px;">
+            <div class="dossier-avatar">👤</div>
+            <div class="dossier-info">
+              <div class="dossier-name">
+                Patient : {{ p.firstName }} {{ p.lastName }}
+              </div>
+              <div class="dossier-meta" *ngIf="p.email">{{ p.email }}</div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ✅ Aperçu médecin sélectionné : prénom + nom -->
+        <ng-container *ngIf="getSelectedMedecin(); let m">
+          <div class="dossier-preview" style="margin-top:8px;">
+            <div class="dossier-avatar">👨‍⚕️</div>
+            <div class="dossier-info">
+              <div class="dossier-name">Dr. {{ m.prenom }} {{ m.nom }}</div>
+            </div>
+          </div>
+        </ng-container>
+
+      </div>
+    </div>
+
+    <!-- BLOC 2 : RENDEZ-VOUS ASSOCIÉ -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon bg-orange">📅</div>
+        <div>
+          <h3>Rendez-vous Associé</h3>
+          <p class="card-desc">
+            Uniquement les rendez-vous non encore liés à une consultation
+          </p>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label class="form-label">
+              Sélectionner un Rendez-vous <span class="req">*</span>
+            </label>
+            <div class="input-wrapper">
+              <span class="input-icon">📅</span>
+              <select
+                [(ngModel)]="selectedRendezvousId"
+                name="selectedRendezvousId"
+                required
+                #rdvRef="ngModel"
+                class="form-control with-icon"
+                [class.ctrl-error]="rdvRef.touched && rdvRef.invalid"
+                [class.ctrl-valid]="rdvRef.touched && rdvRef.valid"
+                (change)="onRdvChange()"
+              >
+                <option [ngValue]="null">— Choisir un rendez-vous disponible —</option>
+                <option *ngFor="let r of rendezvousList" [ngValue]="r.idRendezvous">
+                  📅 {{ r.dateRendezvous | date:'dd/MM/yyyy' }}
+                  <ng-container *ngIf="r.etat"> — {{ r.etat }}</ng-container>
+                </option>
+              </select>
+              <span class="ctrl-feedback"
+                    *ngIf="rdvRef.touched && rdvRef.valid">✓</span>
+            </div>
+            <div class="field-msg error" *ngIf="rendezvousList.length === 0">
+              <span>⚠</span>
+              Aucun rendez-vous disponible — veuillez en créer un d'abord
+            </div>
+            <div class="field-msg error"
+                 *ngIf="rdvRef.touched && rdvRef.invalid && rendezvousList.length > 0">
+              <span>⚠</span> Veuillez sélectionner un rendez-vous
+            </div>
+          </div>
+
+          <!-- Aperçu RDV sélectionné -->
+          <ng-container *ngIf="getSelectedRdv(); let r">
+            <div class="consult-preview">
+              <div class="preview-badge">Rendez-vous sélectionné</div>
+              <div class="preview-grid">
+                <div class="preview-item">
+                  <span class="preview-label">🆔 ID</span>
+                  <span class="preview-value">#{{ r.idRendezvous }}</span>
+                </div>
+                <div class="preview-item">
+                  <span class="preview-label">📅 Date</span>
+                  <span class="preview-value">{{ r.dateRendezvous | date:'dd MMMM yyyy' }}</span>
+                </div>
+                <div class="preview-item" *ngIf="r.etat">
+                  <span class="preview-label">📌 État</span>
+                  <span class="preview-value"><span class="dossier-badge">{{ r.etat }}</span></span>
+                </div>
+                <div class="preview-item" style="grid-column:span 2;color:#38a169;font-weight:600;">
+                  ✅ Rendez-vous disponible
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOC 3 : DIAGNOSTIC & OBSERVATIONS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon bg-green">🔬</div>
+        <div>
+          <h3>Diagnostic &amp; Observations</h3>
+          <p class="card-desc">Résultats cliniques et observations médicales</p>
+        </div>
+      </div>
+      <div class="card-body">
+
+        <!-- Diagnostic -->
+        <div class="form-group">
+          <label class="form-label">
+            Diagnostic Principal <span class="req">*</span>
+            <span class="label-hint">(min. 5 caractères)</span>
+          </label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔬</span>
+            <input
+              type="text"
+              [(ngModel)]="consultation.diagnostic"
+              name="diagnostic"
+              required
+              minlength="5"
+              maxlength="300"
+              #diagRef="ngModel"
+              placeholder="Ex : Rejet aigu de greffe — stade I…"
+              class="form-control with-icon"
+              [class.ctrl-error]="diagRef.touched && diagRef.invalid"
+              [class.ctrl-valid]="diagRef.touched && diagRef.valid"
+              (input)="calcProgress()"
+            />
+            <span class="ctrl-feedback"
+                  *ngIf="diagRef.touched && diagRef.valid">✓</span>
+          </div>
+          <div class="field-footer">
+            <div>
+              <div class="field-msg error"
+                   *ngIf="diagRef.touched && diagRef.errors?.['required']">
+                <span>⚠</span> Le diagnostic est obligatoire
+              </div>
+              <div class="field-msg error"
+                   *ngIf="diagRef.touched && diagRef.errors?.['minlength']">
+                <span>⚠</span>
+                Minimum 5 caractères ({{ consultation.diagnostic.length }} saisis)
+              </div>
+              <div class="field-msg success"
+                   *ngIf="diagRef.touched && diagRef.valid">
+                ✓ Diagnostic valide
+              </div>
+            </div>
+            <span class="char-count"
+                  [class.char-warn]="consultation.diagnostic.length > 250">
+              {{ consultation.diagnostic.length }}&thinsp;/&thinsp;300
+            </span>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-group">
+          <label class="form-label">
+            Notes Cliniques
+            <span class="label-hint">(optionnel — max. 1000 caractères)</span>
+          </label>
+          <textarea
+            [(ngModel)]="consultation.notes"
+            name="notes"
+            maxlength="1000"
+            #notesRef="ngModel"
+            rows="5"
+            placeholder="Observations complémentaires, résultats biologiques…"
+            class="form-control textarea"
+          ></textarea>
+          <div class="field-footer">
+            <span></span>
+            <span class="char-count"
+                  [class.char-warn]="consultation.notes.length > 900"
+                  [class.char-over]="consultation.notes.length >= 1000">
+              {{ consultation.notes.length }}&thinsp;/&thinsp;1000
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" (click)="resetForm()">
+        🔄 Réinitialiser
+      </button>
+      <button type="submit" class="btn-primary"
+              [disabled]="consultForm.invalid || isLoading">
+        <span class="btn-spinner" *ngIf="isLoading"></span>
+        <span *ngIf="!isLoading">✅ Enregistrer la Consultation</span>
+        <span *ngIf="isLoading">Enregistrement…</span>
+      </button>
+    </div>
+
+  </form>
+
+
+<!-- TOAST -->
+<div class="toast-wrapper" [class.toast-visible]="toastVisible">
+  <div class="toast" [ngClass]="toastType">{{ toastMessage }}</div>
+</div>

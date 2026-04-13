@@ -1,0 +1,43 @@
+<div class="medications-back">
+  <div class="page-header">
+    <h1>💊 Medications</h1>
+    <p class="subtitle">Catalog of medications (from MedicationService)</p>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    Loading medications…
+  </div>
+
+  <div *ngIf="error" class="error-banner">
+    {{ error }} Showing demo list.
+  </div>
+
+  <div *ngIf="!loading && medications.length > 0" class="medications-table-wrap">
+    <table class="medications-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Dosage</th>
+          <th>Form</th>
+          <th>Category</th>
+          <th>Active ingredient</th>
+          <th>Monitoring</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let m of medications">
+          <td>{{ m.name }}</td>
+          <td>{{ m.dosage }} {{ m.unit }}</td>
+          <td>{{ m.form }}</td>
+          <td>{{ m.category }}</td>
+          <td>{{ m.activeIngredient }}</td>
+          <td>{{ m.requiresMonitoring ? 'Yes' : 'No' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!loading && medications.length === 0 && !error" class="empty-state">
+    No medications in the catalog. Add some via the API or use the demo list when the backend is unavailable.
+  </div>
+</div>

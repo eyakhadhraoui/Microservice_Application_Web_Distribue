@@ -1,0 +1,688 @@
+<!-- Couche fixe pour overlay + dropdowns (toujours en overlay, jamais dans le flux de la page) -->
+<div class="navbar-dropdowns-layer">
+    <div class="dropdown-overlay"
+         *ngIf="showNotifications || showProfile"
+         (click)="showNotifications = false; showProfile = false">
+    </div>
+    <div class="notifications-dropdown" *ngIf="showNotifications">
+        <!-- MÉDECIN : Alertes médicales (médicament non pris, etc.) -->
+        <ng-container *ngIf="auth.hasRole([KEYCLOAK_ROLES.medecin])">
+            <div class="notifications-dropdown-header" style="background:#fff5f5; border-radius:12px 12px 0 0;">
+                <span class="notifications-dropdown-header-title">🔔 Alertes médicales</span>
+                <span *ngIf="doctorAlertsCount > 0" style="background:#e53e3e; color:white; border-radius:10px; padding:2px 8px; font-size:11px; margin-left:6px;">{{ doctorAlertsCount }} non lue(s)</span>
+                <button type="button" class="notifications-dropdown-close" (click)="showNotifications = false" aria-label="Fermer">×</button>
+            </div>
+            <div class="notifications-dropdown-body">
+                <div *ngIf="isLoadingDoctorAlerts" style="padding:30px; text-align:center; color:#718096;">⏳ Chargement...</div>
+                <div *ngIf="!isLoadingDoctorAlerts && doctorAlerts.length === 0" style="padding:30px; text-align:center; color:#718096;">
+                    <div style="font-size:2rem; margin-bottom:8px;">✅</div>
+                    <div>Aucune alerte non lue</div>
+                </div>
+                <div *ngIf="!isLoadingDoctorAlerts && doctorAlerts.length > 0" class="notification-list">
+                    <div *ngFor="let alert of doctorAlerts" class="notification-item"
+                         [style.background]="alert.severity === 'CRITICAL' ? '#fff5f5' : '#fffbf0'"
+                         style="display:flex; gap:10px; align-items:flex-start; padding:12px 16px; border-bottom:1px solid #f0f0f0;">
+                        <span style="font-size:20px;">{{ alert.severity === 'CRITICAL' ? '🚨' : '⚠️' }}</span>
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-weight:600; color:#2d3748; font-size:0.88rem; margin-bottom:3px;">{{ alert.patientName || (alert.idPatient ? 'Patient #' + alert.idPatient : 'Patient') }}</div>
+                            <div style="color:#4a5568; font-size:0.82rem; line-height:1.4;">{{ alert.message }}</div>
+                            <div style="color:#a0aec0; font-size:0.75rem; margin-top:4px;">{{ formatAlertDate(alert.dateCreation) }}</div>
+                        </div>
+                        <button (click)="markDoctorAlertRead(alert.idNotificationMedecin)" title="Marquer comme lu"
+                                style="background:none; border:none; cursor:pointer; color:#a0aec0; font-size:16px;">✕</button>
+                    </div>
+                </div>
+            </div>
+            <div class="notifications-dropdown-footer" *ngIf="doctorAlerts.length > 0">
+                <button type="button" (click)="markAllDoctorAlertsRead()" style="background:none; border:1px solid #e53e3e; color:#e53e3e; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">Tout lire</button>
+            </div>
+        </ng-container>
+        <!-- PATIENT : Notifications WebSocket (nouvelle image, etc.) -->
+        <ng-container *ngIf="!auth.hasRole([KEYCLOAK_ROLES.medecin])">
+            <div class="notifications-dropdown-header">
+                <span class="notifications-dropdown-header-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+                </span>
+                <span class="notifications-dropdown-header-title">Notifications</span>
+                <button type="button" class="notifications-dropdown-close" (click)="showNotifications = false" aria-label="Fermer">×</button>
+            </div>
+            <div class="notifications-dropdown-body">
+                <div class="notification-list" *ngIf="(notificationService.notifications$ | async)?.length; else noNotifications">
+                    <div class="notification-item" *ngFor="let notif of (notificationService.notifications$ | async) ?? []">
+                        <span class="notif-icon">{{ notif.icon }}</span>
+                        <div class="notif-content">
+                            <div class="notif-title">{{ notif.title }}</div>
+                            <div class="notif-time">{{ notif.time }}</div>
+                        </div>
+                    </div>
+                </div>
+                <ng-template #noNotifications>
+                    <p class="notifications-empty-msg">Aucune nouvelle notification</p>
+                </ng-template>
+            </div>
+            <div class="notifications-dropdown-footer" *ngIf="(notificationService.notifications$ | async)?.length">
+                <a routerLink="/home/calendrier" (click)="showNotifications = false">View calendar</a>
+            </div>
+        </ng-container>
+    </div>
+    <div class="profile-dropdown profile-dropdown-design" *ngIf="showProfile">
+        <button type="button" class="profile-dropdown-close" (click)="showProfile = false" aria-label="Close">×</button>
+        <div class="profile-dropdown-header">
+            <div class="profile-dropdown-avatar">👤</div>
+            <div class="profile-dropdown-username">{{ auth.getProfile()?.username || auth.getProfile()?.name || 'User' }}</div>
+            <div class="profile-dropdown-username-secondary">{{ auth.getProfile()?.username || auth.getProfile()?.name || 'User' }}</div>
+            <span class="profile-dropdown-status">Connecté</span>
+        </div>
+        <div class="profile-dropdown-menu">
+            <a class="profile-dropdown-item" routerLink="/home" (click)="showProfile = false">
+                <span class="profile-dropdown-item-icon profile-dropdown-icon-settings">⚙️</span>
+                <span class="profile-dropdown-item-text">
+                    <span class="profile-dropdown-item-label">Settings</span>
+                    <span class="profile-dropdown-item-sublabel">Account preferences</span>
+                </span>
+                <span class="profile-dropdown-item-arrow">›</span>
+            </a>
+            <a class="profile-dropdown-item" routerLink="/home" (click)="showProfile = false">
+                <span class="profile-dropdown-item-icon profile-dropdown-icon-children">👥</span>
+                <span class="profile-dropdown-item-text">
+                    <span class="profile-dropdown-item-label">My Children</span>
+                    <span class="profile-dropdown-item-sublabel">Manage profiles</span>
+                </span>
+                <span class="profile-dropdown-item-arrow">›</span>
+            </a>
+            <a class="profile-dropdown-item" routerLink="/home/history" (click)="showProfile = false">
+                <span class="profile-dropdown-item-icon profile-dropdown-icon-medical">➕</span>
+                <span class="profile-dropdown-item-text">
+                    <span class="profile-dropdown-item-label">Medical record</span>
+                    <span class="profile-dropdown-item-sublabel">History &amp; consultations</span>
+                </span>
+                <span class="profile-dropdown-item-arrow">›</span>
+            </a>
+            <button type="button" class="profile-dropdown-item" (click)="openPrescriptionsForm()">
+                <span class="profile-dropdown-item-icon profile-dropdown-icon-prescriptions">📄</span>
+                <span class="profile-dropdown-item-text">
+                    <span class="profile-dropdown-item-label">Prescriptions</span>
+                    <span class="profile-dropdown-item-sublabel">Medical prescriptions</span>
+                </span>
+                <span class="profile-dropdown-item-arrow">›</span>
+            </button>
+            <button type="button" class="profile-dropdown-item profile-dropdown-item-logout" (click)="logout()">
+                <span class="profile-dropdown-item-icon profile-dropdown-icon-logout">↗</span>
+                <span class="profile-dropdown-item-text">
+                    <span class="profile-dropdown-item-label">Logout</span>
+                    <span class="profile-dropdown-item-sublabel">End session</span>
+                </span>
+                <span class="profile-dropdown-item-arrow">›</span>
+            </button>
+        </div>
+        <div class="profile-dropdown-footer">KidneyCare v2.1 • Parent Portal</div>
+    </div>
+</div>
+
+<!-- header-start -->
+<header class="navbar-header">
+    <div class="header-area">
+        <div id="sticky-header" class="main-header-area">
+            <div class="navbar-container">
+                <div class="navbar-row">
+
+                    <div class="navbar-logo" [class.navbar-logo--patient]="auth.hasRole([KEYCLOAK_ROLES.patient])">
+                        <a routerLink="/home">
+                            <h2 class="logo-title">KidneyCare</h2>
+                            <small class="logo-subtitle">{{ auth.hasRole([KEYCLOAK_ROLES.patient]) ? 'PORTAIL PATIENT' : 'Patient portal' }}</small>
+                        </a>
+                    </div>
+
+                    <nav class="nav-main">
+                        <!-- Menu patient (FR) — aligné suivi médicaments / nutrition -->
+                        <ul id="navigation" class="nav-list nav-list--patient" *ngIf="auth.hasRole([KEYCLOAK_ROLES.patient])">
+                            <li>
+                                <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">🏠 Accueil</a>
+                            </li>
+                            <li>
+                                <a href="#" class="nav-patient-rdv" (click)="openAppointmentForm(); $event.preventDefault()">📅 Prendre rendez-vous</a>
+                            </li>
+                            <li>
+                                <a routerLink="/home/reminders"
+                                   routerLinkActive="active nav-patient-med-active"
+                                   [routerLinkActiveOptions]="{ exact: true }">💊 Mes médicaments</a>
+                            </li>
+                            <li>
+                                <a routerLink="/home/nutrition" routerLinkActive="active">🥗 Ma nutrition</a>
+                            </li>
+                        </ul>
+                        <!-- Menu par défaut (non patient / secours) -->
+                        <ul id="navigation-fallback" class="nav-list" *ngIf="!auth.hasRole([KEYCLOAK_ROLES.patient])">
+                            <li><a routerLink="/home" routerLinkActive="active">🏠 Home</a></li>
+                            <li><a href="#" (click)="goToMedicalRecords(); $event.preventDefault()">📁 Medical records</a></li>
+                            <li><a routerLink="/home/history" routerLinkActive="active">📋 History</a></li>
+                            <li><a routerLink="/home/calendrier" routerLinkActive="active">📅 My calendar</a></li>
+                            <li><a href="#" (click)="openAppointmentForm(); $event.preventDefault()">📅 Book Appointment</a></li>
+                            <li><a routerLink="/home/reminders" routerLinkActive="active">⏰ Medication reminders</a></li>
+                            <li *ngIf="auth.isLoggedIn() && auth.hasRole([KEYCLOAK_ROLES.medecin])"><a routerLink="/back/dossiers" class="nav-back">👨‍⚕️ medecin</a></li>
+                        </ul>
+                    </nav>
+
+                    <div class="user-actions">
+                        <ng-container *ngIf="auth.isLoggedIn(); else notLoggedIn">
+                            <button type="button" class="icon-btn icon-btn-circle icon-btn-circle-notification notification-btn" (click)="toggleNotifications()" title="Notifications">
+                                <span class="icon-btn-inner icon-bell">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+                                </span>
+                                <ng-container *ngIf="auth.hasRole([KEYCLOAK_ROLES.medecin])">
+                                    <span class="badge" *ngIf="doctorAlertsCount > 0">{{ doctorAlertsCount > 99 ? '99+' : doctorAlertsCount }}</span>
+                                </ng-container>
+                                <ng-container *ngIf="!auth.hasRole([KEYCLOAK_ROLES.medecin])">
+                                    <ng-container *ngIf="(notificationService.unreadCount$ | async) as count">
+                                        <span class="badge" *ngIf="count > 0">{{ count }}</span>
+                                    </ng-container>
+                                </ng-container>
+                            </button>
+                            <button type="button" class="icon-btn icon-btn-circle user-avatar-btn" (click)="toggleProfile()" title="Profile">
+                                <span class="icon-btn-inner icon-profile">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                </span>
+                            </button>
+                        </ng-container>
+                        <ng-template #notLoggedIn>
+                            <a routerLink="/login" class="btn-login-nav">Login</a>
+                        </ng-template>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<router-outlet></router-outlet>
+
+<!-- ✅ Toast notification temps réel -->
+<div class="notification-toast" *ngIf="toastVisible">
+    <span class="toast-icon">🖼️</span>
+    <span class="toast-message">{{ toastMessage }}</span>
+</div>
+
+<!-- header-end -->
+
+<!-- Appointment Modal (Book Appointment) -->
+<div *ngIf="showAppointmentForm"
+     class="appointment-form-overlay"
+     (click)="closeAppointmentForm()">
+
+  <div class="appointment-form appointment-form-rdv" (click)="$event.stopPropagation()">
+
+    <button class="close-btn" (click)="closeAppointmentForm()">×</button>
+
+    <div class="form-header form-header-blue">
+      <h2>📅 Book Appointment</h2>
+      <p>Pediatric Nephrology Consultation</p>
+    </div>
+
+    <form #appointmentForm="ngForm"
+          (ngSubmit)="onSubmitAppointment(appointmentForm)">
+
+      <div class="form-group">
+        <label>👤 Patient</label>
+        <div class="patient-id-display">Patient #{{ appointmentPatientId }}</div>
+      </div>
+
+      <div class="form-group">
+        <label>AVAILABLE SLOTS</label>
+        <div *ngIf="loadingSlots" class="slots-loading">
+          <span class="slots-spinner"></span>
+          Loading slots...
+        </div>
+        <div *ngIf="!loadingSlots && availableSlots.length > 0" class="slots-list">
+          <button type="button" *ngFor="let slot of availableSlots" class="slot-chip"
+                  [class.selected]="selectedSlot === slot"
+                  (click)="selectSlot(slot)">
+            {{ slot }}
+          </button>
+        </div>
+        <div *ngIf="!loadingSlots && availableSlots.length === 0" class="slots-empty">
+          No slots available. Choose a date manually below.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>OR CHOOSE A DATE MANUALLY</label>
+        <div class="datetime-row">
+          <input type="datetime-local" name="manualDate" [(ngModel)]="appointmentManualDate"
+                 class="input-datetime" placeholder="dd/mm/yyyy --:--">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>STATUS <span class="required-asterisk">*</span></label>
+        <select name="status" [(ngModel)]="appointmentStatus" required class="input-select">
+          <option value="PENDING">Awaiting confirmation</option>
+          <option value="CONFIRMED">Confirmed</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="button"
+                class="btn-cancel"
+                (click)="closeAppointmentForm()">
+          Cancel
+        </button>
+
+        <button type="submit"
+                class="btn-submit btn-confirm-rdv"
+                [disabled]="!appointmentForm.valid || (!selectedSlot && !appointmentManualDate)">
+          📅 Confirm appointment
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+<!-- ══ MODAL LISTE ORDONNANCES (profil / Prescriptions) ══════════════ -->
+  <div *ngIf="showOrdonnancesModal" class="ord-list-overlay" (click)="closeOrdonnances()">
+    <div class="ord-list-modal" (click)="$event.stopPropagation()">
+
+      <div class="ord-list-header">
+        <div class="ord-list-header-inner">
+          <div class="ord-list-header-icon" aria-hidden="true">💊</div>
+          <div class="ord-list-header-text">
+            <h2 class="ord-list-title">Mes Ordonnances</h2>
+            <p class="ord-list-sub">
+              Patient<span *ngIf="patientId > 0"> #{{ patientId }}</span>{{ patientName ? ' — ' + patientName : '' }}
+            </p>
+          </div>
+        </div>
+        <button type="button" class="ord-list-close" (click)="closeOrdonnances()" aria-label="Fermer">✕</button>
+      </div>
+  
+      <div class="ord-list-body">
+        <div *ngIf="isPrescLoading" class="ord-list-loading">
+          <div class="ord-list-spinner"></div>
+          <p>Chargement des ordonnances…</p>
+        </div>
+  
+        <div *ngIf="prescPatientUnknown" class="ord-list-empty ord-list-patient-unknown">
+          <div class="ord-list-empty-icon">👤</div>
+          <h3>Patient non identifié</h3>
+          <p>Veuillez vous connecter pour afficher vos ordonnances.</p>
+        </div>
+
+        <div *ngIf="!isPrescLoading && !prescPatientUnknown && prescriptionsForCurrentPatient.length === 0" class="ord-list-empty">
+          <div class="ord-list-empty-icon">📋</div>
+          <h3>Aucune ordonnance</h3>
+          <p>Aucune prescription trouvée pour ce patient.</p>
+        </div>
+  
+        <ng-container *ngIf="!isPrescLoading && prescriptionsForCurrentPatient.length > 0">
+          <p class="ord-list-count">{{ prescriptionsForCurrentPatient.length }} ordonnance(s)</p>
+          <div class="ord-list-rows">
+            <div *ngFor="let presc of prescriptionsForCurrentPatient; let i = index"
+                 class="ord-list-row"
+                 (click)="selectOrdonnance(presc)">
+              <div class="ord-list-num">{{ i + 1 }}</div>
+              <div class="ord-list-info">
+                <div class="ord-list-date">{{ presc.prescriptionDate | date:'dd MMMM yyyy':'':'fr-FR' }}</div>
+                <div class="ord-list-tags">
+                  <span class="ord-list-tag purple">
+                    💊 {{ presc.prescriptionItems?.length ?? 0 }} médicament(s)
+                  </span>
+                  <span class="ord-list-tag yellow" *ngIf="prescNotes(presc) as n">
+                    📝 {{ n | slice:0:30 }}{{ n.length > 30 ? '…' : '' }}
+                  </span>
+                </div>
+              </div>
+              <span class="ord-list-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="2.5" width="18" height="18">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+  
+      <div class="ord-list-footer">KidneyCare · Portail patient</div>
+    </div>
+  </div>
+  
+  <!-- ══ MODAL DÉTAIL ORDONNANCE (uniquement si ordonnance du patient connecté) ══════════════ -->
+  <div *ngIf="showPrescriptionDetail && selectedPrescription && isPrescriptionForCurrentPatient(selectedPrescription)"
+       class="ord-overlay"
+       (click)="closePrescriptionDetail()">
+  
+    <div class="ord-modal" (click)="$event.stopPropagation()">
+  
+      <!-- Barre actions -->
+      <div class="ord-topbar no-print">
+        <button type="button" class="ord-back-btn" (click)="closePrescriptionDetail()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Retour
+        </button>
+        <div class="ord-topbar-actions">
+          <div class="doc-presc-actions">
+            <button type="button" class="btn-print-action" (click)="printPrescription(selectedPrescription)">
+              <span class="btn-icon">🖨️</span>
+              <span class="btn-label">Imprimer</span>
+            </button>
+            <button type="button" class="btn-download-action" (click)="downloadPrescriptionPDF(selectedPrescription)">
+              <span class="btn-icon">⬇️</span>
+              <span class="btn-label">Télécharger PDF</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="ord-close-btn" (click)="closePrescriptionDetail()">✕</button>
+  
+      <!-- Document -->
+      <div class="ord-doc" id="prescriptionPrintZone">
+  
+        <div class="ord-doc-header">
+          <div class="ord-clinic-info">
+            <div class="ord-clinic-logo">K</div>
+            <div>
+              <div class="ord-clinic-name">KidneyCare</div>
+              <div class="ord-clinic-sub">Centre de Néphrologie Pédiatrique</div>
+              <div class="ord-clinic-addr">200 Avenue de la Santé · Tunis · +216 70 000 000</div>
+            </div>
+          </div>
+          <div class="ord-doc-meta">
+            <div class="ord-doc-title">ORDONNANCE</div>
+            <div class="ord-doc-num">N° {{ selectedPrescription.id }}</div>
+            <div class="ord-doc-date">{{ selectedPrescription.prescriptionDate | date:'dd MMMM yyyy':'':'fr-FR' }}</div>
+          </div>
+        </div>
+  
+        <div class="ord-doc-rule"></div>
+  
+        <div class="ord-patient-row">
+          <div class="ord-patient-field">
+            <span class="ord-field-label">Patient</span>
+            <span class="ord-field-val">#{{ detailPrescriptionPatientId }}{{ patientName ? ' — ' + patientName : '' }}</span>
+          </div>
+          <div class="ord-patient-field">
+            <span class="ord-field-label">Date de prescription</span>
+            <span class="ord-field-val">{{ selectedPrescription.prescriptionDate | date:'dd/MM/yyyy':'':'fr-FR' }}</span>
+          </div>
+          <div class="ord-patient-field">
+            <span class="ord-field-label">Médicaments prescrits</span>
+            <span class="ord-field-val">{{ selectedPrescription.prescriptionItems?.length || 0 }}</span>
+          </div>
+        </div>
+  
+        <div class="ord-note" *ngIf="prescNotes(selectedPrescription) as clinNote">
+          <div class="ord-note-label">Note clinique</div>
+          <div class="ord-note-text">{{ clinNote }}</div>
+        </div>
+  
+        <div class="ord-rp-row">
+          <span class="ord-rp-symbol">Rp</span>
+          <div class="ord-rp-line"></div>
+        </div>
+  
+        <div class="ord-empty"
+             *ngIf="!selectedPrescription.prescriptionItems || selectedPrescription.prescriptionItems.length === 0">
+          Aucun médicament prescrit.
+        </div>
+  
+        <div class="ord-items"
+             *ngIf="selectedPrescription.prescriptionItems && selectedPrescription.prescriptionItems.length > 0">
+          <div *ngFor="let item of selectedPrescription.prescriptionItems; let i = index" class="ord-item">
+            <div class="ord-item-index">{{ i + 1 }}</div>
+            <div class="ord-item-body">
+              <div class="ord-item-top">
+                <span class="ord-item-name">{{ ordItemTitle(item, i) }}</span>
+                <div class="ord-item-badges">
+                  <span class="ord-badge ord-badge-priority" *ngIf="item.isPriority">★ Prioritaire</span>
+                  <span class="ord-badge ord-badge-immuno"   *ngIf="item.isImmunosuppressor">Immunosupp.</span>
+                </div>
+              </div>
+              <div class="ord-item-cat" *ngIf="ordItemCategory(item)">{{ ordItemCategory(item) }}</div>
+              <div class="ord-item-grid ord-item-grid--2">
+                <div class="ord-detail-cell">
+                  <span class="ord-detail-lbl">Fréquence</span>
+                  <span class="ord-detail-val">{{ ordItemFrequency(item) || '—' }}</span>
+                </div>
+                <div class="ord-detail-cell">
+                  <span class="ord-detail-lbl">Voie</span>
+                  <span class="ord-detail-val">{{ ordItemRoute(item) || '—' }}</span>
+                </div>
+                <div class="ord-detail-cell">
+                  <span class="ord-detail-lbl">Posologie</span>
+                  <span class="ord-detail-val">{{ ordItemPosology(item) || '—' }}</span>
+                </div>
+                <div class="ord-detail-cell">
+                  <span class="ord-detail-lbl">Durée</span>
+                  <span class="ord-detail-val">{{ ordItemDuration(item) || '—' }}</span>
+                </div>
+                <div class="ord-detail-cell">
+                  <span class="ord-detail-lbl">Début</span>
+                  <span class="ord-detail-val">{{ ordItemStart(item) ? (ordItemStart(item) | date:'dd/MM/yyyy':'':'fr-FR') : '—' }}</span>
+                </div>
+                <div class="ord-detail-cell">
+                  <span class="ord-detail-lbl">Fin</span>
+                  <span class="ord-detail-val">{{ ordItemEnd(item) ? (ordItemEnd(item) | date:'dd/MM/yyyy':'':'fr-FR') : '—' }}</span>
+                </div>
+              </div>
+              <div class="ord-special" *ngIf="item.specialInstructions">{{ item.specialInstructions }}</div>
+            </div>
+          </div>
+        </div>
+  
+        <div class="ord-doc-footer">
+          <div>
+            <div class="ord-sig-line"></div>
+            <div class="ord-sig-label">Signature &amp; Cachet du médecin</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="ord-footer-brand">KidneyCare · Portail patient</div>
+            <div class="ord-footer-gen">Généré le {{ today | date:'dd/MM/yyyy':'':'fr-FR' }}</div>
+            <div class="ord-footer-valid">Valable 3 mois à compter de la prescription</div>
+          </div>
+        </div>
+  
+      </div>
+    </div>
+  </div>
+
+<!-- Emergency Form Modal -->
+<div *ngIf="showEmergencyForm" class="form-overlay" (click)="closeEmergencyForm()">
+    <div class="form-popup emergency-popup" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="closeEmergencyForm()">×</button>
+        
+        <h2 style="color: #ff4757;">🚨 Emergency Contact</h2>
+        <p>Urgent Medical Assistance</p>
+
+        <form #emergencyForm="ngForm" (ngSubmit)="onSubmitEmergency(emergencyForm)">
+            
+            <div class="form-group">
+                <label>👶 Child's Name</label>
+                <input type="text" class="form-control" name="childName" ngModel placeholder="Child's full name" required>
+            </div>
+
+            <div class="form-group">
+                <label>📅 Date of Birth</label>
+                <input type="date" class="form-control" name="childDOB" ngModel required>
+            </div>
+
+            <div class="form-group">
+                <label>👤 Your Name</label>
+                <input type="text" class="form-control" name="parentName" ngModel placeholder="Parent/Guardian name" required>
+            </div>
+
+            <div class="form-group">
+                <label>📱 Contact Number</label>
+                <input type="tel" class="form-control" name="phone" ngModel placeholder="+216 XX XXX XXX" required>
+            </div>
+
+            <div class="form-group">
+                <label>📍 Current Location</label>
+                <input type="text" class="form-control" name="location" ngModel placeholder="Your current address" required>
+            </div>
+
+            <div class="form-group">
+                <label>🚑 Emergency Type</label>
+                <select class="form-control" name="emergencyType" ngModel required>
+                    <option value="">Select emergency type</option>
+                    <option value="severe-pain">Severe Pain</option>
+                    <option value="high-fever">High Fever</option>
+                    <option value="difficulty-breathing">Difficulty Breathing</option>
+                    <option value="blood-in-urine">Blood in Urine</option>
+                    <option value="severe-swelling">Severe Swelling</option>
+                    <option value="loss-consciousness">Loss of Consciousness</option>
+                    <option value="other">Other Emergency</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>⚠️ Describe the Emergency</label>
+                <textarea class="form-control" name="description" ngModel placeholder="Please describe the situation in detail..." rows="5" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>🩺 Current Symptoms</label>
+                <textarea class="form-control" name="symptoms" ngModel placeholder="List all current symptoms..." rows="3" required></textarea>
+            </div>
+
+            <div class="alert-box">
+                ⚠️ For life-threatening emergencies, call 190 immediately!
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" (click)="closeEmergencyForm()">Cancel</button>
+                <button type="submit" class="btn-submit emergency-btn" [disabled]="!emergencyForm.valid">
+                    🚨 Send Emergency Request
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- Medical Report Form Modal -->
+<div *ngIf="showMedicalReportForm" class="form-overlay" (click)="closeMedicalReportForm()">
+    <div class="form-popup" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="closeMedicalReportForm()">×</button>
+        <h2>📋 Medical Report</h2>
+        <p>Request or view medical reports</p>
+        <form #medicalReportForm="ngForm" (ngSubmit)="onSubmitMedicalReport(medicalReportForm)">
+            <div class="form-group">
+                <label>👶 Select Child</label>
+                <select class="form-control" name="childId" ngModel required>
+                    <option value="">Choose child</option>
+                    <option value="1">Child 1</option>
+                    <option value="2">Child 2</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>📅 Report Date</label>
+                <input type="date" class="form-control" name="reportDate" ngModel required>
+            </div>
+            <div class="form-group">
+                <label>📝 Report Type</label>
+                <select class="form-control" name="reportType" ngModel required>
+                    <option value="">Select type</option>
+                    <option value="consultation">Consultation Report</option>
+                    <option value="discharge">Discharge Summary</option>
+                    <option value="follow-up">Follow-up Report</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" (click)="closeMedicalReportForm()">Cancel</button>
+                <button type="submit" class="btn-submit" [disabled]="!medicalReportForm.valid">Request Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lab Result Form Modal -->
+<div *ngIf="showLabResultForm" class="form-overlay" (click)="closeLabResultForm()">
+    <div class="form-popup" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="closeLabResultForm()">×</button>
+        <h2>🔬 Lab Results</h2>
+        <p>View or request lab results</p>
+        <form #labResultForm="ngForm" (ngSubmit)="onSubmitLabResult(labResultForm)">
+            <div class="form-group">
+                <label>👶 Select Child</label>
+                <select class="form-control" name="childId" ngModel required>
+                    <option value="">Choose child</option>
+                    <option value="1">Child 1</option>
+                    <option value="2">Child 2</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>📅 Date Range</label>
+                <input type="date" class="form-control" name="dateFrom" ngModel>
+            </div>
+            <div class="form-group">
+                <label>🔬 Lab Type (Optional)</label>
+                <select class="form-control" name="labType" ngModel>
+                    <option value="">All results</option>
+                    <option value="blood">Blood Test</option>
+                    <option value="urine">Urine Analysis</option>
+                    <option value="kidney">Kidney Function</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" (click)="closeLabResultForm()">Cancel</button>
+                <button type="submit" class="btn-submit" [disabled]="!labResultForm.valid">View Lab Results</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Treatment Form Modal -->
+<div *ngIf="showTreatmentForm" class="form-overlay" (click)="closeTreatmentForm()">
+    <div class="form-popup" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="closeTreatmentForm()">×</button>
+        
+        <h2>💊 Treatment Information</h2>
+        <p>Access Treatment Plans & Prescriptions</p>
+
+        <form #treatmentForm="ngForm" (ngSubmit)="onSubmitTreatment(treatmentForm)">
+            
+            <div class="form-group">
+                <label>👶 Select Child</label>
+                <select class="form-control" name="childId" ngModel required>
+                    <option value="">Choose child</option>
+                    <option value="1">Child 1</option>
+                    <option value="2">Child 2</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>💊 Information Type</label>
+                <select class="form-control" name="infoType" ngModel required>
+                    <option value="">Select information type</option>
+                    <option value="current">Current Treatments</option>
+                    <option value="prescriptions">Active Prescriptions</option>
+                    <option value="history">Treatment History</option>
+                    <option value="protocols">Treatment Protocols</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>📅 Date Range (Optional)</label>
+                <input type="date" class="form-control" name="dateRange" ngModel>
+            </div>
+
+            <div class="form-group">
+                <label>📝 Specific Query</label>
+                <textarea class="form-control" name="query" ngModel placeholder="Any specific treatment information you need..." rows="3"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" (click)="closeTreatmentForm()">Cancel</button>
+                <button type="submit" class="btn-submit" [disabled]="!treatmentForm.valid">
+                    💊 View Treatment Info
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+<!-- header-end -->

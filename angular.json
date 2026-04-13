@@ -1,0 +1,138 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "npm",
+    "analytics": "33a76412-bb96-4012-9301-deeb683db48b"
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "mon-projet": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "standalone": false
+        },
+        "@schematics/angular:directive": {
+          "standalone": false
+        },
+        "@schematics/angular:pipe": {
+          "standalone": false
+        }
+      },
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "src/main.ts",
+            "tsConfig": "tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "/assets"
+              }
+            ],
+            "styles": [
+              "src/styles.css",
+              "src/assets/css/bootstrap.min.css",
+              "src/assets/css/animate.css",
+              "src/assets/css/flaticon.css",
+              "src/assets/css/font-awesome.min.css",
+              "src/assets/css/owl.carousel.min.css",
+              "src/assets/css/nice-select.css",
+              "src/assets/css/slicknav.css",
+              "src/assets/css/style.css",
+              "src/assets/css/theme-default.css",
+              "node_modules/owl.carousel/dist/assets/owl.carousel.min.css"
+            ],
+            "scripts": [
+              "src/polyfills-global.js",
+              "src/assets/js/vendor/jquery-1.12.4.min.js",
+              "src/assets/js/jquery.form.js",
+              "src/assets/js/jquery.ajaxchimp.min.js",
+              "src/assets/js/jquery.counterup.min.js",
+              "src/assets/js/waypoints.min.js",
+              "src/assets/js/jquery.scrollUp.min.js",
+              "src/assets/js/jquery.slicknav.min.js",
+              "src/assets/js/jquery.validate.min.js",
+              "src/assets/js/jquery.magnific-popup.min.js",
+              "src/assets/js/owl.carousel.min.js",
+              "src/assets/js/nice-select.min.js",
+              "src/assets/js/mail-script.js",
+              "src/assets/js/main.js",
+              "src/assets/js/plugins.js",
+              "src/assets/js/popper.min.js",
+              "src/assets/js/bootstrap.min.js",
+              "src/assets/js/ajax-form.js",
+              "src/assets/js/imagesloaded.pkgd.min.js",
+              "src/assets/js/isotope.pkgd.min.js",
+              "src/assets/js/gijgo.min.js",
+              "src/assets/js/wow.min.js",
+              "src/assets/js/contact.js",
+              "src/assets/js/scrollIt.js",
+              "node_modules/owl.carousel/dist/owl.carousel.min.js"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.production.ts"
+                }
+              ],
+              "optimization": {
+                "fonts": {
+                  "inline": false
+                }
+              },
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2MB",
+                  "maximumError": "5MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "80kB",
+                  "maximumError": "128kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "mon-projet:build:production"
+            },
+            "development": {
+              "buildTarget": "mon-projet:build:development",
+              "proxyConfig": "proxy.conf.json"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
+        }
+      }
+    }
+  }
+}

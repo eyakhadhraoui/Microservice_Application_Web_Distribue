@@ -1,0 +1,1170 @@
+<!--infection-vaccinaiton.html-->
+
+<div style="width:100%; min-height:100%; background:#f8fafc; box-sizing:border-box;">
+
+  <div *ngIf="showNotificationPanel"
+       (click)="toggleNotificationPanel()"
+       style="position:fixed; inset:0; z-index:8998;">
+  </div>
+
+  <!-- AUTO POPUP ON LOAD -->
+  <div *ngIf="totalNotificationCount > 0 && showNotifications"
+       style="position:fixed; top:20px; left:50%; transform:translateX(-50%);
+              z-index:9999; width:90%; max-width:520px;
+              background:white; border:1px solid #e2e8f0; border-radius:16px;
+              box-shadow:0 16px 48px rgba(0,0,0,0.15);
+              animation: notifDrop 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+              overflow:hidden;">
+    <div style="display:flex; justify-content:space-between; align-items:center;
+                padding:14px 18px; background:linear-gradient(135deg,#1f8dd6,#0ea5e9);">
+      <span style="font-weight:800; font-size:15px; color:white;">Vaccination Reminders</span>
+      <button (click)="dismissNotifications()"
+              style="background:rgba(255,255,255,0.2); border:none;
+                     width:28px; height:28px; border-radius:50%;
+                     color:white; font-size:16px; cursor:pointer;
+                     display:flex; align-items:center; justify-content:center;
+                     line-height:1; transition:background 0.2s;"
+              title="Dismiss">✕</button>
+    </div>
+    <div style="padding:12px 14px; max-height:340px; overflow-y:auto;">
+      <div *ngIf="vaccinationNotifications.length > 0">
+        <div style="font-size:11px; font-weight:800; text-transform:uppercase;
+                    letter-spacing:0.08em; color:#1f8dd6; margin-bottom:6px; padding-left:2px;">
+          Vaccination Dates
+        </div>
+        <div *ngFor="let note of vaccinationNotifications"
+             [style.background]="note.startsWith('🔴') ? '#fef2f2' : note.startsWith('💉') ? '#dbeafe' : '#eff6ff'"
+             [style.borderLeft]="note.startsWith('🔴') ? '4px solid #ef4444' : note.startsWith('💉') ? '4px solid #3b82f6' : '4px solid #3b82f6'"
+             [style.border]="note.startsWith('🔴') ? '1px solid #fca5a5' : note.startsWith('💉') ? '1px solid #93c5fd' : '1px solid #bfdbfe'"
+             [style.color]="note.startsWith('🔴') ? '#991b1b' : note.startsWith('💉') ? '#1d4ed8' : '#1e40af'"
+             style="padding:10px 14px; margin-bottom:6px; border-radius:10px; font-size:13px; line-height:1.5;"
+             [innerHTML]="note.split('|').slice(1).join('')">
+        </div>
+      </div>
+      <div *ngIf="boosterNotifications.length > 0"
+           [style.marginTop]="vaccinationNotifications.length > 0 ? '10px' : '0'">
+        <div style="font-size:11px; font-weight:800; text-transform:uppercase;
+                    letter-spacing:0.08em; color:#ea580c; margin-bottom:6px; padding-left:2px;">
+          Booster Dates
+        </div>
+        <div *ngFor="let note of boosterNotifications"
+             [style.background]="note.startsWith('🟠') ? '#fff7ed' : note.startsWith('💉') ? '#dbeafe' : '#fff7ed'"
+             [style.borderLeft]="note.startsWith('🟠') ? '4px solid #f97316' : note.startsWith('💉') ? '4px solid #3b82f6' : '4px solid #f97316'"
+             [style.border]="note.startsWith('🟠') ? '1px solid #fed7aa' : note.startsWith('💉') ? '1px solid #93c5fd' : '1px solid #fed7aa'"
+             [style.color]="note.startsWith('🟠') ? '#9a3412' : note.startsWith('💉') ? '#1d4ed8' : '#9a3412'"
+             style="padding:10px 14px; margin-bottom:6px; border-radius:10px; font-size:13px; line-height:1.5;"
+             [innerHTML]="note.split('|').slice(1).join('')">
+        </div>
+      </div>
+    </div>
+    <div style="padding:10px 18px; border-top:1px solid #f1f5f9;
+                display:flex; justify-content:space-between; align-items:center;
+                background:#f8fafc;">
+      <span style="font-size:12px; color:#94a3b8;">
+        {{ totalNotificationCount }} reminder{{ totalNotificationCount === 1 ? '' : 's' }}
+      </span>
+      <button (click)="dismissNotifications()"
+              style="font-size:12px; font-weight:700; color:#1f8dd6;
+                     background:none; border:none; cursor:pointer; padding:4px 0;">
+        Dismiss all →
+      </button>
+    </div>
+  </div>
+
+  <!-- BELL BUTTON -->
+  <div style="position:fixed; bottom:32px; right:32px; z-index:9000;">
+    <button (click)="toggleNotificationPanel()"
+            style="width:56px; height:56px; border-radius:50%; border:none;
+                   background:linear-gradient(135deg,#1f8dd6,#0ea5e9);
+                   color:white; font-size:24px; cursor:pointer;
+                   box-shadow:0 6px 24px rgba(31,141,214,0.45);
+                   display:flex; align-items:center; justify-content:center;
+                   transition: transform 0.2s ease, box-shadow 0.2s ease;
+                   position:relative;"
+            [style.transform]="showNotificationPanel ? 'scale(1.12)' : 'scale(1)'"
+            title="Vaccination Reminders">
+      🔔
+      <span *ngIf="totalNotificationCount > 0"
+            style="position:absolute; top:-4px; right:-4px;
+                   background:#ef4444; color:white;
+                   font-size:11px; font-weight:800;
+                   min-width:20px; height:20px; padding:0 5px;
+                   border-radius:99px; border:2px solid white;
+                   display:flex; align-items:center; justify-content:center;">
+        {{ totalNotificationCount }}
+      </span>
+    </button>
+
+    <div *ngIf="showNotificationPanel"
+         style="position:absolute; bottom:68px; right:0;
+                width:360px; max-height:480px; overflow-y:auto;
+                background:white; border-radius:16px;
+                box-shadow:0 16px 48px rgba(0,0,0,0.18);
+                border:1px solid #e2e8f0;
+                animation: fadeSlideDown 0.2s ease both;">
+      <div style="padding:16px 18px 12px; border-bottom:1px solid #f1f5f9;
+                  display:flex; justify-content:space-between; align-items:center;
+                  position:sticky; top:0; background:white; z-index:1;
+                  border-radius:16px 16px 0 0;">
+        <span style="font-size:15px; font-weight:800; color:#1e293b;">Reminders</span>
+        <span style="font-size:12px; color:#94a3b8; font-weight:600;">
+          {{ totalNotificationCount }} alert{{ totalNotificationCount === 1 ? '' : 's' }}
+        </span>
+      </div>
+      <div *ngIf="totalNotificationCount === 0"
+           style="padding:32px 20px; text-align:center; color:#94a3b8;">
+        <div style="font-size:36px; margin-bottom:10px;">✅</div>
+        <div style="font-weight:700; font-size:14px;">All clear!</div>
+        <div style="font-size:12px; margin-top:4px;">No upcoming vaccination reminders.</div>
+      </div>
+      <div *ngIf="vaccinationNotifications.length > 0">
+        <div style="padding:10px 18px 6px;
+                    font-size:11px; font-weight:800; text-transform:uppercase;
+                    letter-spacing:0.08em; color:#1f8dd6;">
+          Vaccination Dates
+        </div>
+        <div *ngFor="let note of vaccinationNotifications"
+             style="margin:0 12px 8px; padding:10px 14px;
+                    background:#eff6ff; border:1px solid #bfdbfe;
+                    border-left:4px solid #3b82f6;
+                    border-radius:10px; color:#1e40af;
+                    font-size:13px; line-height:1.5;"
+             [innerHTML]="note.split('|').slice(1).join('')">
+        </div>
+      </div>
+      <div *ngIf="boosterNotifications.length > 0">
+        <div style="padding:10px 18px 6px;
+                    font-size:11px; font-weight:800; text-transform:uppercase;
+                    letter-spacing:0.08em; color:#ea580c;">
+          Booster Dates
+        </div>
+        <div *ngFor="let note of boosterNotifications"
+             style="margin:0 12px 8px; padding:10px 14px;
+                    background:#fff7ed; border:1px solid #fed7aa;
+                    border-left:4px solid #f97316;
+                    border-radius:10px; color:#9a3412;
+                    font-size:13px; line-height:1.5;"
+             [innerHTML]="note.split('|').slice(1).join('')">
+        </div>
+      </div>
+      <div style="height:8px;"></div>
+    </div>
+  </div>
+
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div *ngIf="deleteConfirm.show"
+       style="position:fixed; inset:0; background:rgba(0,0,0,0.45);
+              z-index:9999; display:flex; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:18px; padding:32px 36px;
+                max-width:380px; width:90%; text-align:center;
+                box-shadow:0 20px 60px rgba(0,0,0,0.25);
+                animation: fadeSlideDown 0.2s ease both;">
+      <div style="font-size:48px; margin-bottom:12px;">🗑️</div>
+      <h3 style="margin:0 0 8px; color:#1e293b; font-size:18px;">
+        Delete {{ deleteConfirm.type === 'infection' ? 'Infection' : 'Vaccination' }}?
+      </h3>
+      <p style="margin:0 0 24px; color:#64748b; font-size:14px; line-height:1.6;">
+        Are you sure you want to delete
+        <strong style="color:#1e293b;">{{ deleteConfirm.name }}</strong>?
+        <span *ngIf="deleteConfirm.type === 'infection'">
+          <br><span style="color:#ef4444; font-size:13px;">
+            All linked vaccinations will also be deleted.
+          </span>
+        </span>
+        <br><span style="font-size:13px;">This action cannot be undone.</span>
+      </p>
+      <div style="display:flex; gap:12px; justify-content:center;">
+        <button (click)="cancelDelete()"
+                style="padding:10px 24px; border-radius:10px; border:2px solid #e2e8f0;
+                       background:white; color:#64748b; font-family:'Nunito';
+                       font-size:14px; font-weight:700; cursor:pointer;">
+          Cancel
+        </button>
+        <button (click)="confirmDelete()"
+                style="padding:10px 24px; border-radius:10px; border:none;
+                       background:linear-gradient(135deg,#ef4444,#dc2626);
+                       color:white; font-family:'Nunito';
+                       font-size:14px; font-weight:700; cursor:pointer;
+                       box-shadow:0 4px 14px rgba(239,68,68,0.4);">
+          Yes, Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATE MODAL -->
+  <div *ngIf="showPatientModal"
+       style="position:fixed; inset:0; background:rgba(0,0,0,0.5);
+              z-index:9999; display:flex; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:20px; padding:32px 36px;
+                max-width:480px; width:92%;
+                box-shadow:0 24px 64px rgba(0,0,0,0.22);
+                animation: fadeSlideDown 0.25s ease both;">
+
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+        <div style="width:42px; height:42px; border-radius:12px;
+                    background:linear-gradient(135deg,#1f8dd6,#0ea5e9);
+                    display:flex; align-items:center; justify-content:center; font-size:22px;">📄</div>
+        <div>
+          <h3 style="margin:0; color:#0d3b6e; font-size:17px;">Export Vaccination Certificate</h3>
+          <p style="margin:0; color:#64748b; font-size:12px;">
+            Signed PDF — includes all vaccinations and infections.
+          </p>
+        </div>
+      </div>
+
+     <!-- REPLACE the patient name label + input block in the certificate modal -->
+<label style="font-size:13px; color:#6b7280; font-weight:700; display:block; margin-bottom:4px;">
+  Patient <span style="color:#ef4444;">*</span>
+</label>
+<select [(ngModel)]="patientInfo.name"
+        class="input"
+        [style.borderColor]="patientTouched['name'] && patientNameError ? '#ef4444' : ''"
+        (blur)="touchPatient('name')"
+        (ngModelChange)="touchPatient('name')">
+  <option value="">— Select Patient —</option>
+  <option *ngFor="let p of patients" [value]="p.username">{{ p.displayName }}</option>
+</select>
+<p *ngIf="patientTouched['name'] && patientNameError"
+   style="color:#ef4444; font-size:12px; margin:-6px 0 8px; font-weight:600;">
+  {{ patientNameError }}
+</p>
+
+      <label style="font-size:13px; color:#6b7280; font-weight:700; display:block; margin-bottom:4px; margin-top:8px;">
+        Date of Birth
+      </label>
+      <input type="date" [(ngModel)]="patientInfo.dob" class="input" [max]="todayIso"/>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;">
+        <div>
+          <label style="font-size:13px; color:#6b7280; font-weight:700; display:block; margin-bottom:4px;">Attending Doctor</label>
+          <input [(ngModel)]="patientInfo.doctor" placeholder="e.g. Dr. Mansour" class="input"/>
+        </div>
+      </div>
+
+      <label style="font-size:13px; color:#6b7280; font-weight:700; display:block; margin-bottom:4px; margin-top:8px;">
+        Hospital / Clinic
+      </label>
+      <input [(ngModel)]="patientInfo.hospital" placeholder="e.g. Charles Nicolle Hospital" class="input"/>
+
+      <div style="background:#f0f8ff; border:1px solid #b3d9f5; border-radius:10px;
+                  padding:10px 14px; margin:14px 0 20px; font-size:12px; color:#1565a8;">
+        Certificate includes an <strong>HMAC-SHA256 signature</strong> for authenticity.
+        All <strong>{{ vaccinations.length }}</strong> vaccination(s) and
+        <strong>{{ infections.length }}</strong> infection(s) will be included.
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button class="rmed-btn-reset" (click)="closePatientModal()">Cancel</button>
+        <button class="rmed-btn-all"
+                (click)="exportCertificate()"
+                [disabled]="certLoading"
+                [style.opacity]="certLoading ? '0.7' : '1'"
+                style="background:linear-gradient(135deg,#0d3b6e,#1f8dd6); min-width:170px;">
+          {{ certLoading ? 'Generating...' : 'Generate & Download' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECURRENCE PREDICTION MODAL -->
+  <div *ngIf="showRecurrenceAlert"
+       (click)="showRecurrenceAlert = false"
+       style="position:fixed; inset:0; background:rgba(0,0,0,0.5);
+              z-index:9999; display:flex; align-items:flex-start;
+              justify-content:center; padding-top:60px; overflow-y:auto;">
+
+    <div (click)="$event.stopPropagation()"
+         style="background:white; border-radius:20px; width:92%; max-width:580px;
+                max-height:82vh; overflow-y:auto;
+                box-shadow:0 24px 64px rgba(0,0,0,0.22);
+                animation: fadeSlideDown 0.25s ease both; margin-bottom:40px;">
+
+      <div style="display:flex; align-items:center; justify-content:space-between;
+                  padding:18px 22px 14px;
+                  background:linear-gradient(135deg,#dc2626,#ef4444);
+                  border-radius:20px 20px 0 0; position:sticky; top:0; z-index:1;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div>
+            <div style="font-weight:900; font-size:16px; color:white;">Recurrence Predictions</div>
+            <div style="font-size:12px; color:rgba(255,255,255,0.8);">
+              Risk forecast based on your infection history
+            </div>
+          </div>
+        </div>
+        <button (click)="showRecurrenceAlert = false"
+                style="background:rgba(255,255,255,0.2); border:none;
+                       width:30px; height:30px; border-radius:50%;
+                       color:white; font-size:16px; cursor:pointer;
+                       display:flex; align-items:center; justify-content:center;">✕</button>
+      </div>
+
+      <div *ngIf="recurringTypes.length === 0"
+           style="padding:40px 24px; text-align:center;">
+        <div style="font-size:44px; margin-bottom:12px;">✅</div>
+        <div style="font-weight:800; color:#166534; font-size:15px;">No recurring infections</div>
+        <div style="color:#6b7280; font-size:13px; margin-top:6px;">
+          All recorded infections are unique — nothing to predict.
+        </div>
+      </div>
+
+      <div *ngIf="recurringTypes.length > 0" style="padding:16px 18px 20px;">
+        <div *ngFor="let rec of allPredictions; let last = last"
+             [style.marginBottom]="last ? '0' : '16px'"
+             style="border:1.5px solid #e2e8f0; border-radius:16px; overflow:hidden;">
+
+          <div style="display:flex; align-items:center; justify-content:space-between;
+                      flex-wrap:wrap; gap:8px;
+                      padding:14px 16px 10px; background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div [style.background]="rec.prediction.color"
+                   style="width:10px; height:10px; border-radius:50%; flex-shrink:0;"></div>
+              <span style="font-size:15px; font-weight:900; color:#1e293b;">{{ rec.type }}</span>
+              <span style="font-size:11px; font-weight:700; color:#6b7280;">
+                · {{ getPatientDisplayLabel(rec.patient) }} · {{ rec.count }} episodes
+              </span>
+            </div>
+            <div [style.background]="rec.prediction.color"
+                 style="color:white; font-size:13px; font-weight:900;
+                        padding:5px 14px; border-radius:99px;">
+              {{ rec.prediction.chance }}% {{ rec.prediction.label }} Risk
+            </div>
+          </div>
+
+          <div style="padding:14px 16px 16px;">
+            <div style="margin-bottom:14px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-size:12px; font-weight:700; color:#6b7280;">Recurrence Probability</span>
+                <span style="font-size:13px; font-weight:900;"
+                      [style.color]="rec.prediction.color">{{ rec.prediction.chance }}%</span>
+              </div>
+              <div style="background:#e2e8f0; border-radius:99px; height:10px; overflow:hidden;">
+                <div [style.width]="rec.prediction.chance + '%'"
+                     [style.background]="rec.prediction.color"
+                     style="height:100%; border-radius:99px;
+                            transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);"></div>
+              </div>
+            </div>
+
+            <div [style.borderColor]="rec.prediction.color"
+                 style="border:1.5px solid; border-radius:12px;
+                        padding:12px 14px; margin-bottom:14px;"
+                 [style.background]="rec.prediction.chance >= 70 ? '#fef2f2'
+                                   : rec.prediction.chance >= 45 ? '#fff7ed' : '#fefce8'">
+              <div style="font-size:11px; font-weight:800; text-transform:uppercase;
+                          letter-spacing:0.08em; margin-bottom:6px;"
+                   [style.color]="rec.prediction.color">
+                Predicted Next Occurrence Window
+              </div>
+              <div style="font-size:16px; font-weight:900;"
+                   [style.color]="rec.prediction.color">
+                {{ rec.prediction.earliest }} — {{ rec.prediction.latest }}
+              </div>
+              <div style="font-size:12px; color:#6b7280; margin-top:4px; font-weight:600;">
+                Based on the avg interval between past episodes
+              </div>
+            </div>
+
+            <div style="background:#f8fafc; border-radius:12px; padding:12px 14px;">
+              <div style="font-size:11px; font-weight:800; text-transform:uppercase;
+                          letter-spacing:0.08em; color:#64748b; margin-bottom:10px;">
+                Reasoning
+              </div>
+              <div *ngFor="let reason of rec.prediction.reasons; let i = index"
+                   style="display:flex; gap:10px; align-items:flex-start; margin-bottom:8px;">
+                <div style="background:#e2e8f0; color:#64748b; font-size:10px; font-weight:800;
+                            min-width:20px; height:20px; border-radius:50%;
+                            display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;">
+                  {{ i + 1 }}
+                </div>
+                <span style="font-size:12px; font-weight:600; color:#374151; line-height:1.5;">
+                  {{ reason }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:12px 20px; border-top:1px solid #f1f5f9;
+                  background:#f8fafc; border-radius:0 0 20px 20px;
+                  display:flex; justify-content:space-between; align-items:center;
+                  position:sticky; bottom:0;">
+        <span style="font-size:11px; color:#94a3b8; font-weight:600;">
+          Predictions are estimates only — not a medical diagnosis.
+        </span>
+        <button (click)="showRecurrenceAlert = false"
+                style="font-size:12px; font-weight:800; color:#dc2626;
+                       background:none; border:none; cursor:pointer; padding:4px 0;">
+          Close →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+<div style="padding:28px 32px; width:100%; box-sizing:border-box;">
+
+    <!-- INFECTIONS SECTION HEADER -->
+    <div style="display:flex; justify-content:space-between; align-items:center;
+            flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+  <h2 style="margin:0; font-size:20px; color:#1e293b;">Infections</h2>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="rmed-btn-all" (click)="openAddForm()">➕Add Infection</button>
+
+        <button class="rmed-btn-all"
+                (click)="showRecurrenceAlert = true"
+                [style.background]="recurringTypes.length > 0
+                  ? 'linear-gradient(135deg,#dc2626,#ef4444)'
+                  : 'linear-gradient(135deg,#64748b,#94a3b8)'"
+                style="position:relative;">
+          🔁Recurrences
+          <span *ngIf="recurringTypes.length > 0"
+                style="position:absolute; top:-6px; right:-6px;
+                       background:white; color:#dc2626;
+                       font-size:11px; font-weight:900;
+                       min-width:20px; height:20px; padding:0 5px;
+                       border-radius:99px; border:2px solid #ef4444;
+                       display:flex; align-items:center; justify-content:center;">
+            {{ recurringTypes.length }}
+          </span>
+        </button>
+
+        <button class="rmed-btn-all"
+                style="background:linear-gradient(135deg,#0d3b6e,#1f8dd6);"
+                (click)="openPatientModal()">
+        📄 Export Certificate
+        </button>
+
+        <button class="rmed-btn-all"
+                [style.opacity]="showVaccinationSection ? '1' : '0.75'"
+                (click)="toggleVaccinationSection()">
+          💉{{ showVaccinationSection ? 'Hide Vaccinations' : 'Manage Vaccinations' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- RECURRENCE DETECTION PANEL -->
+    <div *ngIf="showRecurrencePanel"
+         style="margin-bottom:24px; animation: fadeSlideDown 0.25s ease both;">
+
+      <div *ngIf="recurringTypes.length === 0"
+           style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:16px;
+                  padding:24px; text-align:center;">
+        <div style="font-size:40px; margin-bottom:8px;">✅</div>
+        <div style="font-weight:800; color:#166534; font-size:15px;">No recurring infections detected</div>
+        <div style="color:#4ade80; font-size:13px; margin-top:4px;">
+          Every recorded infection type is unique.
+        </div>
+      </div>
+
+      <div *ngIf="recurringTypes.length > 0">
+        <div style="background:linear-gradient(135deg,#fef2f2,#fff7ed);
+                    border:1.5px solid #fca5a5; border-radius:16px;
+                    padding:16px 20px; margin-bottom:16px;
+                    display:flex; align-items:center; gap:14px;">
+          <div style="font-size:32px; flex-shrink:0;">⚠️</div>
+          <div>
+            <div style="font-weight:800; color:#991b1b; font-size:15px;">
+              {{ recurringTypes.length }} recurring infection type{{ recurringTypes.length === 1 ? '' : 's' }} detected
+            </div>
+            <div style="color:#b45309; font-size:13px; margin-top:2px;">
+              Recurring infections may indicate an underlying issue. Please consult your nephrologist.
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div *ngFor="let rec of recurringTypes"
+               [style.background]="getRecurrenceColour(rec.count).bg"
+               [style.borderColor]="getRecurrenceColour(rec.count).border"
+               style="border:1.5px solid; border-radius:16px; padding:18px 20px;">
+
+            <div style="display:flex; align-items:center; justify-content:space-between;
+                        flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div [style.background]="getRecurrenceColour(rec.count).dot"
+                     style="width:12px; height:12px; border-radius:50%; flex-shrink:0;
+                            box-shadow:0 0 0 3px rgba(0,0,0,0.1);"></div>
+                <span style="font-size:16px; font-weight:900;"
+                      [style.color]="getRecurrenceColour(rec.count).text">
+                  {{ rec.type }}
+                  <span style="font-size:12px; font-weight:700; opacity:0.75; margin-left:6px;">
+                    · {{ getPatientDisplayLabel(rec.patient) }}
+                  </span>
+                </span>
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <span [style.background]="getRecurrenceColour(rec.count).dot"
+                      style="color:white; font-size:11px; font-weight:800;
+                             padding:4px 12px; border-radius:99px;">
+                  {{ rec.count }}x recurrence
+                </span>
+                <span style="background:#e2e8f0; color:#475569; font-size:11px; font-weight:700;
+                             padding:4px 12px; border-radius:99px;">
+                  Over {{ getRecurrenceSpanDays(rec.infections) }} days
+                </span>
+                <!-- FIXED: was referencing `inf` out of scope, now uses rec.infections -->
+                <span style="background:#f1f5f9; color:#475569; font-size:10px; font-weight:700;
+                             padding:3px 10px; border-radius:99px;">
+                  ~{{ getAvgDaysBetween(rec.infections) }}d between episodes
+                </span>
+              </div>
+            </div>
+
+            <div style="position:relative; padding-left:20px;">
+              <div [style.background]="getRecurrenceColour(rec.count).border"
+                   style="position:absolute; left:5px; top:6px; bottom:6px; width:2px;
+                          border-radius:2px; opacity:0.4;"></div>
+
+              <div *ngFor="let inf of rec.infections; let i = index; let last = last"
+                   style="display:flex; align-items:flex-start; gap:12px;"
+                   [style.marginBottom]="last ? '0' : '10px'">
+
+                <div [style.background]="getRecurrenceColour(rec.count).dot"
+                     style="width:12px; height:12px; border-radius:50%; flex-shrink:0;
+                            margin-top:3px; position:relative; left:-16px; margin-right:-4px;
+                            box-shadow:0 0 0 3px white;"></div>
+
+                <div style="flex:1; background:white; border-radius:10px;
+                            padding:10px 14px; border:1px solid rgba(0,0,0,0.06);">
+                  <div style="display:flex; justify-content:space-between; align-items:center;
+                              flex-wrap:wrap; gap:6px;">
+                    <span style="font-size:12px; font-weight:800; color:#374151;">
+                      Episode {{ i + 1 }}
+                      <span *ngIf="i === 0"
+                            style="background:#dbeafe; color:#1d4ed8;
+                                   font-size:10px; padding:2px 8px; border-radius:99px; margin-left:4px;">
+                        First
+                      </span>
+                      <span *ngIf="i === rec.infections.length - 1 && rec.infections.length > 1"
+                            style="background:#fee2e2; color:#991b1b;
+                                   font-size:10px; padding:2px 8px; border-radius:99px; margin-left:4px;">
+                        Latest
+                      </span>
+                    </span>
+                    <span style="font-size:11px; color:#6b7280; font-weight:600;">
+                      {{ inf.detectionDate | date:'mediumDate' }}
+                    </span>
+                  </div>
+                  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+                    <span style="font-size:11px; font-weight:700;"
+                          [style.color]="getSeverityMeter(inf.severity).color">
+                      ● {{ inf.severity }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px; padding:10px 14px; border-radius:10px;
+                        background:rgba(255,255,255,0.6); font-size:12px; font-weight:600;"
+                 [style.color]="getRecurrenceColour(rec.count).text">
+              <span *ngIf="getRecurrenceLevel(rec.count) === 'warning'">
+                This infection has recurred {{ rec.count }} times. Monitor closely and discuss with your doctor.
+              </span>
+              <span *ngIf="getRecurrenceLevel(rec.count) === 'danger'">
+                {{ rec.count }} occurrences detected. This pattern may indicate a chronic condition — nephrologist review recommended.
+              </span>
+              <span *ngIf="getRecurrenceLevel(rec.count) === 'critical'">
+                {{ rec.count }} occurrences — high recurrence rate. Immediate specialist consultation strongly advised.
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INFECTION ADD/EDIT FORM -->
+    <div *ngIf="showForm" class="rmed-med-card" style="padding:20px; margin-bottom:20px;">
+      <h3 style="margin-top:0">{{ editMode ? 'Edit Infection' : 'Add Infection' }}</h3>
+
+      <label style="font-size:13px; color:#6b7280; display:block; margin-bottom:4px;">
+        Infection Type <span style="color:#ef4444;">*</span>
+      </label>
+      <div style="position:relative;">
+        <input [(ngModel)]="newInfection.type"
+               placeholder="e.g. UTI — start typing to search"
+               class="input"
+               autocomplete="off"
+               [style.borderColor]="infTouched['type'] && infTypeError ? '#ef4444' : ''"
+               (focus)="showTypeSuggestions = true"
+               (blur)="onTypeBlur()"
+               (ngModelChange)="onTypeInput()"/>
+        <div *ngIf="showTypeSuggestions && filteredTypeSuggestions.length > 0"
+             style="position:absolute; top:100%; left:0; right:0; z-index:9999;
+                    background:white; border:1.5px solid #b3d9f5; border-radius:12px;
+                    box-shadow:0 8px 24px rgba(0,0,0,0.12); max-height:260px;
+                    overflow-y:auto; margin-top:-6px;">
+          <div *ngFor="let s of filteredTypeSuggestions"
+               (mousedown)="selectSuggestion(s)"
+               style="padding:10px 14px; cursor:pointer; font-size:13px;
+                      font-weight:600; color:#1e293b; border-bottom:1px solid #f1f5f9;
+                      transition:background 0.15s;"
+               onmouseover="this.style.background='#eff6ff'"
+               onmouseout="this.style.background='white'">
+            {{ s }}
+          </div>
+          <div *ngIf="newInfection.type.trim() && !infectionSuggestions.includes(newInfection.type.trim())"
+               style="padding:10px 14px; font-size:12px; color:#94a3b8; font-style:italic;
+                      border-top:1px solid #f1f5f9; background:#f8fafc;">
+            Using custom name: "{{ newInfection.type.trim() }}"
+          </div>
+        </div>
+      </div>
+      <p *ngIf="infTouched['type'] && infTypeError"
+         style="color:#ef4444; font-size:12px; margin:-6px 0 8px; font-weight:600;">
+        {{ infTypeError }}
+      </p>
+
+      <label style="font-size:13px; color:#6b7280; display:block; margin-bottom:4px; margin-top:4px;">
+        Severity <span style="color:#ef4444;">*</span>
+      </label>
+      <select [(ngModel)]="newInfection.severity"
+              class="input"
+              [style.borderColor]="infTouched['severity'] && infSeverityError ? '#ef4444' : ''"
+              (blur)="touchInfField('severity')"
+              (ngModelChange)="touchInfField('severity')">
+        <option value="">— Select Severity —</option>
+        <option *ngFor="let s of severityLevels" [value]="s">{{ s }}</option>
+      </select>
+      <p *ngIf="infTouched['severity'] && infSeverityError"
+         style="color:#ef4444; font-size:12px; margin:-6px 0 8px; font-weight:600;">
+        {{ infSeverityError }}
+      </p>
+
+      <label style="font-size:13px; color:#6b7280; display:block; margin-bottom:4px; margin-top:4px;">
+        Detection Date <span style="color:#ef4444;">*</span>
+      </label>
+      <input type="date"
+             [(ngModel)]="newInfection.detectionDate"
+             class="input"
+             [max]="todayIso"
+             [style.borderColor]="infTouched['detectionDate'] && infDateError ? '#ef4444' : ''"
+             (blur)="touchInfField('detectionDate')"
+             (ngModelChange)="touchInfField('detectionDate')"/>
+      <p *ngIf="infTouched['detectionDate'] && infDateError"
+         style="color:#ef4444; font-size:12px; margin:-6px 0 8px; font-weight:600;">
+        {{ infDateError }}
+      </p>
+
+      <label style="font-size:13px; color:#6b7280; display:block; margin-bottom:4px; margin-top:4px;">
+        Patient <span style="color:#ef4444;">*</span>
+      </label>
+      <select [(ngModel)]="newInfection.patientName"
+              class="input"
+              [style.borderColor]="infTouched['patientName'] && infPatientError ? '#ef4444' : ''"
+              (blur)="touchInfField('patientName')"
+              (ngModelChange)="touchInfField('patientName')">
+        <option value="">— Select Patient —</option>
+        <option *ngFor="let p of patients" [value]="p.username">{{ p.displayName }}</option>
+      </select>
+      <p *ngIf="infTouched['patientName'] && infPatientError"
+         style="color:#ef4444; font-size:12px; margin:-6px 0 8px; font-weight:600;">
+        {{ infPatientError }}
+      </p>
+
+      <div *ngIf="infDuplicateError && newInfection.type && newInfection.detectionDate"
+           style="background:#fef2f2; border:1px solid #fca5a5; border-left:4px solid #ef4444;
+                  border-radius:10px; padding:10px 14px; margin-bottom:10px;
+                  font-size:13px; color:#991b1b; font-weight:600;">
+        {{ infDuplicateError }}
+      </div>
+
+      <div style="margin-top:16px; display:flex; gap:10px; align-items:center;">
+        <button class="rmed-btn-all"
+                (click)="saveInfection()"
+                [style.opacity]="infFormValid ? '1' : '0.5'">
+          {{ editMode ? 'Update' : 'Add Infection' }}
+        </button>
+        <button class="rmed-btn-reset" (click)="closeForm()">Cancel</button>
+        <span *ngIf="!infFormValid && (infTouched['type'] || infTouched['severity'] || infTouched['detectionDate'])"
+              style="font-size:12px; color:#ef4444; font-weight:600;">
+          Please fix the errors above before saving.
+        </span>
+      </div>
+    </div>
+
+    <!-- INFECTION FILTERS -->
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;
+                background:#f8fafc; border:1px solid #e2e8f0;
+                border-radius:10px; padding:12px 16px; align-items:center;">
+      <input [(ngModel)]="infectionSearch" placeholder="Search infection type"
+             class="input" style="margin:0; flex:1; min-width:180px;"/>
+      <select [(ngModel)]="infectionSeverity" class="input" style="margin:0; width:170px;">
+        <option value="">All Severities</option>
+        <option *ngFor="let s of severityLevels" [value]="s">{{ s }}</option>
+      </select>
+      <select [(ngModel)]="infectionPatientFilter" class="input" style="margin:0; width:150px;">
+        <option value="">All Patients</option>
+        <option *ngFor="let p of patients" [value]="p.username">{{ p.displayName }}</option>
+      </select>
+      <input type="date" [(ngModel)]="infectionDateSearch"
+             class="input" style="margin:0; width:160px;" title="Filter by detection date"/>
+      <span style="font-size:13px; color:#64748b; white-space:nowrap;">Sort by:</span>
+      <button (click)="toggleInfectionSort('type')" class="rmed-btn-reset" style="padding:6px 12px; font-size:13px;">
+        Type {{ infectionSortBy === 'type' ? (infectionSortDir === 'asc' ? '▲' : '▼') : '' }}
+      </button>
+      <button (click)="toggleInfectionSort('detectionDate')" class="rmed-btn-reset" style="padding:6px 12px; font-size:13px;">
+        Date {{ infectionSortBy === 'detectionDate' ? (infectionSortDir === 'asc' ? '▲' : '▼') : '' }}
+      </button>
+      <button (click)="toggleInfectionSort('severity')" class="rmed-btn-reset" style="padding:6px 12px; font-size:13px;">
+        Severity {{ infectionSortBy === 'severity' ? (infectionSortDir === 'asc' ? '▲' : '▼') : '' }}
+      </button>
+      <button (click)="clearInfectionFilters()" class="rmed-btn-reset"
+              style="padding:6px 12px; font-size:13px; color:#ef4444;">Clear</button>
+    </div>
+
+    <!-- INFECTIONS GRID -->
+    <div class="rmed-grid" style="margin-bottom:40px;">
+      <div *ngFor="let inf of filteredInfections" class="rmed-med-card">
+
+        <div *ngIf="getRecurrenceCount(inf) > 1"
+             style="padding:8px 14px 0; display:flex; gap:6px; flex-wrap:wrap;">
+          <span [style.background]="getRecurrenceColour(getRecurrenceCount(inf)).dot"
+                style="color:white; font-size:10px; font-weight:800;
+                       padding:3px 10px; border-radius:99px; display:inline-flex; align-items:center; gap:4px;">
+            RECURRENT · {{ getRecurrenceCount(inf) }}x
+          </span>
+          <span style="background:#f1f5f9; color:#475569; font-size:10px; font-weight:700;
+                       padding:3px 10px; border-radius:99px;">
+            ~{{ getAvgDaysBetween(recurrenceMap[(inf.patientName || '').trim().toLowerCase() + '::' + inf.type.trim().toLowerCase()]) }}d between episodes
+          </span>
+        </div>
+
+        <div class="rmed-card-header">
+          <div class="rmed-card-title-block">
+            <h3 class="rmed-med-name">{{ inf.type }}</h3>
+            <span class="rmed-cat-tag">{{ inf.severity }}</span>
+          </div>
+        </div>
+        <div style="margin:10px 0 6px; padding:0 18px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-size:11px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">Severity</span>
+            <span style="font-size:11px; font-weight:600;" [style.color]="getSeverityMeter(inf.severity).color">
+              {{ inf.severity || '—' }}
+            </span>
+          </div>
+          <div style="background:#e2e8f0; border-radius:99px; height:8px; overflow:hidden;">
+            <div [style.width]="getSeverityMeter(inf.severity).width"
+                 [style.background]="getSeverityMeter(inf.severity).color"
+                 style="height:100%; border-radius:99px;
+                        transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1), background 0.4s ease;">
+            </div>
+          </div>
+        </div>
+        <div class="rmed-ingredient">
+          <span class="rmed-ing-lbl">Patient</span>
+          <span class="rmed-ing-val">
+            <span style="background:#e0e7ff; color:#3730a3; font-size:11px; font-weight:800;
+                         padding:2px 10px; border-radius:99px;">
+              {{ getPatientDisplayLabel(inf.patientName) }}
+            </span>
+          </span>
+        </div>
+        <div class="rmed-dosage-row">
+          <span class="rmed-dosage-pill">Detected: {{ inf.detectionDate | date }}</span>
+        </div>
+        <div class="rmed-card-footer" style="display:flex; gap:8px;">
+          <button class="rmed-btn-reset" (click)="editInfection(inf)">Edit</button>
+          <button class="rmed-btn-reset"
+                  style="color:#ef4444; border-color:#fca5a5;"
+                  (click)="askDeleteInfection(inf.id, inf.type)">Delete</button>
+        </div>
+      </div>
+      <p *ngIf="filteredInfections.length === 0" style="color:#888;">
+        No infections match your filters.
+      </p>
+    </div>
+
+    <!-- VACCINATIONS SECTION -->
+    <div *ngIf="showVaccinationSection">
+
+      <hr style="margin-bottom:24px; border-color:#d1d5db;"/>
+
+     <div style="display:flex; justify-content:space-between; align-items:center;
+            flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+  <h2 style="margin:0; font-size:20px; color:#1e293b;">Vaccinations</h2>
+  <button class="rmed-btn-all" (click)="openAddVaccinationForm()">➕ Add Vaccination</button>
+</div>
+
+      <!-- VACCINATION ADD/EDIT FORM -->
+      <div *ngIf="showVaccinationForm" class="rmed-med-card" style="padding:20px; margin-bottom:20px;">
+        <h3 style="margin-top:0">{{ editMode ? 'Edit Vaccination' : 'Add Vaccination' }}</h3>
+
+        <label style="font-size:13px; color:#6b7280; display:block; margin-bottom:4px;">
+          Vaccine Name <span style="color:#ef4444;">*</span>
+        </label>
+        <div style="position:relative;">
+  <input [(ngModel)]="newVaccination.name"
+         placeholder="e.g. Hepatitis B — start typing to search"
+         class="input"
+         autocomplete="off"
+         [style.borderColor]="vacTouched['name'] && vacNameError ? '#ef4444' : ''"
+         (focus)="showVacNameSuggestions = true"
+         (blur)="onVacNameBlur()"
+         (ngModelChange)="touchField('name'); showVacNameSuggestions = true"/>
+
+  <div *ngIf="showVacNameSuggestions && filteredVacSuggestions.length > 0"
+       style="position:absolute; top:100%; left:0; right:0; z-index:9999;
+              background:white; border:1.5px solid #b3d9f5; border-radius:12px;
+              box-shadow:0 8px 24px rgba(0,0,0,0.12); max-height:260px;
+              overflow-y:auto; margin-top:-6px;">
+    <div *ngFor="let s of filteredVacSuggestions"
+         (mousedown)="selectVacSuggestion(s)"
+         style="padding:10px 14px; cursor:pointer; font-size:13px;
+                font-weight:600; color:#1e293b; border-bottom:1px solid #f1f5f9;
+                transition:background 0.15s;"
+         onmouseover="this.style.background='#eff6ff'"
+         onmouseout="this.style.background='white'">
+       {{ s }}
+    </div>
+    <div *ngIf="newVaccination.name.trim() && !vaccineSuggestions.includes(newVaccination.name.trim())"
+         style="padding:10px 14px; font-size:12px; color:#94a3b8; font-style:italic;
+                border-top:1px solid #f1f5f9; background:#f8fafc;">
+       Using custom name: "{{ newVaccination.name.trim() }}"
+    </div>
+  </div>
+</div>
+        <p *ngIf="vacTouched['name'] && vacNameError"
+           style="color:#ef4444; font-size:12px; margin:-6px 0 8px; font-weight:600;">
+          {{ vacNameError }}
+        </p>
+        <div *ngIf="vacDuplicateNameError && newVaccination.name.trim()"
+             style="background:#fef2f2; border:1px solid #fca5a5; border-left:4px solid #ef4444;
+                    border-radius:10px; padding:10px 14px; margin-bottom:10px;
+                    font-size:13px; color:#991b1b; font-weight:600;">
+          {{ vacDuplicateNameError }}
+        </div>
+
+        <label style="font-size:13px; color:#6b7280; display:block; margin-bottom:4px; margin-top:4px;">
+          Vaccination Date <span style="color:#ef4444;">*</span>
+        </label>
+        <input type="date"
+               [(ngModel)]="newVaccination.vaccination_date"
+               class="input"
+               [min]="todayIso"
+               [style.borderColor]="vacTouched['vaccination_date'] && vacDateError ? '#ef4444' : ''"
+               (blur)="touchField('vaccination_date')"
+               (ngModelChange)="touchField('vaccination_date'); touchField('booster_date')"/>
+        <p *ngIf="vacTouched['vaccination_date'] && vacDateError"
+           style="color:#ef4444; font-size:12px; margin:-6px 0 8px; font-weight:600;">
+          {{ vacDateError }}
+        </p>
+
+        <label style="font-size:13px; color:#6b7280; display:block; margin-bottom:4px; margin-top:4px;">
+          Booster Date
+          <span style="color:#9ca3af; font-weight:400;">(optional — min 3 days after vaccination date)</span>
+        </label>
+        <input type="date"
+               [(ngModel)]="newVaccination.booster_date"
+               class="input"
+               [min]="minBoosterDate"
+               [style.borderColor]="vacTouched['booster_date'] && vacBoosterError ? '#ef4444' : ''"
+               (blur)="touchField('booster_date')"
+               (ngModelChange)="touchField('booster_date')"/>
+        <p *ngIf="vacTouched['booster_date'] && vacBoosterError"
+           style="color:#ef4444; font-size:12px; margin:-6px 0 8px; font-weight:600;">
+          {{ vacBoosterError }}
+        </p>
+
+        <label style="font-size:13px; color:#6b7280; display:block; margin-bottom:4px; margin-top:4px;">
+          Linked Infection (optional)
+        </label>
+        <select [(ngModel)]="newVaccination.infectionId" class="input">
+          <option [ngValue]="null">— None —</option>
+          <option *ngFor="let inf of infections" [ngValue]="inf.id">
+            {{ inf.type }} ({{ inf.detectionDate | date }})
+          </option>
+        </select>
+
+        <ng-container *ngIf="editMode">
+          <label style="font-size:13px; color:#6b7280; display:block; margin-bottom:4px; margin-top:4px;">
+            Vaccine Status
+          </label>
+          <select [(ngModel)]="newVaccination.taken" class="input">
+            <option [ngValue]="false">Not Taken</option>
+            <option [ngValue]="true">Taken</option>
+          </select>
+        </ng-container>
+
+
+
+        <div style="margin-top:16px; display:flex; gap:10px; align-items:center;">
+          <button class="rmed-btn-all"
+                  (click)="saveVaccination()"
+                  [style.opacity]="vacFormValid ? '1' : '0.5'">
+            {{ editMode ? 'Update' : 'Add Vaccination' }}
+          </button>
+          <button class="rmed-btn-reset" (click)="closeVaccinationForm()">Cancel</button>
+          <span *ngIf="!vacFormValid && (vacTouched['name'] || vacTouched['vaccination_date'])"
+                style="font-size:12px; color:#ef4444; font-weight:600;">
+            Please fix the errors above before saving.
+          </span>
+        </div>
+      </div>
+
+      <!-- VACCINATION FILTERS -->
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;
+                  background:#f8fafc; border:1px solid #e2e8f0;
+                  border-radius:10px; padding:12px 16px; align-items:center;">
+                  <input [(ngModel)]="vaccinationSearch" placeholder="Search vaccine name"
+               class="input" style="margin:0; flex:1; min-width:100px;"/>
+
+       
+        <select [(ngModel)]="vaccinationInfId" class="input" style="margin:0; width:150px;">
+          <option value="">All Infections</option>
+          <option [ngValue]="null">Not linked</option>
+          <option *ngFor="let inf of infections" [ngValue]="inf.id">{{ inf.type }}</option>
+        </select>
+        <input type="date" [(ngModel)]="vaccinationDateSearch"
+               class="input" style="margin:0; width:160px;" title="Filter by vaccination or booster date"/>
+        <select [(ngModel)]="vaccinationTakenFilter" class="input" style="margin:0; width:150px;">
+          <option value="all">All Statuses</option>
+          <option value="taken">Taken</option>
+          <option value="not-taken">Not Taken</option>
+        </select>
+        <span style="font-size:13px; color:#64748b; white-space:nowrap;">Sort by:</span>
+       <select [(ngModel)]="vaccinationPatientFilter" class="input" style="margin:0; width:150px;">
+  <option value="">All Patients</option>
+  <option *ngFor="let p of patients" [value]="p.username">{{ p.displayName }}</option>
+</select>
+        <button (click)="toggleVaccinationSort('vaccination_date')" class="rmed-btn-reset" style="padding:6px 12px; font-size:13px;">
+          Vac. Date {{ vaccinationSortBy === 'vaccination_date' ? (vaccinationSortDir === 'asc' ? '▲' : '▼') : '' }}
+        </button>
+        <button (click)="toggleVaccinationSort('booster_date')" class="rmed-btn-reset" style="padding:6px 12px; font-size:13px;">
+          Booster Date {{ vaccinationSortBy === 'booster_date' ? (vaccinationSortDir === 'asc' ? '▲' : '▼') : '' }}
+        </button>
+        <button (click)="clearVaccinationFilters()" class="rmed-btn-reset"
+                style="padding:6px 12px; font-size:13px; color:#ef4444;">X</button>
+      </div>
+
+     <!-- PROGRESS METER -->
+<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;
+            padding:16px 20px; margin-bottom:20px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="font-size:14px; font-weight:700; color:#374151;">💉 Vaccination Progress</span>
+      <span style="font-size:12px; color:#6b7280;">
+        {{ vaccinationProgress.taken }} of {{ vaccinationProgress.total }} taken
+      </span>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <select [(ngModel)]="progressPatientFilter"
+              class="input"
+              style="margin:0; width:140px; padding:6px 10px; font-size:13px;">
+        <option value="">All Patients</option>
+        <option *ngFor="let p of patients" [value]="p.username">{{ p.displayName }}</option>
+      </select>
+      <span style="font-size:18px; font-weight:800; min-width:52px; text-align:right;"
+            [style.color]="vaccinationProgress.score >= 75 ? '#10b981'
+                         : vaccinationProgress.score >= 50 ? '#84cc16'
+                         : vaccinationProgress.score >= 25 ? '#f59e0b' : '#ef4444'">
+        {{ vaccinationProgress.score }}<span style="font-size:12px; font-weight:500;">/100</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- MEDICAL INTELLIGENCE WARNINGS -->
+<div *ngIf="vacFormMedicalWarnings.length > 0"
+     style="margin-bottom:20px; animation: fadeSlideDown 0.25s ease both;">
+
+  <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+    <span style="font-size:18px;">🧠</span>
+    <span style="font-size:12px; font-weight:800; text-transform:uppercase;
+                 letter-spacing:0.08em; color:#64748b;">Medical Intelligence Alerts</span>
+    <span style="background:#fee2e2; color:#991b1b; font-size:11px; font-weight:800;
+                 padding:2px 10px; border-radius:99px;">
+      {{ vacFormMedicalWarnings.length }} alert{{ vacFormMedicalWarnings.length === 1 ? '' : 's' }}
+    </span>
+  </div>
+
+  <div *ngFor="let w of vacFormMedicalWarnings"
+       [style.background]="w.severity === 'critical' ? '#fef2f2' : '#fffbeb'"
+       [style.borderLeft]="w.severity === 'critical' ? '4px solid #ef4444' : '4px solid #f59e0b'"
+       [style.border]="w.severity === 'critical' ? '1px solid #fca5a5' : '1px solid #fcd34d'"
+       style="border-radius:12px; padding:12px 16px; margin-bottom:10px; font-size:13px; line-height:1.6;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+      <span style="font-size:18px;">{{ w.severity === 'critical' ? '🚨' : '⚠️' }}</span>
+      <span [style.color]="w.severity === 'critical' ? '#991b1b' : '#92400e'"
+            style="font-weight:800; font-size:12px; text-transform:uppercase; letter-spacing:0.05em;">
+        {{ w.severity === 'critical' ? 'Critical Warning' : 'Caution' }}
+      </span>
+    </div>
+    <span [style.color]="w.severity === 'critical' ? '#7f1d1d' : '#78350f'"
+          style="font-weight:600;">
+      {{ w.message }}
+    </span>
+  </div>
+
+</div>
+
+  <!-- Patient label pill -->
+  <div style="margin-bottom:8px;">
+    <span style="font-size:11px; font-weight:800; text-transform:uppercase;
+                 letter-spacing:0.06em; color:#6b7280;">Showing: </span>
+    <span style="background:#ede9fe; color:#5b21b6; font-size:11px; font-weight:800;
+                 padding:2px 10px; border-radius:99px;">
+      {{ vaccinationProgress.label }}
+    </span>
+  </div>
+
+  <div style="background:#e2e8f0; border-radius:99px; height:12px; overflow:hidden;">
+    <div [style.width]="vaccinationProgress.score + '%'"
+         [style.background]="getProgressGradient(vaccinationProgress.score)"
+         style="height:100%; border-radius:99px;
+                transition: width 0.7s cubic-bezier(0.34,1.56,0.64,1);">
+    </div>
+  </div>
+
+  <p *ngIf="vaccinationProgress.total === 0"
+     style="margin:8px 0 0; font-size:12px; color:#9ca3af; text-align:center;">
+    {{ progressPatientFilter ? 'No vaccinations linked to ' + getPatientDisplayLabel(progressPatientFilter) + '.' : 'No vaccinations recorded yet.' }}
+  </p>
+</div>
+
+      <!-- VACCINATIONS GRID -->
+      <div class="rmed-grid">
+        <div *ngFor="let vac of filteredVaccinations"
+             class="rmed-med-card"
+             [ngStyle]="getCardStyle(vac)">
+
+          <div style="display:flex; flex-wrap:wrap; gap:6px; padding:12px 14px 0;">
+            <span *ngIf="vac.taken && (!vac.booster_date || vac.booster_taken)"
+                  style="background:#22c55e; color:#fff; font-size:11px; font-weight:700;
+                         padding:3px 10px; border-radius:99px;">ALL DONE</span>
+            <span *ngIf="vac.taken && vac.booster_date && !vac.booster_taken"
+                  style="background:#22c55e; color:#fff; font-size:11px; font-weight:700;
+                         padding:3px 10px; border-radius:99px;">VACCINE TAKEN</span>
+            <span *ngIf="getVacStatus(vac) === 'overdue'"
+                  style="background:#fee2e2; color:#991b1b; font-size:11px; font-weight:700;
+                         padding:3px 10px; border-radius:99px; border:1px solid #fca5a5;">
+              VACCINE OVERDUE</span>
+            <span *ngIf="getVacStatus(vac) === 'today'"
+                  style="background:#dbeafe; color:#1d4ed8; font-size:11px; font-weight:700;
+                         padding:3px 10px; border-radius:99px; border:1px solid #93c5fd;">
+              VACCINATE TODAY</span>
+            <span *ngIf="getBoosterStatus(vac) === 'overdue'"
+                  style="background:#ffedd5; color:#9a3412; font-size:11px; font-weight:700;
+                         padding:3px 10px; border-radius:99px; border:1px solid #fdba74;">
+              BOOSTER OVERDUE</span>
+            <span *ngIf="getBoosterStatus(vac) === 'today'"
+                  style="background:#dbeafe; color:#1d4ed8; font-size:11px; font-weight:700;
+                         padding:3px 10px; border-radius:99px; border:1px solid #93c5fd;">
+              BOOST TODAY</span>
+            <span *ngIf="vac.booster_date && vac.booster_taken"
+                  style="background:#f0fdf4; color:#166534; font-size:11px; font-weight:700;
+                         padding:3px 10px; border-radius:99px; border:1px solid #86efac;">
+              BOOSTER DONE</span>
+          </div>
+
+          <div class="rmed-card-header">
+            <div class="rmed-card-title-block">
+              <h3 class="rmed-med-name"
+                  [style.text-decoration]="vac.taken ? 'line-through' : 'none'"
+                  [style.color]="vac.taken ? '#6b7280' : ''">{{ vac.name }}</h3>
+              <span class="rmed-cat-tag">{{ getInfectionName(vac.infectionId) }}</span>
+            </div>
+          </div>
+
+          <div class="rmed-ingredient"
+               [style.background]="getVacStatus(vac) === 'overdue' ? '#fee2e2'
+                                  : getVacStatus(vac) === 'today'   ? '#dbeafe' : ''">
+            <span class="rmed-ing-lbl">Vaccinated</span>
+            <span class="rmed-ing-val"
+                  [style.color]="getVacStatus(vac) === 'overdue' ? '#991b1b'
+                               : getVacStatus(vac) === 'today'   ? '#1d4ed8' : ''">
+              {{ vac.vaccination_date | date }}
+            </span>
+          </div>
+
+          <div *ngIf="vac.booster_date" class="rmed-ingredient"
+               [style.background]="getBoosterStatus(vac) === 'overdue' ? '#ffedd5'
+                                  : getBoosterStatus(vac) === 'today'   ? '#dbeafe'
+                                  : vac.booster_taken                   ? '#f0fdf4' : ''">
+            <span class="rmed-ing-lbl">Booster</span>
+            <span class="rmed-ing-val"
+                  [style.color]="getBoosterStatus(vac) === 'overdue' ? '#9a3412'
+                               : getBoosterStatus(vac) === 'today'   ? '#1d4ed8'
+                               : vac.booster_taken                   ? '#166534' : ''">
+              {{ vac.booster_date | date }}
+              <span *ngIf="vac.booster_taken" style="margin-left:4px;">✅</span>
+            </span>
+          </div>
+
+          <!-- EFFICACY DECAY -->
+<div *ngIf="getEfficacyPercent(vac) !== null"
+     style="padding:10px 16px 4px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+    <span style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;
+                 letter-spacing:0.05em;">🛡 Protection Remaining</span>
+    <span style="font-size:13px; font-weight:900;"
+          [style.color]="getEfficacyColor(getEfficacyPercent(vac)!)">
+      {{ getEfficacyPercent(vac) }}%
+    </span>
+  </div>
+  <div style="background:#e2e8f0; border-radius:99px; height:8px; overflow:hidden;">
+    <div [style.width]="getEfficacyPercent(vac) + '%'"
+         [style.background]="getEfficacyColor(getEfficacyPercent(vac)!)"
+         style="height:100%; border-radius:99px;
+                transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);">
+    </div>
+  </div>
+  <p *ngIf="getEfficacyPercent(vac)! < 50"
+     style="font-size:11px; color:#ef4444; font-weight:700; margin:5px 0 0;">
+    ⚠ Protection is low — consider scheduling a booster.
+  </p>
+</div>
+
+<!-- MEDICAL INTELLIGENCE CARD WARNINGS -->
+<div *ngIf="getCardMedicalWarnings(vac).length > 0"
+     style="padding:10px 16px 4px;">
+  <div *ngFor="let w of getCardMedicalWarnings(vac)"
+       [style.background]="w.severity === 'critical' ? '#fef2f2' : '#fffbeb'"
+       [style.borderLeft]="w.severity === 'critical' ? '4px solid #ef4444' : '4px solid #f59e0b'"
+       [style.border]="w.severity === 'critical' ? '1px solid #fca5a5' : '1px solid #fcd34d'"
+       style="border-radius:10px; padding:10px 12px; margin-bottom:6px;
+              font-size:12px; line-height:1.5;">
+    <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px;">
+      <span>{{ w.severity === 'critical' ? '🚨' : '⚠️' }}</span>
+      <span [style.color]="w.severity === 'critical' ? '#991b1b' : '#92400e'"
+            style="font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:0.05em;">
+        {{ w.severity === 'critical' ? 'Critical Warning' : 'Caution' }}
+      </span>
+    </div>
+    <span [style.color]="w.severity === 'critical' ? '#7f1d1d' : '#78350f'"
+          style="font-weight:600;">{{ w.message }}</span>
+  </div>
+</div>
+
+          <div class="rmed-card-footer" style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button *ngIf="!vac.taken"
+                    class="rmed-btn-all"
+                    style="font-size:12px; padding:6px 12px;"
+                    (click)="markAsTaken(vac.id)">
+              Mark as Taken
+            </button>
+            <button *ngIf="vac.taken && vac.booster_date && !vac.booster_taken"
+                    style="font-size:12px; padding:6px 12px; border-radius:10px; border:none;
+                           background:linear-gradient(135deg,#f97316,#ea580c); color:white;
+                           font-family:'Nunito'; font-weight:700; cursor:pointer;"
+                    (click)="markBoosterAsTaken(vac.id)">
+              Mark Booster Taken
+            </button>
+            <button class="rmed-btn-reset" (click)="editVaccination(vac)">Edit</button>
+            <button class="rmed-btn-reset"
+                    style="color:#ef4444; border-color:#fca5a5;"
+                    (click)="askDeleteVaccination(vac.id, vac.name)">Delete</button>
+          </div>
+
+        </div>
+        <p *ngIf="filteredVaccinations.length === 0" style="color:#888;">
+          No vaccinations match your filters.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>

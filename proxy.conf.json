@@ -1,0 +1,65 @@
+[
+  {
+    "context": ["/ws"],
+    "target": "http://127.0.0.1:8095",
+    "secure": false,
+    "changeOrigin": true,
+    "ws": true,
+    "logLevel": "warn"
+  },
+  {
+    "context": ["/api/auth"],
+    "target": "http://127.0.0.1:8000",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
+  },
+  {
+    "context": ["/api/users"],
+    "target": "http://127.0.0.1:8000",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
+  },
+  {
+    "context": ["/users"],
+    "target": "http://127.0.0.1:8000",
+    "pathRewrite": {
+      "^/users": "/api/users"
+    },
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
+  },
+  {
+    "context": ["/api"],
+    "target": "http://127.0.0.1:8095",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
+  },
+  {
+    "context": ["/projet"],
+    "target": "http://127.0.0.1:8095",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
+  },
+  {
+    "context": ["/prescription/api"],
+    "target": "http://127.0.0.1:8095",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/prescription/api": "/api"
+    },
+    "logLevel": "warn"
+  },
+  {
+    "context": ["/prescription"],
+    "target": "http://127.0.0.1:8095",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
+  }
+]

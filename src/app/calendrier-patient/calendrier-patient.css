@@ -1,0 +1,426 @@
+/* ========== Conteneur ========== */
+.calendrier-patient {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* ========== En-tête ========== */
+.calendrier-header {
+  margin-bottom: 1.5rem;
+}
+
+.calendrier-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: #0f766e;
+  letter-spacing: -0.02em;
+}
+
+.calendrier-subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+/* ========== Chargement ========== */
+.calendrier-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: #64748b;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #0d9488;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ========== Erreur ========== */
+.calendrier-error {
+  padding: 1.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  color: #b91c1c;
+  text-align: center;
+}
+
+.calendrier-error p { margin: 0 0 1rem 0; }
+
+/* ========== Boutons communs ========== */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s, transform 0.05s;
+}
+
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: #0d9488;
+  color: #fff;
+}
+
+.btn-primary:hover { background: #0f766e; }
+
+/* ========== Statistiques ========== */
+.calendrier-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.stat-card .stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f766e;
+}
+
+.stat-card .stat-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stat-card.stat-suivi .stat-value { color: #0d9488; }
+.stat-card.stat-image .stat-value { color: #6366f1; }
+
+/* ========== Filtres ========== */
+.calendrier-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.filter-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-right: 0.25rem;
+}
+
+.filter-btn {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.875rem;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.filter-btn.active {
+  background: #ccfbf1;
+  border-color: #0d9488;
+  color: #0f766e;
+  font-weight: 600;
+}
+
+/* ========== Navigation mois ========== */
+.calendrier-nav-wrap {
+  margin-bottom: 1.5rem;
+}
+
+.calendrier-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.btn-nav {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1.25rem;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-nav:hover {
+  background: #f0fdfa;
+  border-color: #0d9488;
+  color: #0f766e;
+}
+
+.month-label {
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-transform: capitalize;
+  color: #334155;
+  min-width: 180px;
+  text-align: center;
+}
+
+.btn-today {
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+}
+
+.btn-today:hover { background: #ccfbf1; }
+
+/* ========== Mini grille du mois ========== */
+.month-mini-grid {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.grid-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.grid-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.grid-cell {
+  aspect-ratio: 1;
+  max-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 0.85rem;
+  color: #334155;
+  cursor: default;
+  position: relative;
+}
+
+.grid-cell.empty {
+  background: transparent;
+  cursor: default;
+}
+
+.grid-cell.has-events {
+  background: #f0fdfa;
+  color: #0f766e;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.grid-cell.has-events:hover {
+  background: #ccfbf1;
+}
+
+.grid-dot {
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #0d9488;
+}
+
+/* ========== Liste vide ========== */
+.calendrier-empty {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: #64748b;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px dashed #e2e8f0;
+}
+
+.calendrier-empty p { margin: 0.5rem 0; }
+
+.calendrier-empty.filtré { padding: 2rem; }
+
+/* ========== Liste des jours ========== */
+.calendrier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.day-block {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  scroll-margin-top: 1rem;
+}
+
+.day-block.is-today {
+  border-color: #0d9488;
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
+}
+
+.day-title {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background: #f8fafc;
+  color: #334155;
+  text-transform: capitalize;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.day-block.is-today .day-title {
+  background: #f0fdfa;
+  color: #0f766e;
+}
+
+.day-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #0d9488;
+  color: #fff;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+.day-count {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #64748b;
+  margin-left: auto;
+}
+
+.event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.event-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  align-items: flex-start;
+  transition: background 0.15s;
+}
+
+.event-item:hover { background: #fafafa; }
+
+.event-item:last-child { border-bottom: none; }
+
+.event-suivi {
+  border-left: 4px solid #0d9488;
+}
+
+.event-image {
+  border-left: 4px solid #6366f1;
+}
+
+.event-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.event-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-type {
+  display: inline-block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 0.2rem;
+}
+
+.event-titre {
+  display: block;
+  font-size: 1rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.event-desc {
+  margin: 0.4rem 0 0 0;
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 640px) {
+  .calendrier-patient { padding: 1rem; }
+
+  .calendrier-nav {
+    gap: 0.5rem;
+  }
+
+  .month-label { min-width: 140px; font-size: 1rem; }
+
+  .grid-cell { max-height: 36px; font-size: 0.8rem; }
+
+  .day-title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .day-count { margin-left: 0; }
+
+  .calendrier-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

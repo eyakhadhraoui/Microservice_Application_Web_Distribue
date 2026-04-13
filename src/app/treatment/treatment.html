@@ -1,0 +1,815 @@
+<div class="home-page-content treatment-content">
+    <div class="page-header">
+      <div>
+        <h1>Gestion des Traitements Post-Greffe</h1>
+        <p class="subtitle">Médicaments, prescriptions et suivi de l'observance</p>
+      </div>
+    </div>
+
+    <!-- TABS HORIZONTAUX -->
+    <div class="tabs-container">
+      <button class="tab-button" [class.active]="activeTab === 'medications'" (click)="setActiveTab('medications')">
+        💊 Médicaments <span class="tab-badge">{{ medications.length }}</span>
+      </button>
+      <button class="tab-button" [class.active]="activeTab === 'prescriptions'" (click)="setActiveTab('prescriptions')">
+        📋 Prescriptions <span class="tab-badge">{{ prescriptions.length }}</span>
+      </button>
+      <button class="tab-button" [class.active]="activeTab === 'items'" (click)="setActiveTab('items')">
+        🔗 Items <span class="tab-badge">{{ prescriptionItems.length }}</span>
+      </button>
+      <button class="tab-button" [class.active]="activeTab === 'history'" (click)="setActiveTab('history')">
+        🕓 Historique <span class="tab-badge">{{ medicationHistory.length }}</span>
+      </button>
+    </div>
+
+    <!-- ═══ TAB 1 : MÉDICAMENTS ═══ -->
+    <div *ngIf="activeTab === 'medications'" class="tab-content">
+      <div class="section-header">
+        <h2>Liste des Médicaments</h2>
+        <button class="btn-primary" (click)="openMedicationModal()">+ Nouveau Médicament</button>
+      </div>
+
+      <div class="search-filter-bar">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" [(ngModel)]="medSearch" (ngModelChange)="filterMeds()"
+                 placeholder="Rechercher nom, principe actif…" class="search-input">
+          <button *ngIf="medSearch" class="clear-btn" (click)="medSearch=''; filterMeds()">×</button>
+        </div>
+        <div class="filter-group">
+          <label>Catégorie</label>
+          <select [(ngModel)]="medCatFilter" (ngModelChange)="filterMeds()" class="filter-select">
+            <option value="">Toutes</option>
+            <option value="antipyrétique">Antipyrétique</option>
+            <option value="antibiotique">Antibiotique</option>
+            <option value="anti-inflammatoire">Anti-inflammatoire</option>
+            <option value="diurétique">Diurétique</option>
+            <option value="antihypertenseur">Antihypertenseur</option>
+            <option value="immunosuppresseur">Immunosuppresseur</option>
+            <option value="corticostéroïde">Corticostéroïde</option>
+            <option value="antiviral">Antiviral</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Forme</label>
+          <select [(ngModel)]="medFormFilter" (ngModelChange)="filterMeds()" class="filter-select">
+            <option value="">Toutes</option>
+            <option value="comprimé">Comprimé</option>
+            <option value="gélule">Gélule</option>
+            <option value="suspension">Suspension</option>
+            <option value="injectable">Injectable</option>
+            <option value="sirop">Sirop</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Surveillance</label>
+          <select [(ngModel)]="medMonitorFilter" (ngModelChange)="filterMeds()" class="filter-select">
+            <option value="">Tous</option>
+            <option value="yes">Requise</option>
+            <option value="no">Non requise</option>
+          </select>
+        </div>
+        <button *ngIf="medSearch || medCatFilter || medFormFilter || medMonitorFilter"
+                class="btn-reset" (click)="resetMedFilters()">Réinitialiser</button>
+      </div>
+      <p class="results-count">{{ filteredMeds.length }} médicament(s) affiché(s)</p>
+
+      <!-- LIST VIEW MÉDICAMENTS -->
+      <div class="list-view">
+        <div *ngFor="let med of filteredMeds" class="lv-card">
+          <!-- Ligne principale : tout sur une seule ligne -->
+          <div class="lv-main">
+            <div class="lv-icon med-icon">💊</div>
+            <span class="lv-name">{{ med.name }}</span>
+            <span class="dosage-pill">{{ med.dosage }} {{ med.unit }}</span>
+            <span class="lv-chip lv-chip-form">{{ med.form }}</span>
+            <span class="cat-badge" [attr.data-cat]="med.category">{{ med.category }}</span>
+            <span class="lv-chip lv-chip-active">🔬 {{ med.activeIngredient }}</span>
+            <span *ngIf="med.requiresMonitoring"  class="status warning">⚠️ Surveillance requise</span>
+            <span *ngIf="!med.requiresMonitoring" class="status stable">✓ Non requise</span>
+            <div class="lv-actions">
+              <button class="btn-icon-edit" (click)="openMedicationModal(med)" title="Modifier">✏️</button>
+              <button class="btn-icon-del"  (click)="deleteMedication(med.id)"  title="Supprimer">🗑️</button>
+            </div>
+          </div>
+          <!-- Ligne secondaire : contre-indications si présentes -->
+          <div class="lv-sub" *ngIf="med.contraindications">
+            <span class="lv-sub-label">Contre-indications :</span>
+            <span class="lv-sub-val">{{ med.contraindications }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="filteredMeds.length === 0 && medications.length > 0" class="empty-state">
+          <p>Aucun résultat pour ces filtres</p>
+          <button class="btn-secondary" (click)="resetMedFilters()">Réinitialiser les filtres</button>
+        </div>
+        <div *ngIf="medications.length === 0" class="empty-state">
+          <div class="empty-icon">💊</div>
+          <p>Aucun médicament enregistré</p>
+          <button class="btn-primary" (click)="openMedicationModal()">Ajouter un médicament</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 2 : PRESCRIPTIONS ═══ -->
+    <div *ngIf="activeTab === 'prescriptions'" class="tab-content">
+      <div class="section-header">
+        <h2>Liste des Prescriptions</h2>
+        <button class="btn-primary" (click)="openPrescriptionModal()">+ Nouvelle Prescription</button>
+      </div>
+
+      <div class="search-filter-bar">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" [(ngModel)]="prescSearch" (ngModelChange)="filterPrescriptions()"
+                 placeholder="Rechercher par ID dossier médical…" class="search-input">
+          <button *ngIf="prescSearch" class="clear-btn" (click)="prescSearch=''; filterPrescriptions()">×</button>
+        </div>
+        <div class="filter-group">
+          <label>Trier par</label>
+          <select [(ngModel)]="prescSort" (ngModelChange)="filterPrescriptions()" class="filter-select">
+            <option value="recent">Plus récent</option>
+            <option value="oldest">Plus ancien</option>
+          </select>
+        </div>
+      </div>
+      <p class="results-count">{{ filteredPrescriptions.length }} prescription(s) affichée(s)</p>
+
+      <div class="prescriptions-grid">
+        <div *ngFor="let p of filteredPrescriptions" class="prescription-card slide-in">
+          <div class="prescription-header">
+            <div class="presc-header-left">
+              <div class="presc-icon">📋</div>
+              <div>
+                <div class="prescription-date">{{ formatDate(p.prescriptionDate) }}</div>
+                <div class="prescription-doctor">Patient: <strong>{{ getPatientName(getPrescriptionPatientId(p)) }}</strong></div>
+              </div>
+            </div>
+            <div class="presc-header-actions">
+              <button class="btn-icon-edit" (click)="openPrescriptionModal(p)" title="Modifier">✏️</button>
+              <button class="btn-icon-del" (click)="deletePrescription(p.id)" title="Supprimer">🗑️</button>
+            </div>
+          </div>
+          <div *ngIf="p.notes" class="prescription-notes">📝 {{ p.notes }}</div>
+
+          <button class="btn-add-med" (click)="openItemModal(p.id)">+ Ajouter un médicament</button>
+
+          <!-- LIST VIEW pour les items de prescription -->
+          <div class="presc-items-list" *ngIf="getPrescriptionItems(p.id).length > 0">
+            <h4>Médicaments Prescrits ({{ getPrescriptionItems(p.id).length }})</h4>
+            <div *ngFor="let item of getPrescriptionItems(p.id)" class="presc-item-row">
+              <div class="pi-main">
+                <span class="pi-name">{{ getMedName(item.medicationId) }}</span>
+                <span class="dosage-pill pi-dosage">{{ getMedDosage(item.medicationId) }}</span>
+                <span class="freq-pill">{{ item.frequency }}</span>
+                <span class="lv-chip">⏱ {{ item.duration }} jours</span>
+                <span class="lv-chip pi-instr">{{ item.dosageInstructions }}</span>
+                <div class="pi-actions">
+                  <button class="btn-icon-del" (click)="deleteItem(item.id)">🗑️</button>
+                  <button *ngIf="isImmunosuppressor(item.medicationId)"
+                          class="btn-icon-dose"
+                          (click)="openDosageModal(item)"
+                          title="Ajustement de dose">⚠️</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="getPrescriptionItems(p.id).length === 0" class="no-items">Aucun médicament prescrit</div>
+        </div>
+
+        <div *ngIf="filteredPrescriptions.length === 0" class="empty-state">
+          <div class="empty-icon">📋</div>
+          <p>Aucune prescription trouvée</p>
+          <button class="btn-primary" (click)="openPrescriptionModal()">Créer une prescription</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 3 : ITEMS ═══ -->
+    <div *ngIf="activeTab === 'items'" class="tab-content">
+      <div class="section-header">
+        <h2>Items de Prescription</h2>
+      </div>
+      <div class="search-filter-bar">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" [(ngModel)]="itemSearch" (ngModelChange)="filterItems()"
+                 placeholder="Rechercher par médicament, fréquence…" class="search-input">
+          <button *ngIf="itemSearch" class="clear-btn" (click)="itemSearch=''; filterItems()">×</button>
+        </div>
+      </div>
+      <p class="results-count">{{ filteredItems.length }} item(s) affiché(s)</p>
+
+      <!-- LIST VIEW ITEMS -->
+      <div class="list-view">
+        <div *ngFor="let item of filteredItems" class="lv-card">
+          <div class="lv-main">
+            <div class="lv-icon item-icon">🔗</div>
+            <span class="lv-name">{{ getMedName(item.medicationId) }}</span>
+            <span class="lv-chip lv-chip-presc">Presc. #{{ item.prescriptionId }}</span>
+            <span class="cat-badge" style="background:#e9d8fd;color:#553c9a">{{ getMedCategory(item.medicationId) }}</span>
+            <span class="freq-pill">{{ item.frequency }}</span>
+            <span class="lv-chip">{{ item.administrationRoute }}</span>
+            <span class="lv-chip">📅 {{ formatDate(item.startDate) }} → {{ formatDate(item.endDate) }}</span>
+            <span *ngIf="item.isPriority"  class="status warning">⭐ Prioritaire</span>
+            <span *ngIf="!item.isPriority" class="status stable">Normal</span>
+          </div>
+          <div class="lv-sub">
+            <span class="lv-sub-label">Instructions :</span>
+            <span class="lv-sub-val">{{ item.dosageInstructions }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="filteredItems.length === 0" class="empty-state">
+          <div class="empty-icon">🔗</div>
+          <p>Aucun item de prescription</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 4 : HISTORIQUE ═══ -->
+    <div *ngIf="activeTab === 'history'" class="tab-content">
+      <div class="section-header">
+        <h2>Historique des Prises</h2>
+        <button class="btn-primary" (click)="openHistoryModal()">+ Enregistrer une Prise</button>
+      </div>
+
+      <div class="search-filter-bar">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" [(ngModel)]="histSearch" (ngModelChange)="filterHistory()"
+                 placeholder="Rechercher par patient, médicament…" class="search-input">
+          <button *ngIf="histSearch" class="clear-btn" (click)="histSearch=''; filterHistory()">×</button>
+        </div>
+        <div class="filter-group">
+          <label>Statut</label>
+          <select [(ngModel)]="histStatusFilter" (ngModelChange)="filterHistory()" class="filter-select">
+            <option value="">Tous</option>
+            <option value="TAKEN">Pris</option>
+            <option value="MISSED">Manqué</option>
+            <option value="DELAYED">Retardé</option>
+            <option value="REFUSED">Refusé</option>
+          </select>
+        </div>
+        <button *ngIf="histSearch || histStatusFilter"
+                class="btn-reset" (click)="histSearch=''; histStatusFilter=''; filterHistory()">Réinitialiser</button>
+      </div>
+      <p class="results-count">{{ filteredHistory.length }} enregistrement(s) affiché(s)</p>
+
+      <!-- LIST VIEW HISTORIQUE -->
+      <div class="list-view">
+        <div *ngFor="let h of filteredHistory" class="lv-card"
+             [class.lv-taken]="h.status === 'TAKEN'"
+             [class.lv-missed]="h.status === 'MISSED'"
+             [class.lv-delayed]="h.status === 'DELAYED'"
+             [class.lv-refused]="h.status === 'REFUSED'">
+          <!-- Ligne principale -->
+          <div class="lv-main">
+            <div class="lv-icon hist-icon">🕓</div>
+            <span class="lv-name">{{ h.medicationName || 'Item #' + h.prescriptionItemId }}</span>
+            <span class="lv-chip lv-chip-date">{{ formatDateTime(h.takenAt) }}</span>
+            <span class="lv-chip lv-chip-patient">👤 #{{ h.patientId }}</span>
+            <span [class]="'status ' + getStatusClass(h.status)">{{ getStatusLabel(h.status) }}</span>
+            <span *ngIf="h.temperature" class="temp-pill">🌡 {{ h.temperature }}°C</span>
+            <span *ngIf="h.sideEffects" class="status danger">⚠️ Effets sec.</span>
+            <div class="lv-actions">
+              <button class="btn-icon-edit" (click)="openHistoryModal(h)">✏️</button>
+              <button class="btn-icon-del"  (click)="deleteHistory(h.id)">🗑️</button>
+            </div>
+          </div>
+          <!-- Ligne secondaire -->
+          <div class="lv-sub" *ngIf="h.actualDosage || h.administeredBy || h.vitalSigns">
+            <span class="lv-sub-chip" *ngIf="h.actualDosage">💊 Dose : {{ h.actualDosage }}</span>
+            <span class="lv-sub-chip" *ngIf="h.administeredBy">👩‍⚕️ Par : {{ h.administeredBy }}</span>
+            <span class="lv-sub-chip" *ngIf="h.vitalSigns">❤️ {{ h.vitalSigns }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="filteredHistory.length === 0" class="empty-state">
+          <div class="empty-icon">🕓</div>
+          <p>Aucun historique de prise</p>
+          <button class="btn-primary" (click)="openHistoryModal()">Enregistrer une prise</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MODAL 5 : AJUSTEMENT DE DOSE ═══ -->
+    <div class="modal-overlay" *ngIf="showDosageModal" (click)="closeDosageModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>⚠️ Ajustement de Dose</h2>
+          <button class="modal-close" (click)="closeDosageModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <div *ngIf="dosageLoading" style="text-align:center; padding:30px; color:#718096;">
+            Chargement des suggestions...
+          </div>
+          <div *ngIf="!dosageLoading && pendingAdjustments.length === 0" class="empty-state">
+            <p>✅ Aucun ajustement de dose en attente pour ce patient.</p>
+          </div>
+          <div *ngIf="!dosageLoading && pendingAdjustments.length > 0">
+            <div *ngFor="let adj of pendingAdjustments" class="dosage-card">
+              <div class="dosage-header">
+                <span class="status warning">⚠️ PENDING</span>
+                <span style="font-size:12px; color:#718096;">{{ formatDate(adj.createdAt) }}</span>
+              </div>
+              <div class="dosage-info">
+                <div><strong>Médicament :</strong> {{ adj.medicationName }}</div>
+                <div><strong>Dose actuelle :</strong> {{ adj.currentDose }} mg</div>
+                <div><strong>Dose suggérée :</strong>
+                  <span style="color:#4c51bf; font-weight:700;">{{ adj.suggestedDose }} mg</span>
+                </div>
+                <div><strong>Raison :</strong> {{ adj.reason }}</div>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:16px;">
+                <button class="btn-primary" (click)="approveDosage(adj.id)">✅ Approuver</button>
+                <button class="btn-secondary" (click)="rejectDosage(adj.id)">❌ Rejeter</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="closeDosageModal()">Fermer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MODAL 1 : MÉDICAMENT ═══ -->
+    <div class="modal-overlay" *ngIf="showMedicationModal" (click)="closeMedicationModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ isEditMode ? 'Modifier' : 'Nouveau' }} Médicament</h2>
+          <button class="modal-close" (click)="closeMedicationModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <form #medForm="ngForm" novalidate>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nom du médicament <span class="required">*</span></label>
+                <input type="text" name="medName" [(ngModel)]="newMedication.name" #medName="ngModel"
+                       required minlength="2" maxlength="100"
+                       [class.is-invalid]="(medName.invalid && medName.touched) || medicationNameError"
+                       [class.is-valid]="medName.valid && medName.touched && !medicationNameError"
+                       class="form-control" placeholder="Ex: Tacrolimus"
+                       (blur)="medName.control.markAsTouched()"
+                       (input)="medicationNameError = ''">
+                <div class="field-error" *ngIf="medName.touched && medName.errors?.['required'] && !medicationNameError">Le nom du médicament est obligatoire</div>
+                <div class="field-error" *ngIf="medName.touched && medName.errors?.['minlength'] && !medicationNameError">Au moins 2 caractères requis</div>
+                <div class="field-error" *ngIf="medicationNameError">{{ medicationNameError }}</div>
+              </div>
+
+              <div class="form-group">
+                <label>Dosage <span class="required">*</span></label>
+                <input type="text" name="medDosage" [(ngModel)]="newMedication.dosage" #medDosage="ngModel"
+                       required pattern="^\d{1,6}(\.\d{1,3})?$"
+                       [class.is-invalid]="medDosage.invalid && medDosage.touched"
+                       [class.is-valid]="medDosage.valid && medDosage.touched"
+                       class="form-control" placeholder="Ex: 500 ou 2.5"
+                       (blur)="medDosage.control.markAsTouched()">
+                <div class="field-error" *ngIf="medDosage.touched && medDosage.errors?.['required']">Le dosage est obligatoire</div>
+                <div class="field-error" *ngIf="medDosage.touched && medDosage.errors?.['pattern']">Nombre valide requis (ex: 500 ou 2.5)</div>
+              </div>
+
+              <div class="form-group">
+                <label>Unité <span class="required">*</span></label>
+                <select name="medUnit" [(ngModel)]="newMedication.unit" #medUnit="ngModel" required
+                        [class.is-invalid]="medUnit.invalid && medUnit.touched"
+                        [class.is-valid]="medUnit.valid && medUnit.touched"
+                        class="form-control" (change)="medUnit.control.markAsTouched()">
+                  <option value="">— Sélectionner —</option>
+                  <option value="mg">mg</option>
+                  <option value="ml">ml</option>
+                  <option value="g">g</option>
+                  <option value="µg">µg</option>
+                  <option value="UI">UI</option>
+                  <option value="comprimé">comprimé</option>
+                </select>
+                <div class="field-error" *ngIf="medUnit.touched && medUnit.errors?.['required']">L'unité est obligatoire</div>
+              </div>
+
+              <div class="form-group">
+                <label>Forme <span class="required">*</span></label>
+                <select name="medForm" [(ngModel)]="newMedication.form" #medFormControl="ngModel" required
+                        [class.is-invalid]="medFormControl.invalid && medFormControl.touched"
+                        [class.is-valid]="medFormControl.valid && medFormControl.touched"
+                        class="form-control" (change)="medFormControl.control.markAsTouched()">
+                  <option value="">— Sélectionner —</option>
+                  <option value="comprimé">Comprimé</option>
+                  <option value="gélule">Gélule</option>
+                  <option value="suspension">Suspension</option>
+                  <option value="injectable">Injectable</option>
+                  <option value="sirop">Sirop</option>
+                </select>
+                <div class="field-error" *ngIf="medFormControl.touched && medFormControl.errors?.['required']">La forme est obligatoire</div>
+              </div>
+
+              <div class="form-group">
+                <label>Principe Actif <span class="required">*</span></label>
+                <input type="text" name="medActiveIngredient" [(ngModel)]="newMedication.activeIngredient"
+                       #medActive="ngModel" required minlength="2" maxlength="150"
+                       [class.is-invalid]="medActive.invalid && medActive.touched"
+                       [class.is-valid]="medActive.valid && medActive.touched"
+                       class="form-control" placeholder="Ex: Tacrolimus"
+                       (blur)="medActive.control.markAsTouched()">
+                <div class="field-error" *ngIf="medActive.touched && medActive.errors?.['required']">Le principe actif est obligatoire</div>
+              </div>
+
+              <div class="form-group">
+                <label>Catégorie <span class="required">*</span></label>
+                <select name="medCategory" [(ngModel)]="newMedication.category" #medCat="ngModel" required
+                        [class.is-invalid]="medCat.invalid && medCat.touched"
+                        [class.is-valid]="medCat.valid && medCat.touched"
+                        class="form-control" (change)="medCat.control.markAsTouched()">
+                  <option value="">— Sélectionner —</option>
+                  <option value="immunosuppresseur">Immunosuppresseur</option>
+                  <option value="antipyrétique">Antipyrétique</option>
+                  <option value="antibiotique">Antibiotique</option>
+                  <option value="anti-inflammatoire">Anti-inflammatoire</option>
+                  <option value="diurétique">Diurétique</option>
+                  <option value="antihypertenseur">Antihypertenseur</option>
+                  <option value="corticostéroïde">Corticostéroïde</option>
+                  <option value="antiviral">Antiviral</option>
+                  <option value="autre">Autre</option>
+                </select>
+                <div class="field-error" *ngIf="medCat.touched && medCat.errors?.['required']">La catégorie est obligatoire</div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:4px;">
+              <label class="checkbox-label">
+                <input type="checkbox" name="medMonitoring" [(ngModel)]="newMedication.requiresMonitoring">
+                <span>Nécessite une surveillance particulière</span>
+              </label>
+            </div>
+
+            <div class="form-group" style="margin-top:12px;">
+              <label>Contre-indications <span class="optional">(optionnel)</span></label>
+              <textarea name="medContra" [(ngModel)]="newMedication.contraindications" #medContra="ngModel"
+                        maxlength="500" rows="3" class="form-control"
+                        placeholder="Ex: Insuffisance hépatique sévère…"></textarea>
+              <div class="field-hint">{{ medContra.value?.length || 0 }} / 500</div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="closeMedicationModal()">Annuler</button>
+          <button class="btn-primary" [disabled]="medForm.invalid" (click)="submitMedication(medForm)">
+            {{ isEditMode ? 'Mettre à jour' : 'Créer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MODAL 2 : PRESCRIPTION ═══ -->
+    <div class="modal-overlay" *ngIf="showPrescriptionModal" (click)="closePrescriptionModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ isEditMode ? 'Modifier' : 'Nouvelle' }} Prescription</h2>
+          <button class="modal-close" (click)="closePrescriptionModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <form #prescForm="ngForm" novalidate>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Patient <span class="required">*</span></label>
+                <select name="prescPatientId" [(ngModel)]="newPrescription.patientId"
+                        #prescPatient="ngModel" required
+                        [class.is-invalid]="prescPatient.invalid && prescPatient.touched"
+                        [class.is-valid]="prescPatient.valid && prescPatient.touched"
+                        class="form-control" (blur)="prescPatient.control.markAsTouched()">
+                  <option [ngValue]="null" disabled>{{ patients.length ? 'Choisir un patient' : 'Aucun patient enregistré' }}</option>
+                  <option *ngFor="let pat of patients" [ngValue]="pat.id">{{ pat.name }} ({{ pat.mrn }})</option>
+                </select>
+                <div class="field-error" *ngIf="prescPatient.touched && prescPatient.errors?.['required']">Le patient est obligatoire</div>
+                <p *ngIf="patients.length === 0" class="field-hint">Les patients apparaissent ici après inscription sur le portail.</p>
+              </div>
+
+              <div class="form-group">
+                <label>Date de prescription <span class="required">*</span></label>
+                <input type="date" name="prescDate" [(ngModel)]="newPrescription.prescriptionDate"
+                       #prescDate="ngModel" required [max]="today"
+                       [class.is-invalid]="prescDate.invalid && prescDate.touched"
+                       [class.is-valid]="prescDate.valid && prescDate.touched"
+                       class="form-control" (blur)="prescDate.control.markAsTouched()">
+                <div class="field-error" *ngIf="prescDate.touched && prescDate.errors?.['required']">La date de prescription est obligatoire</div>
+                <div class="field-error" *ngIf="prescDate.value && prescDate.value > today">La date ne peut pas être dans le futur</div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:4px;">
+              <label>Notes <span class="optional">(optionnel)</span></label>
+              <textarea name="prescNotes" [(ngModel)]="newPrescription.notes"
+                        rows="4" class="form-control" placeholder="Notes du médecin…"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="closePrescriptionModal()">Annuler</button>
+          <button class="btn-primary" [disabled]="prescForm.invalid" (click)="submitPrescription(prescForm)">
+            {{ isEditMode ? 'Mettre à jour' : 'Créer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MODAL 3 : PRESCRIPTION ITEM ═══ -->
+    <div class="modal-overlay" *ngIf="showItemModal" (click)="closeItemModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Ajouter un Médicament à la Prescription</h2>
+          <button class="modal-close" (click)="closeItemModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <form #itemForm="ngForm" novalidate>
+
+            <div class="form-group">
+              <label>Médicament <span class="required">*</span></label>
+              <select name="itemMedId" [(ngModel)]="newItem.medicationId" #itemMed="ngModel" required
+                      [class.is-invalid]="itemMed.invalid && itemMed.touched"
+                      [class.is-valid]="itemMed.valid && itemMed.touched"
+                      class="form-control"
+                      (ngModelChange)="onMedSelected(+$event)"
+                      (change)="itemMed.control.markAsTouched()">
+                <option [ngValue]="0">— Sélectionner un médicament —</option>
+                <option *ngFor="let m of medications" [ngValue]="m.id">
+                  {{ m.name }} — {{ m.dosage }}{{ m.unit }} ({{ m.form }})
+                </option>
+              </select>
+              <div class="field-error" *ngIf="itemMed.touched && (itemMed.errors?.['required'] || newItem.medicationId === 0)">Le médicament est obligatoire</div>
+
+              <div *ngIf="selectedMedInfo" class="med-info-box">
+                <div><strong>Principe actif :</strong> {{ selectedMedInfo.activeIngredient }}</div>
+                <div><strong>Catégorie :</strong> {{ selectedMedInfo.category }}</div>
+                <div *ngIf="selectedMedInfo.requiresMonitoring" class="warn-text">Surveillance particulière requise pour ce médicament</div>
+              </div>
+            </div>
+
+            <!-- ⚖️ SECTION POIDS — visible si immunosuppresseur -->
+            <div *ngIf="selectedMedInfo && isImmunosuppressor(newItem.medicationId)"
+                 class="weight-dose-section">
+              <div class="weight-dose-header">⚖️ Dosage selon le poids (Immunosuppresseur)</div>
+              <div class="weight-dose-row">
+                <div class="form-group" style="flex:1; min-width:150px; margin:0;">
+                  <label>Poids du patient (kg)</label>
+                  <input type="number"
+                         name="patientWeight"
+                         [(ngModel)]="patientWeightKg"
+                         min="1" max="200" step="0.1"
+                         class="form-control"
+                         placeholder="Ex: 28.5"
+                         (input)="onWeightChange()">
+                </div>
+                <div class="dose-result" *ngIf="calculatedDose > 0">
+                  <div class="dose-result-label">💊 Dose suggérée</div>
+                  <div class="dose-result-value">{{ calculatedDose }} mg</div>
+                  <div class="dose-result-formula">
+                    {{ patientWeightKg }} kg × 0.1 mg/kg = {{ calculatedDose }} mg/jour
+                  </div>
+                </div>
+              </div>
+              <button type="button"
+                      class="btn-weight-save"
+                      [disabled]="!patientWeightKg || patientWeightKg <= 0 || weightSaved"
+                      (click)="recordWeight()">
+                {{ weightSaved ? '✅ Poids enregistré — en attente de validation' : '💾 Enregistrer le poids et envoyer pour validation' }}
+              </button>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Instructions de dosage <span class="required">*</span></label>
+                <input type="text" name="itemInstructions" [(ngModel)]="newItem.dosageInstructions"
+                       #itemInstr="ngModel" required minlength="3"
+                       [class.is-invalid]="itemInstr.invalid && itemInstr.touched"
+                       [class.is-valid]="itemInstr.valid && itemInstr.touched"
+                       class="form-control" placeholder="Ex: 1 gélule matin et soir"
+                       (blur)="itemInstr.control.markAsTouched()">
+                <div class="field-error" *ngIf="itemInstr.touched && itemInstr.errors?.['required']">Les instructions sont obligatoires</div>
+                <div class="field-error" *ngIf="itemInstr.touched && itemInstr.errors?.['minlength']">Au moins 3 caractères requis</div>
+              </div>
+
+              <div class="form-group">
+                <label>Fréquence <span class="required">*</span></label>
+                <select name="itemFreq" [(ngModel)]="newItem.frequency" #itemFreq="ngModel" required
+                        [class.is-invalid]="itemFreq.invalid && itemFreq.touched"
+                        [class.is-valid]="itemFreq.valid && itemFreq.touched"
+                        class="form-control"
+                        (ngModelChange)="onFrequencyChange($event)"
+                        (change)="itemFreq.control.markAsTouched()">
+                  <option value="">— Sélectionner —</option>
+                  <option value="1x/jour">1 fois par jour</option>
+                  <option value="2x/jour">2 fois par jour</option>
+                  <option value="3x/jour">3 fois par jour</option>
+                  <option value="Toutes les 8h">Toutes les 8h</option>
+                  <option value="Toutes les 12h">Toutes les 12h</option>
+                  <option value="Au besoin">Au besoin</option>
+                  <option value="1x/semaine">1 fois par semaine</option>
+                </select>
+                <div class="field-error" *ngIf="itemFreq.touched && itemFreq.errors?.['required']">La fréquence est obligatoire</div>
+              </div>
+
+              <div class="form-group" *ngIf="scheduledTimes.length > 0" style="grid-column: 1 / -1;">
+                <label>Horaires de prise</label>
+                <div class="schedules-container">
+                  <div *ngFor="let time of scheduledTimes; let i = index" class="schedule-row">
+                    <span class="schedule-label">Prise {{ i + 1 }}</span>
+                    <input type="time" [name]="'schedTime' + i" [(ngModel)]="scheduledTimes[i]"
+                           class="form-control schedule-input">
+                  </div>
+                </div>
+                <div class="field-hint">Vous pouvez ajuster les horaires suggérés</div>
+              </div>
+
+              <div class="form-group">
+                <label>Voie d'administration <span class="required">*</span></label>
+                <select name="itemRoute" [(ngModel)]="newItem.administrationRoute" #itemRoute="ngModel" required
+                        [class.is-invalid]="itemRoute.invalid && itemRoute.touched"
+                        [class.is-valid]="itemRoute.valid && itemRoute.touched"
+                        class="form-control" (change)="itemRoute.control.markAsTouched()">
+                  <option value="">— Sélectionner —</option>
+                  <option value="orale">Orale</option>
+                  <option value="intraveineuse">Intraveineuse (IV)</option>
+                  <option value="intramusculaire">Intramusculaire (IM)</option>
+                  <option value="sous-cutanée">Sous-cutanée</option>
+                  <option value="rectale">Rectale</option>
+                  <option value="inhalation">Inhalation</option>
+                </select>
+                <div class="field-error" *ngIf="itemRoute.touched && itemRoute.errors?.['required']">La voie d'administration est obligatoire</div>
+              </div>
+
+              <div class="form-group">
+                <label>Durée (jours) <span class="required">*</span></label>
+                <input type="number" name="itemDuration" [(ngModel)]="newItem.duration" #itemDur="ngModel"
+                       required min="1" max="365"
+                       [class.is-invalid]="itemDur.invalid && itemDur.touched"
+                       [class.is-valid]="itemDur.valid && itemDur.touched"
+                       class="form-control" placeholder="Ex: 30"
+                       (blur)="itemDur.control.markAsTouched()">
+                <div class="field-error" *ngIf="itemDur.touched && itemDur.errors?.['required']">La durée est obligatoire</div>
+                <div class="field-error" *ngIf="itemDur.touched && itemDur.errors?.['min']">Minimum 1 jour</div>
+                <div class="field-error" *ngIf="itemDur.touched && itemDur.errors?.['max']">Maximum 365 jours</div>
+              </div>
+
+              <div class="form-group">
+                <label>Date de début <span class="required">*</span></label>
+                <input type="date" name="itemStartDate" [(ngModel)]="newItem.startDate" #itemStart="ngModel"
+                       required
+                       [class.is-invalid]="itemStart.invalid && itemStart.touched"
+                       [class.is-valid]="itemStart.valid && itemStart.touched"
+                       class="form-control" (blur)="itemStart.control.markAsTouched()">
+                <div class="field-error" *ngIf="itemStart.touched && itemStart.errors?.['required']">La date de début est obligatoire</div>
+              </div>
+
+              <div class="form-group">
+                <label>Date de fin <span class="required">*</span></label>
+                <input type="date" name="itemEndDate" [(ngModel)]="newItem.endDate" #itemEnd="ngModel"
+                       required
+                       [class.is-invalid]="itemEnd.invalid && itemEnd.touched"
+                       [class.is-valid]="itemEnd.valid && itemEnd.touched"
+                       class="form-control" (blur)="itemEnd.control.markAsTouched()">
+                <div class="field-error" *ngIf="itemEnd.touched && itemEnd.errors?.['required']">La date de fin est obligatoire</div>
+                <div class="field-error" *ngIf="itemEnd.value && itemStart.value && itemEnd.value < itemStart.value">La date de fin doit être après la date de début</div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:4px;">
+              <label class="checkbox-label">
+                <input type="checkbox" name="itemPriority" [(ngModel)]="newItem.isPriority">
+                <span>Marquer comme prioritaire</span>
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="closeItemModal()">Annuler</button>
+          <button class="btn-primary" [disabled]="itemForm.invalid || newItem.medicationId === 0" (click)="submitItem(itemForm)">
+            Ajouter
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MODAL 4 : HISTORIQUE ═══ -->
+    <div class="modal-overlay" *ngIf="showHistoryModal" (click)="closeHistoryModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ isEditMode ? 'Modifier' : 'Enregistrer' }} une Prise</h2>
+          <button class="modal-close" (click)="closeHistoryModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <form #histForm="ngForm" novalidate>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Item de Prescription <span class="required">*</span></label>
+                <select name="histItemId" [(ngModel)]="newHistory.prescriptionItemId" #histItem="ngModel" required
+                        [class.is-invalid]="histItem.invalid && histItem.touched"
+                        [class.is-valid]="histItem.valid && histItem.touched"
+                        class="form-control" (change)="histItem.control.markAsTouched()">
+                  <option [ngValue]="null">— Sélectionner —</option>
+                  <option *ngFor="let item of prescriptionItems" [ngValue]="item.id">
+                    {{ getMedName(item.medicationId) }} — {{ item.frequency }}
+                  </option>
+                </select>
+                <div class="field-error" *ngIf="histItem.touched && histItem.errors?.['required']">L'item de prescription est obligatoire</div>
+              </div>
+
+              <div class="form-group">
+                <label>Patient <span class="required">*</span></label>
+                <select name="histPatientId" [(ngModel)]="newHistory.patientId"
+                        #histPatient="ngModel" required
+                        [class.is-invalid]="histPatient.invalid && histPatient.touched"
+                        [class.is-valid]="histPatient.valid && histPatient.touched"
+                        class="form-control"
+                        (change)="histPatient.control.markAsTouched()">
+                  <option [ngValue]="null">— Sélectionner un patient —</option>
+                  <option *ngFor="let pat of patients" [ngValue]="pat.id">
+                    {{ pat.name }} (#{{ pat.id }})
+                  </option>
+                </select>
+                <div class="field-error" *ngIf="histPatient.touched && histPatient.errors?.['required']">Veuillez choisir un patient</div>
+                <p class="field-hint" *ngIf="patients.length === 0" style="margin-top:6px;font-size:12px;color:#94a3b8;">
+                  Aucun patient listé : vérifiez que l’API patients répond (projetconsultation ou gateway).
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label>Date &amp; Heure <span class="required">*</span></label>
+                <input type="datetime-local" name="histTakenAt" [(ngModel)]="newHistory.takenAt"
+                       #histDate="ngModel" required
+                       [class.is-invalid]="histDate.invalid && histDate.touched"
+                       [class.is-valid]="histDate.valid && histDate.touched"
+                       class="form-control" (blur)="histDate.control.markAsTouched()">
+                <div class="field-error" *ngIf="histDate.touched && histDate.errors?.['required']">La date et l'heure sont obligatoires</div>
+              </div>
+
+              <div class="form-group">
+                <label>Statut <span class="required">*</span></label>
+                <select name="histStatus" [(ngModel)]="newHistory.status" #histStatus="ngModel" required
+                        [class.is-invalid]="histStatus.invalid && histStatus.touched"
+                        [class.is-valid]="histStatus.valid && histStatus.touched"
+                        class="form-control" (change)="histStatus.control.markAsTouched()">
+                  <option value="">— Sélectionner —</option>
+                  <option value="TAKEN">Pris</option>
+                  <option value="MISSED">Manqué</option>
+                  <option value="DELAYED">Retardé</option>
+                  <option value="REFUSED">Refusé</option>
+                </select>
+                <div class="field-error" *ngIf="histStatus.touched && histStatus.errors?.['required']">Le statut est obligatoire</div>
+              </div>
+
+              <div class="form-group">
+                <label>Dose Réelle <span class="optional">(optionnel)</span></label>
+                <input type="text" name="histDosage" [(ngModel)]="newHistory.actualDosage"
+                       class="form-control" placeholder="Ex: 2 comprimés">
+              </div>
+
+              <div class="form-group">
+                <label>Administré Par <span class="optional">(optionnel)</span></label>
+                <input type="text" name="histAdminBy" [(ngModel)]="newHistory.administeredBy"
+                       class="form-control" placeholder="Ex: Parent, Infirmière">
+              </div>
+
+              <div class="form-group">
+                <label>Température (°C) <span class="optional">(optionnel)</span></label>
+                <input type="number" name="histTemp" [(ngModel)]="newHistory.temperature"
+                       #histTemp="ngModel" min="34" max="43" step="0.1"
+                       [class.is-invalid]="histTemp.invalid && histTemp.touched"
+                       class="form-control" placeholder="Ex: 37.5"
+                       (blur)="histTemp.control.markAsTouched()">
+                <div class="field-error" *ngIf="histTemp.touched && (histTemp.errors?.['min'] || histTemp.errors?.['max'])">La température doit être entre 34 °C et 43 °C</div>
+              </div>
+
+              <div class="form-group">
+                <label>Signes Vitaux <span class="optional">(optionnel)</span></label>
+                <input type="text" name="histVitals" [(ngModel)]="newHistory.vitalSigns"
+                       class="form-control" placeholder="Ex: TA: 110/70">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:4px;">
+              <label>Effets Secondaires <span class="optional">(optionnel)</span></label>
+              <textarea name="histSideEffects" [(ngModel)]="newHistory.sideEffects"
+                        rows="2" class="form-control" placeholder="Effets secondaires observés…"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Notes <span class="optional">(optionnel)</span></label>
+              <textarea name="histNotes" [(ngModel)]="newHistory.notes"
+                        rows="2" class="form-control" placeholder="Notes additionnelles…"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="closeHistoryModal()">Annuler</button>
+          <button class="btn-primary" [disabled]="histForm.invalid" (click)="submitHistory(histForm)">
+            {{ isEditMode ? 'Mettre à jour' : 'Enregistrer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TOASTS ═══ -->
+    <div class="toast toast-success" *ngIf="toastSuccess">{{ toastMsg }}</div>
+    <div class="toast toast-error"   *ngIf="toastError">{{ toastMsg }}</div>
+</div>

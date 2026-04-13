@@ -1,0 +1,379 @@
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f6f9; color: #2d3748; }
+
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+  .page-header h1 { font-size: 30px; color: #2d3748; margin-bottom: 6px; }
+  .subtitle { color: #718096; font-size: 15px; }
+
+  .progress-card { background: white; border-radius: 14px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 3px 12px rgba(0,0,0,0.05); }
+  .progress-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .progress-title { font-weight: 600; color: #2d3748; font-size: 14px; }
+  .progress-status { font-size: 13px; font-weight: 600; color: #e53e3e; }
+  .progress-status.ready { color: #38a169; }
+  .progress-track { width: 100%; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 12px; }
+  .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #667eea, #38a169); transition: width 0.4s ease; }
+  .progress-steps { display: flex; gap: 20px; font-size: 13px; color: #a0aec0; font-weight: 500; flex-wrap: wrap; }
+  .progress-steps .step-done { color: #38a169; }
+  .optional-hint { color: #a0aec0; font-style: italic; }
+
+  .card { background: white; border-radius: 14px; box-shadow: 0 3px 12px rgba(0,0,0,0.05); margin-bottom: 24px; overflow: hidden; }
+  .card-header { display: flex; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 2px solid #f0f4ff; }
+  .card-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .bg-indigo { background: linear-gradient(135deg, #667eea22, #5a67d822); }
+  .bg-teal   { background: linear-gradient(135deg, #48bb7822, #38a16922); }
+  .bg-purple { background: linear-gradient(135deg, #9f7aea22, #805ad522); }
+  .card-header h3 { font-size: 17px; color: #2d3748; margin-bottom: 3px; }
+  .card-desc { font-size: 13px; color: #718096; }
+  .card-body { padding: 24px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .form-group { margin-bottom: 20px; }
+  .form-label { display: block; font-size: 13px; font-weight: 700; color: #4a5568; margin-bottom: 8px; letter-spacing: 0.3px; }
+  .req      { color: #e53e3e; margin-left: 2px; }
+  .optional { font-weight: 400; color: #a0aec0; font-size: 12px; }
+
+  .input-wrapper { position: relative; }
+  .input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 16px; pointer-events: none; z-index: 1; }
+  .form-control { width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: inherit; transition: all 0.25s; background: white; color: #2d3748; appearance: none; }
+  .form-control.with-icon { padding-left: 42px; padding-right: 36px; }
+  select.form-control { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2364748b' d='M5 6L0 0h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+  .form-control:focus { outline: none; border-color: #5a67d8; box-shadow: 0 0 0 3px rgba(90,103,216,0.15); }
+  .form-control.ctrl-error { border-color: #e53e3e !important; background: #fff5f5; box-shadow: 0 0 0 3px rgba(229,62,62,0.12); }
+  .form-control.ctrl-valid { border-color: #38a169 !important; background: #f0fff4; box-shadow: 0 0 0 3px rgba(56,161,105,0.12); }
+  .ctrl-feedback { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); color: #38a169; font-weight: 700; font-size: 15px; }
+
+  .field-msg { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; margin-top: 6px; padding: 6px 10px; border-radius: 6px; animation: fadeIn 0.2s ease; }
+  .field-msg.error   { color: #c53030; background: #fff5f5; border: 1px solid #fed7d7; }
+  .field-msg.success { color: #276749; background: #f0fff4; border: 1px solid #c6f6d5; }
+  .field-msg.info    { color: #2b6cb0; background: #ebf8ff; border: 1px solid #90cdf4; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .consult-preview { background: linear-gradient(135deg, #f7faff, #eef2ff); border: 2px solid #c3d0ff; border-radius: 12px; padding: 18px; margin-top: 12px; }
+  .preview-badge { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #5a67d8; letter-spacing: 0.8px; margin-bottom: 14px; }
+  .preview-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .preview-item  { display: flex; flex-direction: column; gap: 3px; }
+  .preview-label { font-size: 11px; font-weight: 700; color: #667eea; }
+  .preview-value { font-size: 13px; color: #2d3748; }
+
+  .notification-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 2000; animation: fadeIn 0.3s ease; }
+  .notification-box { background: white; border-radius: 18px; padding: 36px 40px; max-width: 480px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.25); animation: slideUp 0.3s ease; }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .notif-icon  { font-size: 56px; margin-bottom: 16px; }
+  .notif-title { font-size: 22px; font-weight: 800; margin-bottom: 10px; color: #2d3748; }
+  .notif-msg   { font-size: 15px; color: #718096; margin-bottom: 20px; line-height: 1.5; }
+  .notif-recap { background: #f7faff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; text-align: left; font-size: 13px; color: #4a5568; line-height: 1.8; }
+  .notif-recap strong { color: #2d3748; }
+  .notif-success .notif-title { color: #276749; }
+  .notif-error   .notif-title { color: #c53030; }
+  .notif-close-btn { background: linear-gradient(135deg, #667eea, #38a169); color: white; border: none; padding: 12px 28px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+  .notif-close-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(56,161,105,0.4); }
+
+  .form-actions { display: flex; justify-content: flex-end; gap: 12px; padding: 20px 0 10px; }
+  .btn-primary { background: linear-gradient(135deg, #667eea, #38a169); color: white; border: none; padding: 13px 28px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(56,161,105,0.4); }
+  .btn-primary:disabled { background: #cbd5e0; cursor: not-allowed; transform: none; }
+  .btn-secondary { background: #e2e8f0; color: #4a5568; border: none; padding: 13px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+  .btn-secondary:hover { background: #cbd5e0; }
+  .btn-spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; animation: spin 0.7s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast-wrapper { position: fixed; bottom: 30px; right: 30px; z-index: 3000; opacity: 0; transform: translateY(20px); pointer-events: none; transition: all 0.35s ease; }
+  .toast-wrapper.toast-visible { opacity: 1; transform: translateY(0); }
+  .toast { padding: 14px 24px; border-radius: 10px; color: white; font-weight: 600; font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+  .toast-success { background: linear-gradient(135deg, #48bb78, #38a169); }
+  .toast-error   { background: linear-gradient(135deg, #f56565, #e53e3e); }
+
+  @media (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .preview-grid { grid-template-columns: 1fr; }
+    .progress-steps { gap: 12px; }
+  }
+</style>
+
+<!-- ══ NOTIFICATION PLEINE PAGE ══ -->
+<div class="notification-overlay" *ngIf="notification.visible" (click)="closeNotification()">
+  <div class="notification-box"
+       [class.notif-success]="notification.type === 'success'"
+       [class.notif-error]="notification.type === 'error'"
+       (click)="$event.stopPropagation()">
+    <div class="notif-icon">
+      {{ notification.type === 'success' ? '✅' : notification.type === 'error' ? '❌' : '⚠️' }}
+    </div>
+    <div class="notif-title">{{ notification.title }}</div>
+    <div class="notif-msg">{{ notification.message }}</div>
+    <div class="notif-recap" *ngIf="notification.type === 'success' && notification.rdvDate">
+      <div>👤 <strong>Patient :</strong> {{ notification.patient }}</div>
+      <div>📅 <strong>Date :</strong> {{ notification.rdvDate | date:'dd MMMM yyyy à HH:mm' }}</div>
+      <div>📋 <strong>État :</strong> {{ notification.rdvEtat }}</div>
+      <div *ngIf="notification.rdvId">🆔 <strong>ID :</strong> #{{ notification.rdvId }}</div>
+    </div>
+    <button class="notif-close-btn" (click)="closeNotification()">
+      {{ notification.type === 'success' ? 'Parfait ✓' : 'Fermer' }}
+    </button>
+  </div>
+</div>
+
+<!-- ══ PAGE HEADER ══ -->
+<div class="page-header">
+  <div>
+    <h1>📅 Nouveau Rendez-vous</h1>
+    <p class="subtitle">Créer un rendez-vous médical post-greffe</p>
+  </div>
+</div>
+
+<!-- ══ PROGRESSION ══ -->
+<div class="progress-card">
+  <div class="progress-info">
+    <span class="progress-title">Progression du formulaire</span>
+    <span class="progress-status" [class.ready]="formProgress === 100">
+      {{ formProgress === 100 ? '✅ Prêt à enregistrer' : '⚠ Champs obligatoires manquants' }}
+    </span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" [style.width]="formProgress + '%'"></div>
+  </div>
+  <div class="progress-steps">
+    <span [class.step-done]="rendezvous.dateRendezvous">📅 Date</span>
+    <span [class.step-done]="rendezvous.etat">📋 État</span>
+    <span [class.step-done]="(selectedPatientId || 0) > 0">👤 Patient</span>
+    <span class="optional-hint">🩺 Consultation (optionnel)</span>
+  </div>
+</div>
+
+<form (ngSubmit)="saveRendezvous()" #rdvForm="ngForm" novalidate>
+
+  <!-- ══ BLOC 1 : INFORMATIONS GÉNÉRALES ══ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon bg-indigo">📋</div>
+      <div>
+        <h3>Informations Générales</h3>
+        <p class="card-desc">Date et état du rendez-vous</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+
+        <!-- Date & Heure -->
+        <div class="form-group">
+          <label class="form-label">Date &amp; Heure <span class="req">*</span></label>
+          <div class="input-wrapper">
+            <span class="input-icon">📅</span>
+            <input
+              type="datetime-local"
+              [(ngModel)]="rendezvous.dateRendezvous"
+              name="dateRendezvous"
+              required
+              [min]="minDate"
+              #dateRef="ngModel"
+              class="form-control with-icon"
+              [class.ctrl-error]="dateRef.touched && dateRef.invalid"
+              [class.ctrl-valid]="dateRef.touched && dateRef.valid"
+              (change)="onDateChange()"
+            />
+            <span class="ctrl-feedback" *ngIf="dateRef.touched && dateRef.valid">✓</span>
+          </div>
+          <div class="field-msg error" *ngIf="dateRef.touched && dateRef.invalid">
+            <span>⚠</span> La date et l'heure sont obligatoires
+          </div>
+          <div class="field-msg info" *ngIf="dateRef.touched && dateRef.valid">
+            Même jour → Confirmé automatiquement ; Jour futur → Planifié
+          </div>
+        </div>
+
+        <!-- État -->
+        <div class="form-group">
+          <label class="form-label">État <span class="req">*</span></label>
+          <div class="input-wrapper">
+            <span class="input-icon">📋</span>
+            <select
+              [(ngModel)]="rendezvous.etat"
+              name="etat"
+              required
+              #etatRef="ngModel"
+              class="form-control with-icon"
+              [class.ctrl-error]="etatRef.touched && etatRef.invalid"
+              [class.ctrl-valid]="etatRef.touched && etatRef.valid"
+              (change)="calcProgress()"
+            >
+              <option value="">— Choisir un état —</option>
+              <option value="PREVU">🕐 Prévu</option>
+              <option value="PLANIFIE">📋 Planifié</option>
+              <option value="CONFIRME">✅ Confirmé</option>
+              <option value="TERMINE">🏁 Terminé</option>
+              <option value="ANNULE">❌ Annulé</option>
+            </select>
+            <span class="ctrl-feedback" *ngIf="etatRef.touched && etatRef.valid">✓</span>
+          </div>
+          <div class="field-msg error" *ngIf="etatRef.touched && etatRef.invalid">
+            <span>⚠</span> Veuillez sélectionner un état
+          </div>
+          <div class="field-msg success" *ngIf="etatRef.touched && etatRef.valid">
+            ✓ État : {{ getEtatLabel(rendezvous.etat) }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BLOC 2 : PATIENT ══ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon bg-teal">👤</div>
+      <div>
+        <h3>Patient</h3>
+        <p class="card-desc">Sélectionner le patient concerné</p>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <div class="field-msg error" *ngIf="patientsError">
+        <span>⚠</span> {{ patientsError }}
+      </div>
+
+      <div class="field-msg info" *ngIf="loadingPatients">
+        ⏳ Chargement des patients...
+      </div>
+
+      <div class="form-group" *ngIf="!loadingPatients">
+        <label class="form-label">Patient <span class="req">*</span></label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <select
+            [(ngModel)]="selectedPatientId"
+            name="patientId"
+            required
+            #patientRef="ngModel"
+            class="form-control with-icon"
+            [class.ctrl-error]="patientRef.touched && (selectedPatientId || 0) === 0"
+            [class.ctrl-valid]="patientRef.touched && (selectedPatientId || 0) > 0"
+            (change)="calcProgress()"
+          >
+            <option [ngValue]="0">— Choisir un patient —</option>
+            <option *ngFor="let p of patientsList" [ngValue]="p.idPatient">
+              {{ p.firstName }} {{ p.lastName }}
+            </option>
+          </select>
+          <span class="ctrl-feedback" *ngIf="(selectedPatientId || 0) > 0">✓</span>
+        </div>
+
+        <div class="field-msg error"
+             *ngIf="patientsList.length === 0 && !loadingPatients && !patientsError">
+          <span>⚠</span> Aucun patient en base
+        </div>
+
+        <div class="field-msg error"
+             *ngIf="patientRef.touched && (selectedPatientId || 0) === 0 && patientsList.length > 0">
+          <span>⚠</span> Veuillez sélectionner un patient
+        </div>
+
+        <!-- Aperçu patient sélectionné -->
+        <ng-container *ngIf="(selectedPatientId || 0) > 0 && getSelectedPatient(); let p">
+          <div class="consult-preview">
+            <div class="preview-badge">Patient sélectionné</div>
+            <div class="preview-grid">
+              <div class="preview-item">
+                <span class="preview-label">👤 Nom complet</span>
+                <span class="preview-value">{{ p.firstName }} {{ p.lastName }}</span>
+              </div>
+              <div class="preview-item">
+                <span class="preview-label">🆔 ID Patient</span>
+                <span class="preview-value">#{{ p.idPatient }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BLOC 3 : CONSULTATION ASSOCIÉE (optionnel) ══ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon bg-purple">🩺</div>
+      <div>
+        <h3>Consultation Associée</h3>
+        <p class="card-desc">Optionnel — Lier à une consultation ou laisser vide</p>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <div class="field-msg error" *ngIf="consultationsError">
+        <span>⚠</span> {{ consultationsError }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          Sélectionner une Consultation
+          <span class="optional">(optionnel)</span>
+        </label>
+        <div class="input-wrapper">
+          <span class="input-icon">🩺</span>
+          <select
+            [(ngModel)]="selectedConsultationId"
+            name="consultationId"
+            class="form-control with-icon"
+            (change)="onConsultationChange()"
+          >
+            <option [ngValue]="null">— Choisir une consultation —</option>
+            <option *ngFor="let c of consultationsList" [ngValue]="c.idConsultation">
+              {{ c.dateConsultation | date:'dd/MM/yyyy' }}
+              — {{ (c.diagnostic || '') | slice:0:45 }}
+            </option>
+          </select>
+        </div>
+        <div class="field-msg info"
+             *ngIf="consultationsList.length === 0 && !loadingConsultations && !consultationsError">
+          Aucune consultation disponible — le RDV sera créé sans consultation liée.
+        </div>
+      </div>
+
+      <!-- Aperçu consultation sélectionnée -->
+      <ng-container *ngIf="getSelectedConsultation(); let c">
+        <div class="consult-preview">
+          <div class="preview-badge">Aperçu consultation sélectionnée</div>
+          <div class="preview-grid">
+            <div class="preview-item">
+              <span class="preview-label">📅 Date</span>
+              <span class="preview-value">{{ c.dateConsultation | date:'dd MMMM yyyy' }}</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-label">🔬 Diagnostic</span>
+              <span class="preview-value">{{ c.diagnostic || '—' }}</span>
+            </div>
+            <div class="preview-item" *ngIf="c.notes" style="grid-column: span 2;">
+              <span class="preview-label">📝 Notes</span>
+              <span class="preview-value">{{ c.notes }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+
+  <!-- ══ ACTIONS ══ -->
+  <div class="form-actions">
+    <button type="button" class="btn-secondary" (click)="resetForm()">
+      🔄 Réinitialiser
+    </button>
+    <button
+      type="submit"
+      class="btn-primary"
+      [disabled]="!rendezvous.dateRendezvous || !rendezvous.etat || !((selectedPatientId || 0) > 0) || isLoading"
+    >
+      <span class="btn-spinner" *ngIf="isLoading"></span>
+      <span *ngIf="!isLoading">✅ Enregistrer le Rendez-vous</span>
+      <span *ngIf="isLoading">Enregistrement…</span>
+    </button>
+  </div>
+
+</form>
+
+<!-- ══ TOAST ══ -->
+<div class="toast-wrapper" [class.toast-visible]="toastVisible">
+  <div class="toast" [ngClass]="toastType">{{ toastMessage }}</div>
+</div>

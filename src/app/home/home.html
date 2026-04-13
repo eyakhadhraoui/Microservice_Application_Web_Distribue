@@ -1,0 +1,1008 @@
+
+
+<!-- slider_area_start -->
+<div class="slider_area">
+    <div class="slider_active owl-carousel">
+        <div class="single_slider  d-flex align-items-center slider_bg_2">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-12">
+                        <div class="slider_text ">
+                            <h3> <span>Health care</span> <br>
+                                For Hole Family </h3>
+                            <p>In healthcare sector, service excellence is the facility of <br> the hospital as
+                                healthcare service provider to consistently.</p>
+                            <a href="#" class="boxed-btn3">Check Our Services</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+ 
+</div>
+<!-- slider_area_end -->
+<!-- welcome_kidneycare_area_start -->
+<div class="welcome_docmed_area">
+    <div class="container">
+        <div class="row">
+
+            <!-- Images -->
+            <div class="col-xl-6 col-lg-6">
+                <div class="welcome_thumb">
+                    <div class="thumb_1">
+                        <img src="assets/img/about/1.png" alt="">
+                    </div>
+                    <div class="thumb_2">
+                        <img src="assets/img/about/2.png" alt="">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="col-xl-6 col-lg-6">
+                <div class="welcome_docmed_info">
+
+                    <h2>Welcome to KidneyCare</h2>
+
+                    <h3>
+                        Pediatric Kidney Care <br>
+                        Monitoring & Follow-up Platform
+                    </h3>
+
+                    <p>
+                        KidneyCare is a centralized medical platform designed to help
+                        parents monitor their child's kidney health. It allows secure
+                        access to medical records, consultations, laboratory results,
+                        and treatment follow-up.
+                    </p>
+
+                    <ul>
+                        <li>
+                            <i class="flaticon-right"></i>
+                            Access your child's medical history and records
+                        </li>
+
+                        <li>
+                            <i class="flaticon-right"></i>
+                            Book consultations and follow-up appointments easily
+                        </li>
+
+                        <li>
+                            <i class="flaticon-right"></i>
+                            Track treatments, laboratory results, and vaccinations
+                        </li>
+                    </ul>
+
+                    <div class="home-quick-actions">
+                        <a href="#" class="boxed-btn3-white-2" (click)="openAppointmentFromHome($event)">📅 Book Appointment</a>
+                        <a routerLink="/home/treatment" class="boxed-btn3-white-2">💊 My Medications</a>
+                        <a href="#medical-records" class="boxed-btn3-white-2">View Medical Records</a>
+                        <a href="#" class="boxed-btn3-white-2 home-presc-btn" (click)="openPrescriptionsModal(); $event.preventDefault()" *ngIf="auth.hasRole(['patient'])">
+                            📄 Mes Ordonnances
+                            <span class="home-presc-badge" *ngIf="prescriptions.length > 0">{{ prescriptions.length }}</span>
+                        </a>
+                    </div>
+
+                    <!-- Section Mes Ordonnances visible sur la home -->
+                    <div class="home-ordonnances-card" *ngIf="auth.hasRole(['patient']) && (prescriptions.length > 0 || isPrescLoading)">
+                        <div class="home-ord-card-header" (click)="openPrescriptionsModal()">
+                            <span class="home-ord-icon">📄</span>
+                            <div class="home-ord-title-wrap">
+                                <h4 class="home-ord-title">Mes Ordonnances</h4>
+                                <p class="home-ord-sub" *ngIf="!isPrescLoading">{{ prescriptions.length }} ordonnance(s) active(s)</p>
+                                <p class="home-ord-sub" *ngIf="isPrescLoading">Chargement…</p>
+                            </div>
+                            <span class="home-ord-arrow">›</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- welcome_kidneycare_area_end -->
+ <!-- ========================================== -->
+<!-- ESPACE PATIENT - Dossier médical, Suivis, Images -->
+<!-- ========================================== -->
+
+<div class="patient_dashboard_area" id="medical-records">
+    <div class="container">
+        
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="section_title text-center mb-55">
+                    <h3>Medical records</h3>
+                    <p>Overview of your records, follow-up and tests</p>
+                </div>
+            </div>
+        </div>
+
+      
+
+        <!-- Record list -->
+        <div class="row" *ngIf="!loading && !error && dossiers.length > 0">
+            <div class="col-xl-12 col-lg-12 mb-4" *ngFor="let dossier of dossiers">
+                <div class="patient-card">
+                    <div class="patient-card-header" (click)="togglePatient(dossier.idDossierMedical!)">
+                        <div class="patient-card-header-left">
+                            <div class="patient-avatar">
+                                {{ (dossier.patientNom || ('Patient ' + dossier.idPatient)).charAt(0) }}
+                            </div>
+                            <div class="patient-card-header-text">
+                                <div class="patient-card-header-top">
+                                    <h3 class="patient-name">{{ dossier.patientNom || ('Patient ' + dossier.idPatient) }}</h3>
+                                    <span class="dossier-id">Record #{{ dossier.idDossierMedical }}</span>
+                                </div>
+                                <div class="patient-card-header-meta">
+                                    <span class="diagnostic-badge">{{ dossier.diagnostic }}</span>
+                                    <span class="creation-date">Created on {{ formatDate(dossier.dateCreation) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="patient-card-header-right">
+                            <span class="expand-label">
+                                {{ expandedPatients[dossier.idDossierMedical!] ? 'Hide details' : 'View details' }}
+                            </span>
+                            <span class="expand-icon">
+                                {{ expandedPatients[dossier.idDossierMedical!] ? '▾' : '▸' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="patient-card-body" *ngIf="expandedPatients[dossier.idDossierMedical!]">
+                        <div class="patient-card-layout">
+                            <div class="patient-card-main">
+                                <!-- Record summary -->
+                                <section class="dashboard-section">
+                                    <h4 class="section-title">Record summary</h4>
+                                    <div class="summary-grid">
+                                        <div class="summary-item">
+                                            <span class="label">Primary physician</span>
+                                            <span class="value">{{ dossier.medecinNom || ('Dr #' + dossier.idMedecin) }}</span>
+                                        </div>
+                                        <div class="summary-item">
+                                            <span class="label">Main diagnosis</span>
+                                            <span class="value">{{ dossier.diagnostic }}</span>
+                                        </div>
+                                        <div class="summary-item" *ngIf="dossier.notes">
+                                            <span class="label">Notes</span>
+                                            <span class="value">{{ dossier.notes }}</span>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- Messages avec le médecin -->
+                                <section class="dashboard-section messages-section-patient">
+                                    <h4 class="section-title">💬 Messages with your doctor</h4>
+                                    <div *ngIf="loadingMessagesByDossier[dossier.idDossierMedical!]" class="loading-inline"><div class="spinner-small"></div></div>
+                                    <div *ngIf="!loadingMessagesByDossier[dossier.idDossierMedical!] && (messagesByDossierId[dossier.idDossierMedical!] || []).length > 0" class="messages-list-patient">
+                                        <div class="message-bubble-patient" *ngFor="let m of messagesByDossierId[dossier.idDossierMedical!]" [class.from-medecin]="m.typeExpediteur === 'MEDECIN'" [class.from-patient]="m.typeExpediteur === 'PATIENT'">
+                                            <span class="message-meta-patient">{{ m.typeExpediteur === 'MEDECIN' ? 'Doctor' : 'You' }} · {{ formatDateFull(m.dateEnvoi ?? '') }}</span>
+                                            <div class="message-contenu-patient">{{ m.contenu }}</div>
+                                        </div>
+                                    </div>
+                                    <div *ngIf="!loadingMessagesByDossier[dossier.idDossierMedical!]" class="messages-send-patient">
+                                        <textarea [(ngModel)]="newMessageTextByDossier[dossier.idDossierMedical!]" placeholder="Write a message to your doctor..." rows="2" maxlength="2000"></textarea>
+                                        <button type="button" class="btn-send-message-patient" (click)="sendMessagePatient(dossier)" [disabled]="!newMessageTextByDossier[dossier.idDossierMedical!]?.trim() || sendingMessageByDossier[dossier.idDossierMedical!]">{{ sendingMessageByDossier[dossier.idDossierMedical!] ? 'Sending...' : 'Send' }}</button>
+                                    </div>
+                                </section>
+
+                                <!-- Interactive timeline (follow-up, imaging, labs) -->
+                                <section class="dashboard-section timeline-section">
+                                    <div class="section-header-row">
+                                        <h4 class="section-title">Follow-up history</h4>
+                                        <div class="timeline-filters">
+                                            <span class="filter-label">Filter:</span>
+                                            <label class="filter-chip"><input type="checkbox" [checked]="getDefaultTimelineFilters(dossier.idDossierMedical!).suivi" (change)="toggleTimelineFilter(dossier.idDossierMedical!, 'suivi')"> Follow-up</label>
+                                            <label class="filter-chip"><input type="checkbox" [checked]="getDefaultTimelineFilters(dossier.idDossierMedical!).image" (change)="toggleTimelineFilter(dossier.idDossierMedical!, 'image')"> Imaging</label>
+                                            <label class="filter-chip"><input type="checkbox" [checked]="getDefaultTimelineFilters(dossier.idDossierMedical!).bilan" (change)="toggleTimelineFilter(dossier.idDossierMedical!, 'bilan')"> Lab tests</label>
+                                        </div>
+                                    </div>
+                                    <div *ngIf="loadingSuivis[dossier.idDossierMedical!]" class="loading-inline">
+                                        <div class="spinner-small"></div>
+                                        <p>Loading events…</p>
+                                    </div>
+                                    <div *ngIf="!loadingSuivis[dossier.idDossierMedical!]">
+                                        <div class="timeline-add-row">
+                                            <span class="timeline-drag-source" draggable="true" (dragstart)="onDragStartDate($event, dossier)"
+                                                  title="Drag this block onto the timeline area to add an event on the chosen date">
+                                                <label>Date for new event:</label>
+                                                <input type="date" [(ngModel)]="dragSourceDate" (click)="$event.stopPropagation()">
+                                            </span>
+                                        </div>
+                                        <div class="suivis-timeline timeline-vertical timeline-drop-zone" [class.drag-over]="timelineDragOver[dossier.idDossierMedical!]"
+                                             (drop)="onTimelineDrop(dossier, $event)" (dragover)="onTimelineDragOver(dossier, $event)" (dragleave)="onTimelineDragLeave(dossier)">
+                                            <div class="timeline-item" *ngFor="let ev of getTimelineEvents(dossier)" [ngClass]="getTimelineStateClass(ev.state)">
+                                                <div class="timeline-dot" [ngClass]="getTimelineStateClass(ev.state)">{{ getTimelineEventIcon(ev.type) }}</div>
+                                                <div class="timeline-content">
+                                                    <div class="timeline-head">
+                                            <span class="timeline-type">{{ ev.type }}</span>
+                                                        <span class="timeline-date">{{ formatDateFull(ev.date) }}</span>
+                                                        <span class="timeline-state-badge" [ngClass]="getTimelineStateClass(ev.state)">{{ ev.state }}</span>
+                                                    </div>
+                                                    <p class="timeline-label">{{ ev.label }}</p>
+                                                    <div *ngIf="ev.type === 'image' && ev.raw" class="timeline-image-preview">
+                                                        <img [src]="getImageUrlFromEvent(ev)" [alt]="ev.label" (click)="viewImageFromEvent(ev)" (error)="onImageError($event)">
+                                                    </div>
+                                                    <div *ngIf="ev.type === 'bilan' && ev.raw" class="timeline-bilan-actions">
+                                                        <button type="button" class="btn-resultat-action" (click)="openAffichageFromEvent(ev)">View</button>
+                                                        <button type="button" class="btn-resultat-action btn-bilan" (click)="openBilanFromEvent(ev)">Report</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div *ngIf="getTimelineEvents(dossier).length === 0" class="no-data-msg">No events yet.</div>
+                                        </div>
+                                    </div>
+                                </section>
+           
+                            <div class="patient-card-side">
+                                <!-- Imaging -->
+                                <section class="dashboard-section section-images">
+                                    <h4 class="section-title">Imaging</h4>
+                                    <div *ngIf="dossier.idDossierMedical != null && (dossierImages[dossier.idDossierMedical] || []).length > 0" class="images-grid">
+                                        <div class="image-card" *ngFor="let image of (dossierImages[dossier.idDossierMedical] || [])" (click)="viewImage(image)">
+                                            <div class="image-card-img">
+                                                <img [src]="getImageUrl(image.cheminImage || '')" [alt]="getImageTypeLabel(image.typeImage)" (error)="onImageError($event)">
+                                            </div>
+                                            <div class="image-card-info">
+                                                <span class="image-card-type">{{ getImageTypeLabel(image.typeImage) }}</span>
+                                                <span class="image-card-date">{{ formatDateShort(image.dateCapture) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div *ngIf="dossier.idDossierMedical != null && (!dossierImages[dossier.idDossierMedical] || dossierImages[dossier.idDossierMedical].length === 0)" class="no-data-msg">No imaging available for this record.</div>
+                                </section>
+
+                                <!-- Laboratory tests -->
+                                <section class="dashboard-section">
+                                    <div class="section-header-row">
+                                        <h4 class="section-title">Laboratory tests</h4>
+                                        <button type="button" class="btn-saisir-test" (click)="openResultatForm(dossier)">
+                                            <span>Add test result</span>
+                                        </button>
+                                    </div>
+                                    <div *ngIf="loadingResultats[dossier.idDossierMedical!]" class="loading-inline">
+                                        <div class="spinner-small"></div>
+                                        <p>Loading tests…</p>
+                                    </div>
+                                    <div *ngIf="!loadingResultats[dossier.idDossierMedical!]">
+                                        <div *ngIf="dossierResultats[dossier.idDossierMedical!]?.length" class="resultats-cards">
+                                            <div class="resultat-card" *ngFor="let r of dossierResultats[dossier.idDossierMedical!]" [ngClass]="getTestClass(r.codeTest || r.nomTest || '')">
+                                                <div class="resultat-card-head">
+                                                    <span class="resultat-card-title">{{ r.nomTest || r.codeTest || 'Test #' + r.idResultatLaboratoire }}</span>
+                                                    <span class="resultat-card-date">{{ formatDateResultat(r) }}</span>
+                                                </div>
+                                                <div class="resultat-card-value">{{ formatValeur(r) }}</div>
+                                                <div class="resultat-card-actions">
+                                                    <button type="button" class="btn-resultat-action" (click)="openAffichagePopup(r)">View</button>
+                                                    <button type="button" class="btn-resultat-action btn-bilan" (click)="openBilanPopup(r, dossier)">Report</button>
+                                                    <button *ngIf="canDeleteResultat(r)" type="button" class="btn-resultat-action btn-delete-test" (click)="deleteResultat(r, dossier.idDossierMedical!)" title="Delete test (no report)">Delete</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div *ngIf="!loadingResultats[dossier.idDossierMedical!] && (!dossierResultats[dossier.idDossierMedical!] || dossierResultats[dossier.idDossierMedical!].length === 0)" class="no-data-msg">No tests for this record.</div>
+                                    </div>
+                                </section>
+
+                                <!-- Analyse logique — risque de rechute -->
+                                <section class="dashboard-section relapse-risk-section" *ngIf="getRelapseRisk(dossier) as risk">
+                                    <div class="relapse-risk-card" [ngClass]="risk.labelClass">
+                                        <div class="relapse-layout">
+                                            <div class="relapse-main-score">
+                                                <div class="relapse-score-line">
+                                                    <span class="relapse-score-value">{{ risk.score }}</span>
+                                                    <span class="relapse-score-max">/100</span>
+                                                </div>
+                                                <span class="relapse-score-badge" [ngClass]="risk.labelClass">{{ risk.label }}</span>
+                                            </div>
+                                            <div class="relapse-details">
+                                                <h4 class="section-title">Analyse logique — risque de rechute</h4>
+                                                <p class="relapse-risk-intro">
+                                                    Analyse basée sur des règles cliniques (diagnostic, rechutes, fréquence et résultats des suivis). Le score indique un niveau estimé de risque de rechute sur 0–100.
+                                                </p>
+                                                <table class="relapse-table">
+                                                    <tbody>
+                                                        <tr *ngFor="let f of risk.factors">
+                                                            <td class="relapse-factor-name">{{ f.name }}</td>
+                                                            <td class="relapse-factor-value">{{ f.value }}</td>
+                                                            <td class="relapse-factor-impact">{{ f.impact }}</td>
+                                                            <td class="relapse-factor-points">+{{ f.points }}</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="loading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading records…</p>
+        </div>
+
+        <!-- Error -->
+        <div *ngIf="error" class="error-state">
+            <span class="error-icon">⚠️</span>
+            <p>{{ error }}</p>
+            <button type="button" class="btn-retry" (click)="loadDossiers()">🔄 Retry</button>
+        </div>
+
+        <!-- No record -->
+        <div *ngIf="!loading && !error && dossiers.length === 0" class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>No record</h3>
+            <p>No medical record is available yet.</p>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal Ajout d'événement sur la timeline (type + date) -->
+<div class="test-lab-overlay" *ngIf="showAddEventModal" (click)="closeAddEventModal()">
+    <div class="test-lab-popup" (click)="$event.stopPropagation()">
+        <button type="button" class="test-lab-close" (click)="closeAddEventModal()">×</button>
+        <h2 class="test-lab-title">➕ Add an event</h2>
+        <p class="test-lab-subtitle">Dossier #{{ addEventDossier?.idDossierMedical }}</p>
+        <div class="add-event-form">
+            <div class="form-group">
+                <label>Event type</label>
+                <select [(ngModel)]="addEventType">
+<option value="suivi">Follow-up</option>
+                                    <option value="bilan">Lab test</option>
+                                    <option value="image">Image</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" [(ngModel)]="addEventDate">
+            </div>
+            <div class="test-lab-actions">
+                <button type="button" class="btn-test-lab-cancel" (click)="closeAddEventModal()">Cancel</button>
+                <button type="button" class="btn-test-lab-submit" (click)="confirmAddEvent()">Create event</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Formulaire nouveau suivi (depuis timeline) -->
+<div class="test-lab-overlay" *ngIf="showSuiviFormPopup" (click)="closeSuiviFormPopup()">
+    <div class="test-lab-popup" (click)="$event.stopPropagation()">
+        <button type="button" class="test-lab-close" (click)="closeSuiviFormPopup()">×</button>
+        <h2 class="test-lab-title">📋 New follow-up</h2>
+        <p class="test-lab-subtitle">Dossier #{{ suiviFormDossier?.idDossierMedical }}</p>
+        <div class="test-lab-error" *ngIf="suiviFormError">{{ suiviFormError }}</div>
+        <div class="add-event-form">
+            <div class="form-group">
+                <label>Follow-up date <span class="required">*</span></label>
+                <input type="date" [(ngModel)]="suiviFormDate" required>
+            </div>
+            <div class="form-group">
+                <label>Result / Status</label>
+                <select [(ngModel)]="suiviFormResultat">
+                    <option value="STABLE">Stable</option>
+<option value="AMELIORATION">Improvement</option>
+                                    <option value="DETERIORATION">Deterioration</option>
+                                    <option value="REMISSION">Remission</option>
+                                    <option value="RECHUTE">Relapse</option>
+                                    <option value="EN_COURS">In progress</option>
+                                    <option value="SOUS_SURVEILLANCE">Under surveillance</option>
+                </select>
+            </div>
+            <div class="form-group">
+<label>Objective</label>
+                                                <input type="text" [(ngModel)]="suiviFormObjectif" placeholder="Follow-up objective">
+            </div>
+            <div class="form-group">
+<label>Notes</label>
+                                                <textarea [(ngModel)]="suiviFormNotes" rows="3" placeholder="Clinical notes"></textarea>
+            </div>
+            <div class="test-lab-actions">
+                <button type="button" class="btn-test-lab-cancel" (click)="closeSuiviFormPopup()">Cancel</button>
+                <button type="button" class="btn-test-lab-submit" (click)="submitSuiviForm()" [disabled]="suiviSubmitting || !suiviFormDate">{{ suiviSubmitting ? 'Saving...' : 'Save' }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Popup Formulaire saisie résultat laboratoire (par dossier) -->
+<div class="test-lab-overlay" *ngIf="showResultatFormPopup" (click)="closeResultatForm()">
+    <div class="test-lab-popup" (click)="$event.stopPropagation()">
+        <button type="button" class="test-lab-close" (click)="closeResultatForm()">×</button>
+        <h2 class="test-lab-title">🧪 Enter lab test</h2>
+        <p class="test-lab-subtitle">Dossier #{{ selectedDossierForResultat?.idDossierMedical }}</p>
+        <div class="test-lab-error" *ngIf="resultatFormError">{{ resultatFormError }}</div>
+        <form #resultatForm="ngForm" (ngSubmit)="submitResultat(resultatForm)" class="test-lab-form">
+            <div class="form-group">
+                <label>Test type (code) <span class="required">*</span></label>
+                <div *ngIf="loadingTestsCatalog" class="loading-catalog">Loading test types...</div>
+                <div *ngIf="!loadingTestsCatalog && testsCatalog.length === 0" class="no-catalog-msg">
+                    No test type available. Ensure the backend (port 8089) is running and tests have been created (back office or API).
+                </div>
+                <div *ngIf="!loadingTestsCatalog && testsCatalog.length > 0" class="select-test-wrapper" [ngClass]="selectedIdTestInForm != null ? getTestClass(selectedTestCodeInForm) : ''">
+                    <select name="idTestLaboratoire" ngModel #idTestRef="ngModel" required (ngModelChange)="selectedIdTestInForm = $event != null && $event !== '' ? +$event : null">
+                        <option value="">— Select a test —</option>
+                        <option *ngFor="let t of testsCatalog" [value]="t.idTestLaboratoire">{{ t.codeTest }} — {{ t.nomTest }}</option>
+                    </select>
+                    <span class="error-text" *ngIf="idTestRef.invalid && idTestRef.touched">Select a test type.</span>
+                    <span *ngIf="selectedIdTestInForm && selectedTestCodeInForm" class="test-type-badge" [ngClass]="getTestClass(selectedTestCodeInForm)">{{ selectedTestCodeInForm }}</span>
+                </div>
+                <p *ngIf="selectedIdTestInForm && testTypeAlreadyExistsForDossier(selectedIdTestInForm)" class="text-warning-test">
+                    ⚠️ This test type already exists for this record. You cannot create it again.
+                </p>
+            </div>
+            <div class="form-group">
+                <label>Result date <span class="required">*</span></label>
+                <input type="date" name="dateResultat" [(ngModel)]="resultatDefaultDate" #dateResultatRef="ngModel" required>
+                <span class="error-text" *ngIf="dateResultatRef.invalid && dateResultatRef.touched">Date required.</span>
+            </div>
+            <div class="form-group">
+                <label>Value / Result <span class="required">*</span> (max 200 characters)</label>
+                <input type="text" name="valeurResultat" ngModel #valeurResultatRef="ngModel" required maxlength="200" list="valeurResultatList" placeholder="e.g. Normal, 14.2 g/L — suggestions while typing">
+                <datalist id="valeurResultatList">
+                    <option *ngFor="let s of valeurSuggestions" [value]="s"></option>
+                </datalist>
+                <span class="error-text" *ngIf="valeurResultatRef.invalid && valeurResultatRef.touched">Value required.</span>
+                <p class="form-hint">Suggestions: Normal, High, Low, 14.2 g/L, etc.</p>
+            </div>
+            <div class="form-group">
+                <label>State</label>
+                <select name="etat" ngModel>
+                    <option value="">— Select a state —</option>
+                    <option *ngFor="let e of etatChoices" [value]="e">{{ e }}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Conclusion (max 1000 characters)</label>
+                <textarea name="conclusion" ngModel maxlength="1000" rows="2" placeholder="e.g. Result within normal range. No abnormality detected."></textarea>
+            </div>
+            <div class="test-lab-actions">
+                <button type="button" class="btn-test-lab-cancel" (click)="closeResultatForm()">Cancel</button>
+                <button type="submit" class="btn-test-lab-submit" [disabled]="resultatForm.invalid || resultatSubmitting || (selectedIdTestInForm != null && testTypeAlreadyExistsForDossier(selectedIdTestInForm))">{{ resultatSubmitting ? 'Saving...' : 'Save' }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Popup Affichage détail résultat -->
+<div class="test-lab-overlay" *ngIf="showAffichagePopup" (click)="closeAffichagePopup()">
+    <div class="test-lab-popup" (click)="$event.stopPropagation()">
+        <button type="button" class="test-lab-close" (click)="closeAffichagePopup()">×</button>
+        <h2 class="test-lab-title">📋 Test details</h2>
+        <div *ngIf="selectedResultatAffichage" class="bilan-detail">
+            <p><strong>Test:</strong> {{ selectedResultatAffichage.nomTest || selectedResultatAffichage.codeTest }}</p>
+            <p><strong>Date:</strong> {{ formatDateResultat(selectedResultatAffichage) }}</p>
+            <p><strong>Value:</strong> {{ formatValeur(selectedResultatAffichage) }}</p>
+            <p *ngIf="selectedResultatAffichage.etat"><strong>State:</strong> {{ selectedResultatAffichage.etat }}</p>
+            <p *ngIf="selectedResultatAffichage.conclusion"><strong>Conclusion:</strong> {{ selectedResultatAffichage.conclusion }}</p>
+        </div>
+        <div class="test-lab-actions" style="margin-top:16px">
+            <button type="button" class="btn-test-lab-cancel" (click)="closeAffichagePopup()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Popup Bilan (résultat + rapports) -->
+<div class="test-lab-overlay" *ngIf="showBilanPopup" (click)="closeBilanPopup()">
+    <div class="test-lab-popup bilan-popup-wide" (click)="$event.stopPropagation()">
+        <button type="button" class="test-lab-close" (click)="closeBilanPopup()">×</button>
+        <h2 class="test-lab-title">📊 Report</h2>
+        <div *ngIf="selectedBilan" class="bilan-detail">
+            <p><strong>Test:</strong> {{ selectedBilan.nomTest || selectedBilan.codeTest }}</p>
+            <p><strong>Date:</strong> {{ formatDateResultat(selectedBilan) }}</p>
+            <p><strong>Value:</strong> {{ formatValeur(selectedBilan) }}</p>
+            <p *ngIf="selectedBilan.etat"><strong>State:</strong> {{ selectedBilan.etat }}</p>
+            <p *ngIf="selectedBilan.conclusion"><strong>Conclusion:</strong> {{ selectedBilan.conclusion }}</p>
+        </div>
+        <h3 class="rapports-title">Reports</h3>
+        <div *ngIf="loadingRapports" class="loading-inline"><div class="spinner-small"></div></div>
+        <div *ngIf="!loadingRapports && rapportsForBilan.length === 0" class="no-data-msg">No report for this test.</div>
+        <div *ngIf="!loadingRapports && rapportsForBilan.length > 0" class="rapports-list">
+            <div class="rapport-card" *ngFor="let rap of rapportsForBilan">
+                <div class="rapport-card-date">{{ formatDate(rap.dateRapport) }}</div>
+                <div *ngIf="rap.contenu" class="rapport-paragraph"><strong>Content:</strong><span class="rapport-text">{{ rap.contenu }}</span></div>
+                <div *ngIf="rap.conclusion" class="rapport-paragraph"><strong>Conclusion:</strong><span class="rapport-text">{{ rap.conclusion }}</span></div>
+                <div *ngIf="rap.recommandations" class="rapport-paragraph"><strong>Recommendations:</strong><span class="rapport-text">{{ rap.recommandations }}</span></div>
+                <div class="rapport-card-actions">
+<button type="button" class="btn-bilan-pdf btn-export-pdf" (click)="exportRapportPdf(rap)">💾 Save as PDF</button>
+                                                    <button *ngIf="rap.cheminPdf && rap.idRapportBilan" type="button" class="btn-bilan-pdf" (click)="openBilanPdf(rap.idRapportBilan)">📄 View PDF</button>
+                </div>
+            </div>
+        </div>
+        <div class="test-lab-actions" style="margin-top:16px">
+            <button type="button" class="btn-test-lab-cancel" (click)="closeBilanPopup()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- service_area_start -->
+<div class="service_area">
+    <div class="container p-0">
+        <div class="row no-gutters">
+
+            <!-- Medical Records -->
+            <div class="col-xl-4 col-md-4">
+                <div class="single_service">
+                    <div class="icon">
+                        <i class="flaticon-first-aid-kit"></i>
+                    </div>
+                    <h3>My Child Medical Records</h3>
+                    <p>
+                        Access your child’s medical history, laboratory results,
+                        treatments, and follow-up reports securely online.
+                    </p>
+                    <a routerLink="/records" class="boxed-btn3-white">
+                        View Records
+                    </a>
+                </div>
+            </div>
+
+            <!-- Emergency -->
+            <div class="col-xl-4 col-md-4">
+                <div class="single_service">
+                    <div class="icon">
+                        <i class="flaticon-emergency-call"></i>
+                    </div>
+                    <h3>Emergency Consultation</h3>
+                    <p>
+                        Request urgent medical assistance for your child.
+                        Our nephrology team is ready to respond quickly.
+                    </p>
+                    <a routerLink="/emergency"
+                       class="boxed-btn3-white"
+                       style="color:red; font-weight:bold;">
+                        Request Emergency
+                    </a>
+                </div>
+            </div>
+
+            <!-- Appointment -->
+            <div class="col-xl-4 col-md-4">
+                <div class="single_service">
+                    <div class="icon">
+                        <i class="flaticon-electrocardiogram"></i>
+                    </div>
+                    <h3>Book an Appointment</h3>
+                    <p>
+                        Schedule a consultation with our pediatric nephrology
+                        specialists easily through our online system.
+                    </p>
+                    <a routerLink="/appointment" class="boxed-btn3-white">
+                        Book Now
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- service_area_end -->
+ 
+<!-- offers_area_start -->
+<div class="our_department_area">
+    <div class="container">
+
+        <!-- Section Title -->
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="section_title text-center mb-55">
+                    <h3>Our Pediatric Kidney Services</h3>
+                    <p>
+                        Comprehensive and specialized nephrology care designed
+                        to support children and assist parents in managing
+                        kidney-related conditions effectively.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <!-- Kidney Disease Monitoring -->
+            <div class="col-xl-4 col-md-6 col-lg-4">
+                <div class="single_department">
+                    <div class="department_thumb">
+                        <img src="assets/img/department/1.png" alt="Kidney Monitoring">
+                    </div>
+                    <div class="department_content">
+                        <h3><a routerLink="/monitoring">Kidney Disease Monitoring</a></h3>
+                        <p>Continuous follow-up of chronic kidney conditions in children.</p>
+                        <a routerLink="/monitoring" class="learn_more">Learn More</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dialysis Care -->
+            <div class="col-xl-4 col-md-6 col-lg-4">
+                <div class="single_department">
+                    <div class="department_thumb">
+                        <img src="assets/img/department/2.png" alt="Dialysis Care">
+                    </div>
+                    <div class="department_content">
+                        <h3><a routerLink="/dialysis">Pediatric Dialysis</a></h3>
+                        <p>Safe and specialized dialysis treatments adapted for children.</p>
+                        <a routerLink="/dialysis" class="learn_more">Learn More</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transplant Follow-up -->
+            <div class="col-xl-4 col-md-6 col-lg-4">
+                <div class="single_department">
+                    <div class="department_thumb">
+                        <img src="assets/img/department/3.png" alt="Transplant Follow-up">
+                    </div>
+                    <div class="department_content">
+                        <h3><a routerLink="/transplant">Transplant Follow-up</a></h3>
+                        <p>Post-transplant monitoring and personalized recovery care.</p>
+                        <a routerLink="/transplant" class="learn_more">Learn More</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Laboratory Tests -->
+            <div class="col-xl-4 col-md-6 col-lg-4">
+                <div class="single_department">
+                    <div class="department_thumb">
+                        <img src="assets/img/department/4.png" alt="Laboratory Tests">
+                    </div>
+                    <div class="department_content">
+                        <h3><a routerLink="/lab-tests">Laboratory & Diagnostic Tests</a></h3>
+                        <p>Kidney function analysis including creatinine and blood tests.</p>
+                        <a routerLink="/lab-tests" class="learn_more">Learn More</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nutritional Guidance -->
+            <div class="col-xl-4 col-md-6 col-lg-4">
+                <div class="single_department">
+                    <div class="department_thumb">
+                        <img src="assets/img/department/5.png" alt="Renal Nutrition">
+                    </div>
+                    <div class="department_content">
+                        <h3><a routerLink="/nutrition">Renal Nutrition Guidance</a></h3>
+                        <p>Special dietary plans adapted to pediatric kidney conditions.</p>
+                        <a routerLink="/nutrition" class="learn_more">Learn More</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency Consultation -->
+            <div class="col-xl-4 col-md-6 col-lg-4">
+                <div class="single_department">
+                    <div class="department_thumb">
+                        <img src="assets/img/department/6.png" alt="Emergency Consultation">
+                    </div>
+                    <div class="department_content">
+                        <h3><a routerLink="/emergency">Emergency Consultation</a></h3>
+                        <p>Immediate medical support for urgent kidney complications.</p>
+                        <a routerLink="/emergency" class="learn_more text-danger">Request Urgent Help</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- offers_area_end -->
+
+<!-- testmonial_area_start -->
+<div class="testmonial_area">
+    <div class="testmonial_active owl-carousel">
+        <div class="single-testmonial testmonial_bg_1 overlay2">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-10 offset-xl-1">
+                        <div class="testmonial_info text-center">
+                            <div class="quote">
+                                <i class="flaticon-straight-quotes"></i>
+                            </div>
+                            <p>Donec imperdiet congue orci consequat mattis. Donec rutrum porttitor <br>
+                                sollicitudin. Pellentesque id dolor tempor sapien feugiat ultrices nec sed neque.
+                                <br>
+                                Fusce ac mattis nulla. Morbi eget ornare dui. </p>
+                            <div class="testmonial_author">
+                                <h4>Asana Korim</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="single-testmonial testmonial_bg_2 overlay2">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-10 offset-xl-1">
+                        <div class="testmonial_info text-center">
+                            <div class="quote">
+                                <i class="flaticon-straight-quotes"></i>
+                            </div>
+                            <p>Donec imperdiet congue orci consequat mattis. Donec rutrum porttitor <br>
+                                sollicitudin. Pellentesque id dolor tempor sapien feugiat ultrices nec sed neque.
+                                <br>
+                                Fusce ac mattis nulla. Morbi eget ornare dui. </p>
+                            <div class="testmonial_author">
+                                <h4>Asana Korim</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- testmonial_area_end -->
+<!-- business_expert_area_start  -->
+<div class="business_expert_area">
+    <div class="business_tabs_area">
+        <div class="container">
+            <div class="row">
+                <div class="col-xl-12">
+                    <ul class="nav" id="myTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home"
+                        aria-selected="true">Pediatric Kidney Care</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile"
+                        aria-selected="false">Specialized Pediatric Nephrologists</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact"
+                        aria-selected="false">Dialysis & Emergency Care</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="border_bottom">
+            <div class="tab-content" id="myTabContent">
+
+                <!-- TAB 1 -->
+                <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                    <div class="row align-items-center">
+                        <div class="col-xl-6 col-md-6">
+                            <div class="business_info">
+                                <div class="icon">
+                                    <i class="flaticon-first-aid-kit"></i>
+                                </div>
+                                <h3>Comprehensive Kidney Care for Children</h3>
+                                <p>
+                                    We provide specialized diagnosis and treatment for pediatric kidney diseases 
+                                    including urinary tract infections, nephrotic syndrome, congenital kidney disorders, 
+                                    and chronic kidney disease. Our goal is to ensure healthy growth and kidney function 
+                                    for every child through personalized and preventive care.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-xl-6 col-md-6">
+                            <div class="business_thumb">
+                                <img src="assets/img/about/business.png" alt="Pediatric Kidney Care">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2 -->
+                <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                    <div class="row align-items-center">
+                        <div class="col-xl-6 col-md-6">
+                            <div class="business_info">
+                                <div class="icon">
+                                    <i class="flaticon-first-aid-kit"></i>
+                                </div>
+                                <h3>Experienced Pediatric Nephrology Team</h3>
+                                <p>
+                                    Our qualified pediatric nephrologists specialize in managing complex kidney 
+                                    conditions in infants, children, and adolescents. We ensure continuous monitoring, 
+                                    laboratory follow-up, and family-centered care to improve long-term health outcomes.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-xl-6 col-md-6">
+                            <div class="business_thumb">
+                                <img src="assets/img/about/business.png" alt="Pediatric Nephrologists">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3 -->
+                <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+                    <div class="row align-items-center">
+                        <div class="col-xl-6 col-md-6">
+                            <div class="business_info">
+                                <div class="icon">
+                                    <i class="flaticon-first-aid-kit"></i>
+                                </div>
+                                <h3>Dialysis and Emergency Kidney Support</h3>
+                                <p>
+                                    We provide advanced pediatric dialysis services and emergency care for acute kidney 
+                                    injury and severe renal complications. Our unit ensures safe hospitalization, 
+                                    daily monitoring, and specialized medical support tailored for children.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-xl-6 col-md-6">
+                            <div class="business_thumb">
+                                <img src="assets/img/about/business.png" alt="Dialysis and Emergency Care">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<!-- business_expert_area_end  -->
+
+<!-- Emergency_contact start -->
+<div class="Emergency_contact">
+    <div class="conatiner-fluid p-0">
+        <div class="row no-gutters">
+            
+            <!-- Urgence rénale pédiatrique -->
+            <div class="col-xl-6">
+                <div class="single_emergency d-flex align-items-center justify-content-center emergency_bg_1 overlay_skyblue">
+                    <div class="info">
+                        <h3>Pediatric Kidney Emergency</h3>
+                        <p>24/7 emergency care for acute kidney injury and severe renal complications in children.</p>
+                    </div>
+                    <div class="info_button">
+                        <a href="tel:+21670000000" class="boxed-btn3-white">+216 70 000 000</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prise de rendez-vous -->
+            <div class="col-xl-6">
+                <div class="single_emergency d-flex align-items-center justify-content-center emergency_bg_2 overlay_skyblue">
+                    <div class="info">
+                        <h3>Book a Pediatric Nephrology Consultation</h3>
+                        <p>Schedule an appointment with our specialized kidney care team for your child.</p>
+                    </div>
+                    <div class="info_button">
+                        <a href="appointment.html" class="boxed-btn3-white">Book Appointment</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Emergency_contact end -->
+<!-- Chatbot aide tests néphrologie pédiatrique -->
+<div class="nephro-chatbot-widget">
+  <button type="button" class="nephro-chatbot-toggle" (click)="toggleChatbot()" [attr.aria-label]="chatOpen ? 'Close assistant' : 'Open nephro tests assistant'">
+    <span class="nephro-chatbot-icon">{{ chatOpen ? '✕' : '🧪' }}</span>
+    <span class="nephro-chatbot-label">{{ chatOpen ? 'Close' : 'Nephro tests help' }}</span>
+  </button>
+  <div class="nephro-chatbot-panel" *ngIf="chatOpen">
+    <div class="nephro-chatbot-header">
+      <span class="nephro-chatbot-title">🫘 Pediatric nephrology tests assistant</span>
+    </div>
+    <div class="nephro-chatbot-messages" #chatMessagesContainer>
+      <div *ngFor="let msg of chatMessages" class="nephro-chat-msg" [class.nephro-chat-msg-user]="msg.role === 'user'" [class.nephro-chat-msg-bot]="msg.role === 'bot'">
+        <div class="nephro-chat-msg-bubble">
+          <span class="nephro-chat-msg-text">{{ msg.text }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="nephro-chatbot-input-row">
+      <input type="text" class="nephro-chatbot-input" [(ngModel)]="chatUserInput" placeholder="e.g. What is creatinine used for?"
+             (keydown.enter)="$event.preventDefault(); sendChatMessage()">
+      <button type="button" class="nephro-chatbot-send" (click)="sendChatMessage()" [disabled]="!chatUserInput.trim()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- footer start -->
+<footer class="footer">
+        <div class="footer_top">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xl-4 col-md-6 col-lg-4">
+                        <div class="footer_widget">
+                            <div class="footer_logo">
+                                <a href="#">
+                                    <img src="assets/img/footer_logo.png" alt="">
+                                </a>
+                            </div>
+                            <p>
+                                    Firmament morning sixth subdue darkness 
+                                    creeping gathered divide.
+                            </p>
+                            <div class="socail_links">
+                                <ul>
+                                    <li>
+                                        <a href="#">
+                                            <i class="ti-facebook"></i>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#">
+                                            <i class="ti-twitter-alt"></i>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#">
+                                            <i class="fa fa-instagram"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="col-xl-2 offset-xl-1 col-md-6 col-lg-3">
+                        <div class="footer_widget">
+                            <h3 class="footer_title">
+                                    Departments
+                            </h3>
+                            <ul>
+                                <li><a href="#">Eye Care</a></li>
+                                <li><a href="#">Skin Care</a></li>
+                                <li><a href="#">Pathology</a></li>
+                                <li><a href="#">Medicine</a></li>
+                                <li><a href="#">Dental</a></li>
+                            </ul>
+
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-6 col-lg-2">
+                        <div class="footer_widget">
+                            <h3 class="footer_title">
+                                    Useful Links
+                            </h3>
+                            <ul>
+                                <li><a href="#">About</a></li>
+                                <li><a href="#">Blog</a></li>
+                                <li><a href="#">About</a></li>
+                                <li><a href="#"> Contact</a></li>
+                                <li><a href="#"> Appointment</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6 col-lg-3">
+                        <div class="footer_widget">
+                            <h3 class="footer_title">
+                                    Address
+                            </h3>
+                            <p>
+                                200, D-block, Green lane USA <br>
+                                +10 367 467 8934 <br>
+                                docmed@contact.com
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="copy-right_text">
+            <div class="container">
+                <div class="footer_border"></div>
+                <div class="row">
+                    <div class="col-xl-12">
+                        <p class="copy_right text-center">
+Copyright &copy; 2024 All rights reserved
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+<!-- footer end  -->

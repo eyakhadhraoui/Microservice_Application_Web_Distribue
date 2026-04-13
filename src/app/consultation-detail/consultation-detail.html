@@ -1,0 +1,231 @@
+<div class="detail-container">
+  <!-- ─── HEADER ─── -->
+  <div class="detail-header">
+    <button class="btn-back" routerLink="/back/consultations">← Retour</button>
+    <div class="detail-header-text">
+      <h1>📊 Analyse Globale — Consultations Post-Greffe</h1>
+      <p>KPI en temps réel · Détecteur d'anomalies · Vue Kanban des rendez-vous</p>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des données…</p>
+  </div>
+
+  <div *ngIf="!loading">
+
+    <!-- ═══════════════════════════════════════════
+         SECTION 1 — KPI
+    ═══════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-title">📈 Indicateurs KPI en temps réel</div>
+      <div class="kpi-grid">
+
+        <div class="kpi-card" [ngClass]="getKpiColor(kpi.tauxAnnulation, 15, 30)">
+          <div class="kpi-icon">❌</div>
+          <div class="kpi-value">{{ kpi.tauxAnnulation }}%</div>
+          <div class="kpi-label">Taux d'annulation</div>
+          <div class="kpi-sub">des rendez-vous</div>
+          <div class="kpi-bar-wrap">
+            <div class="kpi-bar" [style.width.%]="kpi.tauxAnnulation"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-icon">🩺</div>
+          <div class="kpi-value">{{ kpi.moyenneConsultParSemaine }}</div>
+          <div class="kpi-label">Consultations / semaine</div>
+          <div class="kpi-sub">en moyenne sur la période</div>
+          <div class="kpi-bar-wrap">
+            <div class="kpi-bar kpi-bar-blue" [style.width.%]="capAt100(kpi.moyenneConsultParSemaine * 10)"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-green">
+          <div class="kpi-icon">📄</div>
+          <div class="kpi-value">{{ kpi.ratioAvecRapport }}%</div>
+          <div class="kpi-label">Avec rapport médical</div>
+          <div class="kpi-sub">consultations documentées</div>
+          <div class="kpi-bar-wrap">
+            <div class="kpi-bar kpi-bar-green" [style.width.%]="kpi.ratioAvecRapport"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card" [ngClass]="getKpiColor(kpi.ratioSansRapport, 30, 50)">
+          <div class="kpi-icon">⚠️</div>
+          <div class="kpi-value">{{ kpi.ratioSansRapport }}%</div>
+          <div class="kpi-label">Sans rapport médical</div>
+          <div class="kpi-sub">consultations non documentées</div>
+          <div class="kpi-bar-wrap">
+            <div class="kpi-bar" [style.width.%]="kpi.ratioSansRapport"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card" [ngClass]="kpi.totalAnomalies > 0 ? 'kpi-danger' : 'kpi-good'">
+          <div class="kpi-icon">🚨</div>
+          <div class="kpi-value">{{ kpi.totalAnomalies }}</div>
+          <div class="kpi-label">Anomalie(s) détectée(s)</div>
+          <div class="kpi-sub">{{ kpi.totalAnomalies === 0 ? 'Système en bonne santé ✅' : 'Voir section ci-dessous' }}</div>
+          <div class="kpi-bar-wrap">
+            <div class="kpi-bar" [style.width.%]="capAt100(kpi.totalAnomalies * 20)"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         SECTION 2 — ANOMALIES
+    ═══════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-title">🚨 Détecteur d'anomalies</div>
+
+      <div *ngIf="anomalies.length === 0" class="no-anomalie">
+        <span class="no-anomalie-icon">✅</span>
+        <div>
+          <strong>Aucune anomalie détectée</strong>
+          <p>Toutes les métriques sont dans les seuils normaux.</p>
+        </div>
+      </div>
+
+      <div *ngFor="let a of anomalies" class="anomalie-card" [ngClass]="getAnomalieClass(a.type)">
+        <div class="anomalie-icon">{{ a.icon }}</div>
+        <div class="anomalie-body">
+          <div class="anomalie-titre">{{ a.titre }}</div>
+          <div class="anomalie-desc">{{ a.description }}</div>
+        </div>
+        <div class="anomalie-badge" [ngClass]="getAnomalieClass(a.type)">
+          {{ a.type === 'danger' ? 'CRITIQUE' : a.type === 'warning' ? 'ATTENTION' : 'INFO' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         SECTION 3 — KANBAN
+    ═══════════════════════════════════════════ -->
+    <div class="section">
+      <div class="section-title">
+        📅 Kanban des rendez-vous
+        <span class="kanban-hint">🖱️ Glissez-déposez puis cliquez <strong>Enregistrer</strong></span>
+      </div>
+
+      <!-- ── BARRE TRI & FILTRE ── -->
+      <div class="kanban-sort-bar">
+        <span class="sort-label">🔽 Trier par :</span>
+        <button class="sort-btn" [class.sort-active]="sortField === 'date'" (click)="setSortField('date')">
+          📅 Date
+        </button>
+        <button class="sort-btn" [class.sort-active]="sortField === 'etat'" (click)="setSortField('etat')">
+          🏷️ État
+        </button>
+        <button class="sort-btn" [class.sort-active]="sortField === 'diagnostic'" (click)="setSortField('diagnostic')">
+          🩺 Diagnostic
+        </button>
+        <button class="sort-btn sort-order-btn" (click)="toggleSortOrder()">
+          {{ sortOrder === 'asc' ? '↑ Croissant' : '↓ Décroissant' }}
+        </button>
+
+        <div class="sort-divider"></div>
+
+        <span class="sort-label">Filtrer :</span>
+        <select class="sort-select" [(ngModel)]="filterEtat" (ngModelChange)="applyFiltersAndSort()">
+          <option value="">Tous les états</option>
+          <option value="Prévu">Prévu</option>
+          <option value="Planifié">Planifié</option>
+          <option value="Confirmé">Confirmé</option>
+          <option value="Terminé">Terminé</option>
+          <option value="Annulé">Annulé</option>
+        </select>
+
+        <input
+          class="sort-input"
+          [(ngModel)]="filterDiagnostic"
+          (ngModelChange)="applyFiltersAndSort()"
+          placeholder="🔍 Filtrer diagnostic…">
+      </div>
+
+      <!-- ── KANBAN BOARD ── -->
+      <div class="kanban-board">
+        <div
+          *ngFor="let col of kanbanColumns"
+          class="kanban-col"
+          [ngClass]="[col.cssClass, col.pendingChanges.size > 0 ? 'col-has-changes' : '']"
+          (dragover)="onDragOver($event)"
+          (drop)="onDrop(col)">
+
+          <!-- En-tête colonne -->
+          <div class="kanban-col-header">
+            <span class="kanban-col-icon">{{ col.icon }}</span>
+            <span class="kanban-col-title">{{ col.label }}</span>
+            <span class="kanban-col-count">{{ col.items.length }}</span>
+            <span *ngIf="col.pendingChanges.size > 0" class="pending-badge">
+              {{ col.pendingChanges.size }} modif.
+            </span>
+          </div>
+
+          <!-- Cartes paginées -->
+          <div
+            *ngFor="let rdv of col.pagedItems"
+            class="kanban-card"
+            [class.kanban-card-modified]="col.pendingChanges.has(rdv.idRendezvous)"
+            draggable="true"
+            (dragstart)="onDragStart(rdv, col)"
+            (dragend)="onDragEnd()">
+            <div class="kanban-card-date">📅 {{ rdv.dateRendezvous | date:'dd/MM/yyyy' }}</div>
+            <div class="kanban-card-diag">🩺 {{ rdv.consultation?.diagnostic || 'Sans diagnostic lié' }}</div>
+            <div class="kanban-card-footer">
+              <span class="kanban-card-id">#{{ rdv.idRendezvous }}</span>
+              <span *ngIf="col.pendingChanges.has(rdv.idRendezvous)" class="modified-dot" title="Non sauvegardé">●</span>
+            </div>
+          </div>
+
+          <!-- Colonne vide -->
+          <div *ngIf="col.items.length === 0" class="kanban-empty">
+            Aucun rendez-vous
+          </div>
+
+          <!-- Pagination colonne -->
+          <div class="col-pagination" *ngIf="getColTotalPages(col) > 1">
+            <button class="col-page-btn" (click)="colGoToPage(col, col.currentPage - 1)" [disabled]="col.currentPage === 1">‹</button>
+            <span class="col-page-info">{{ col.currentPage }} / {{ getColTotalPages(col) }}</span>
+            <button class="col-page-btn" (click)="colGoToPage(col, col.currentPage + 1)" [disabled]="col.currentPage === getColTotalPages(col)">›</button>
+          </div>
+
+          <!-- Bouton Save colonne -->
+          <div class="col-save-area">
+            <button
+              class="btn-save-col"
+              [class.btn-save-active]="col.pendingChanges.size > 0"
+              [class.btn-save-success]="col.saveSuccess"
+              [disabled]="col.pendingChanges.size === 0 || col.saving"
+              (click)="saveColumn(col)">
+              <span *ngIf="col.saving" class="save-spinner"></span>
+              <span *ngIf="col.saveSuccess && !col.saving">✅ Enregistré !</span>
+              <span *ngIf="!col.saveSuccess && !col.saving">
+                💾 Enregistrer{{ col.pendingChanges.size > 0 ? ' (' + col.pendingChanges.size + ')' : '' }}
+              </span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Barre globale modifications en attente -->
+      <div *ngIf="totalPendingChanges > 0" class="global-pending-bar">
+        <span>⚠️ {{ totalPendingChanges }} modification(s) non enregistrée(s)</span>
+        <button class="btn-save-all" (click)="saveAllColumns()">
+          <span *ngIf="savingAll" class="save-spinner save-spinner-white"></span>
+          💾 Tout enregistrer
+        </button>
+      </div>
+
+    </div><!-- /section kanban -->
+
+  </div><!-- /!loading -->
+</div><!-- /detail-container -->
+
+<!-- TOASTS -->
+<div class="toast toast-success" *ngIf="toastSuccess">✅ {{ toastMsg }}</div>
+<div class="toast toast-error"   *ngIf="toastError">❌ {{ toastMsg }}</div>

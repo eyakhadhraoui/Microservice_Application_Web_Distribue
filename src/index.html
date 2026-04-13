@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    // Polyfill pour les libs (sockjs-client, stomp) qui utilisent "global" (Node) dans le navigateur
+    (function(g) { if (typeof g.global === 'undefined') g.global = g; })(typeof globalThis !== 'undefined' ? globalThis : window);
+  </script>
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

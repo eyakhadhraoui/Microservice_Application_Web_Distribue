@@ -1,2 +1,2 @@
-/mvnw text eol=lf
-*.cmd text eol=crlf
+# Scripts lancés dans les images Linux (Docker) : éviter CRLF → « no such file or directory »
+*.sh text eol=lf

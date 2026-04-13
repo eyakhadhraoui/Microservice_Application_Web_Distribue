@@ -1,0 +1,63 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-header">
+      <h1 class="login-logo">KidneyCare</h1>
+      <p class="login-subtitle">Patient portal & doctor space</p>
+    </div>
+
+    <div class="login-body">
+      <p class="login-message">
+        Sign in with your username and password (Keycloak).
+      </p>
+
+      <form class="login-form" (ngSubmit)="onSubmit()" #loginForm="ngForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input
+            id="username"
+            type="text"
+            name="username"
+            [(ngModel)]="username"
+            required
+            placeholder="Username"
+            autocomplete="username"
+          />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            [(ngModel)]="password"
+            required
+            placeholder="Password"
+            autocomplete="current-password"
+          />
+        </div>
+
+        <div class="login-error" *ngIf="error">{{ error }}</div>
+
+        <button
+          type="submit"
+          class="btn-login"
+          [disabled]="loading || loginForm.invalid"
+        >
+          <span *ngIf="!loading">Sign in</span>
+          <span *ngIf="loading" class="login-spinner"></span>
+        </button>
+      </form>
+
+      <p class="login-hint">
+        Your credentials are managed by Keycloak. The Spring Boot backend validates the connection.
+      </p>
+      <p class="login-register-link">
+        No account yet? <a routerLink="/register">Create a patient account</a>
+      </p>
+    </div>
+
+    <div class="login-footer">
+      <span class="login-footer-text">KidneyCare — Secure login</span>
+    </div>
+  </div>
+</div>

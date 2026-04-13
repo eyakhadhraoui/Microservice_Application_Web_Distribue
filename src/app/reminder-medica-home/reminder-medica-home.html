@@ -1,0 +1,251 @@
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  reminder-medica-home.html  v6 — scanner en modal      ║
+     ║  Pas de navbar locale : la page s'affiche sous le      ║
+     ║  layout principal (Navbar KidneyCare) via /home/reminders║
+     ╚══════════════════════════════════════════════════════════╝ -->
+<div class="page">
+
+  <!-- ══════════════════ MODAL CONFIRMATION ══════════════════ -->
+  <div class="modal-overlay" *ngIf="showDoseConfirmModal" (click)="closeModal()">
+    <div class="rmd-modal" (click)="$event.stopPropagation()">
+      <button class="rmd-modal__x" (click)="closeModal()">✕</button>
+      <div class="rmd-modal__ico">💊</div>
+      <h3 class="rmd-modal__title">Confirmer la prise</h3>
+      <p class="rmd-modal__desc">
+        <strong>{{ pendingDoseAction?.medName }}</strong><br>
+        {{ pendingDoseAction?.time }} · Dose {{ (pendingDoseAction?.doseIndex ?? 0) + 1 }}
+      </p>
+      <div class="rmd-modal__row">
+        <button class="rmd-modal__btn --ok"   (click)="confirmTakenNow()">✅ Pris<span>avec retard</span></button>
+        <button class="rmd-modal__btn --miss" (click)="confirmNotTaken()">❌ Non pris<span>oublié</span></button>
+      </div>
+      <button class="rmd-modal__cancel" (click)="closeModal()">Annuler</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ MODAL HISTORIQUE ══════════════════ -->
+  <div class="modal-overlay" *ngIf="showHistoryModal" (click)="closeHistoryModal()">
+    <div class="rmd-modal rmd-modal--history" (click)="$event.stopPropagation()">
+      <button class="rmd-modal__x" (click)="closeHistoryModal()">✕</button>
+      <h3 class="rmd-modal__title">📋 Historique du jour</h3>
+      <p class="rmd-modal__subtitle">{{ historyMedName }}</p>
+      <div class="rmd-history-list">
+        <div *ngFor="let entry of historyEntries" class="rmd-history-item"
+             [class.--taken]="entry.status === 'TAKEN' || entry.status === 'DELAYED'"
+             [class.--missed]="entry.status === 'MISSED'"
+             [class.--pending]="entry.status === 'PENDING'">
+          <span class="rmd-history-item__time">{{ entry.time }}</span>
+          <span class="rmd-history-item__ico">
+            <ng-container *ngIf="entry.status === 'TAKEN'">✅</ng-container>
+            <ng-container *ngIf="entry.status === 'DELAYED'">🕐</ng-container>
+            <ng-container *ngIf="entry.status === 'MISSED'">❌</ng-container>
+            <ng-container *ngIf="entry.status === 'PENDING'">⏳</ng-container>
+          </span>
+          <span class="rmd-history-item__lbl">
+            <ng-container *ngIf="entry.status === 'TAKEN'">Pris</ng-container>
+            <ng-container *ngIf="entry.status === 'DELAYED'">Pris avec retard</ng-container>
+            <ng-container *ngIf="entry.status === 'MISSED'">Oublié</ng-container>
+            <ng-container *ngIf="entry.status === 'PENDING'">En attente</ng-container>
+          </span>
+        </div>
+        <div *ngIf="historyEntries.length === 0" class="rmd-history-empty">
+          Aucun historique pour ce médicament aujourd'hui.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ MODAL SCANNER ══════════════════ -->
+  <div class="modal-overlay rmd-scanner-overlay" *ngIf="showScanner" (click)="showScanner = false">
+    <div class="rmd-scanner-modal" (click)="$event.stopPropagation()">
+      <div class="rmd-scanner-modal__header">
+        <div class="rmd-scanner-modal__title">
+          <span style="font-size:22px">📷</span>
+          <span>Scanner un médicament</span>
+        </div>
+        <button class="rmd-modal__x" (click)="showScanner = false">✕</button>
+      </div>
+      <div class="rmd-scanner-modal__body">
+        <app-medication-scanner [prescriptionItems]="prescriptionItems">
+        </app-medication-scanner>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ HERO COMPLIANCE ══════════════════ -->
+  <div class="rmd-hero"
+       [class.rmd-hero--ok]="getAdherencePct() === 100"
+       [class.rmd-hero--warn]="getAdherencePct() >= 70 && getAdherencePct() < 100"
+       [class.rmd-hero--bad]="getAdherencePct() < 70 && getTotalDosesCount() > 0">
+
+    <div class="rmd-hero__left">
+      <div class="rmd-hero__score">
+        <span class="rmd-hero__num">{{ getTakenDosesCount() }}</span>
+        <span class="rmd-hero__denom">/{{ getTotalDosesCount() }}</span>
+      </div>
+      <div class="rmd-hero__score-lbl">doses prises aujourd'hui</div>
+      <div class="rmd-hero__date">{{ todayLabel }}</div>
+      <div class="rmd-hero__bar-wrap">
+        <div class="rmd-hero__bar">
+          <div class="rmd-hero__fill" [style.width]="getAdherencePct() + '%'"></div>
+        </div>
+        <span class="rmd-hero__pct">{{ getAdherencePct() }}%</span>
+      </div>
+      <div class="rmd-hero__compliance-lbl">
+        <ng-container *ngIf="getAdherencePct() === 100 && getTotalDosesCount() > 0">👍 Excellent suivi — 100% des doses prises</ng-container>
+        <ng-container *ngIf="getAdherencePct() >= 70 && getAdherencePct() < 100">⚠️ Suivi partiel — {{ getAdherencePct() }}% des doses prises</ng-container>
+        <ng-container *ngIf="getAdherencePct() < 70 && getTotalDosesCount() > 0">🚨 Suivi insuffisant — {{ getAdherencePct() }}% seulement</ng-container>
+      </div>
+    </div>
+
+    <div class="rmd-hero__medical-box">
+      <ng-container *ngIf="getAdherencePct() === 100 && getTotalDosesCount() > 0">
+        <div class="rmd-hero__medical-title"><span class="rmd-status-dot --ok"></span> État du traitement aujourd'hui</div>
+        <div class="rmd-hero__medical-desc">Adhérence : <strong>100%</strong><br>Aucune dose critique manquée ✅ Traitement bien suivi.</div>
+      </ng-container>
+      <ng-container *ngIf="getAdherencePct() >= 70 && getAdherencePct() < 100">
+        <div class="rmd-hero__medical-title"><span class="rmd-status-dot --warn"></span> Suivi partiellement respecté</div>
+        <div class="rmd-hero__medical-desc">Adhérence : <strong>{{ getAdherencePct() }}%</strong><br>{{ getPendingDosesCount() }} dose(s) restante(s). Pensez à les administrer.</div>
+      </ng-container>
+      <ng-container *ngIf="getAdherencePct() < 70 && getTotalDosesCount() > 0">
+        <div class="rmd-hero__medical-title"><span class="rmd-status-dot --bad"></span> Attention — Doses manquées</div>
+        <div class="rmd-hero__medical-desc"><strong>{{ todayCompliance?.missedToday || getPendingDosesCount() }} dose(s)</strong> importante(s) non prises.<br>Contactez votre médecin si besoin.</div>
+      </ng-container>
+      <ng-container *ngIf="getTotalDosesCount() === 0">
+        <div class="rmd-hero__medical-title"><span class="rmd-status-dot --ok"></span> Chargement…</div>
+      </ng-container>
+      <div class="rmd-hero__reco" *ngIf="getAdherencePct() < 80 && getTotalDosesCount() > 0">
+        <span>📢</span>
+        <span>Respectez les horaires fixes. Les médicaments anti-rejet doivent être pris régulièrement pour protéger le greffon.</span>
+      </div>
+    </div>
+
+    <button class="rmd-hero__all-btn" (click)="markAllTaken()" *ngIf="getPendingDosesCount() > 0">
+      ✅ Tout marquer pris
+    </button>
+  </div>
+
+  <!-- ══════════════════ CONSEIL PARENT ══════════════════ -->
+  <div class="rmd-tip-bar">
+    <span>💡</span>
+    <span><strong>Conseil :</strong> Donnez les médicaments à heure fixe et utilisez une alarme. Les immunosuppresseurs doivent être pris tous les jours même si l'enfant se sent bien.</span>
+  </div>
+
+  <!-- ══════════════════ ACTIONS RAPIDES (modal navbar = même UX que /home) ══════════════════ -->
+  <div class="rmd-quick-actions" *ngIf="auth.hasRole(['patient'])">
+    <button type="button" class="rmd-quick-btn rmd-quick-btn--ord" (click)="openMesOrdonnances()">
+      📄 Mes ordonnances
+    </button>
+    <button type="button" class="rmd-quick-btn rmd-quick-btn--rdv" (click)="openRendezVousModal()">
+      📅 Prendre rendez-vous
+    </button>
+  </div>
+
+  <!-- ══════════════════ BOUTON SCANNER ══════════════════ -->
+  <div class="rmd-scanner-section">
+    <button class="rmd-scan-btn" (click)="showScanner = true">
+      📷 Scanner un médicament
+    </button>
+  </div>
+
+  <!-- ══════════════════ LISTE MÉDICAMENTS ══════════════════ -->
+  <div class="rmd-checklist">
+
+    <div *ngIf="medications.length === 0" class="rmd-checklist__empty">
+      <div style="font-size:42px;margin-bottom:12px">💊</div>
+      <p>Chargement du traitement en cours…</p>
+    </div>
+
+    <div *ngFor="let med of medications; let i = index"
+         class="rmd-card"
+         [class.rmd-card--done]="isFullyTaken(med.id)"
+         [class.rmd-card--critical]="isImmunosuppressorMed(med.id) && !isFullyTaken(med.id)"
+         [class.rmd-card--monitoring]="med.requiresMonitoring && !isImmunosuppressorMed(med.id) && !isFullyTaken(med.id)"
+         [style.animation-delay]="i * 0.07 + 's'">
+
+      <div class="rmd-card__head" [style.border-left-color]="getCatColor(med.category)">
+        <div class="rmd-card__ico" [style.background]="getCatColor(med.category) + '18'">{{ getCatEmoji(med.category) }}</div>
+        <div class="rmd-card__info">
+          <div class="rmd-card__name-row">
+            <span class="rmd-card__name" [class.--done]="isFullyTaken(med.id)">{{ med.name }}</span>
+            <span *ngIf="isImmunosuppressorMed(med.id)" class="rmd-badge-critical">🛡 Immunosuppresseur — Très important</span>
+            <span *ngIf="med.requiresMonitoring && !isImmunosuppressorMed(med.id)" class="rmd-badge-monitor">🔬 Surveillance requise</span>
+          </div>
+          <div class="rmd-card__meta">
+            <span>{{ med.dosage }} {{ med.unit }}</span>
+            <span *ngIf="med.form" class="rmd-sep">·</span>
+            <span *ngIf="med.form">{{ med.form }}</span>
+            <span *ngIf="med.category" class="rmd-cat-tag"
+                  [style.color]="getCatColor(med.category)"
+                  [style.background]="getCatColor(med.category) + '14'">{{ med.category }}</span>
+          </div>
+        </div>
+        <div class="rmd-card__right">
+          <div class="rmd-card__badge"
+               [class.--done]="isFullyTaken(med.id)"
+               [class.--partial]="getTakenDosesForMed(med.id) > 0 && !isFullyTaken(med.id)"
+               [class.--pending]="getTakenDosesForMed(med.id) === 0">
+            <ng-container *ngIf="isFullyTaken(med.id)">✅ Terminé</ng-container>
+            <ng-container *ngIf="!isFullyTaken(med.id)">{{ getTakenDosesForMed(med.id) }} / {{ getTotalDosesForMed(med.id) }} doses</ng-container>
+          </div>
+          <button class="rmd-history-btn" (click)="openHistory(med)">📋 Historique</button>
+        </div>
+      </div>
+
+      <div class="rmd-dose-table">
+        <div class="rmd-dose-table__head">
+          <span class="rmd-col-chk"></span>
+          <span class="rmd-col-moment">Moment</span>
+          <span class="rmd-col-time">Heure</span>
+          <span class="rmd-col-dose">Dose N°</span>
+          <span class="rmd-col-status">État</span>
+        </div>
+
+        <div *ngFor="let dose of getUniqueDoses(med.id)"
+             class="rmd-dose-row"
+             [class.rmd-dose-row--done]="isDoseTaken(med.id, dose.itemId, dose.doseIdx)"
+             [class.rmd-dose-row--missed]="isDoseMissed(med.id, dose.itemId, dose.doseIdx)"
+             [class.rmd-dose-row--saving]="isDoseSaving(med.id, dose.itemId, dose.doseIdx)">
+
+          <div class="rmd-col-chk">
+            <label class="rmd-chk"
+                   [class.rmd-chk--done]="isDoseTaken(med.id, dose.itemId, dose.doseIdx)"
+                   [class.rmd-chk--disabled]="isDoseTaken(med.id, dose.itemId, dose.doseIdx) || isDoseSaving(med.id, dose.itemId, dose.doseIdx)">
+              <input class="rmd-chk__native" type="checkbox"
+                     [checked]="isDoseTaken(med.id, dose.itemId, dose.doseIdx)"
+                     [disabled]="isDoseTaken(med.id, dose.itemId, dose.doseIdx) || isDoseSaving(med.id, dose.itemId, dose.doseIdx)"
+                     (change)="toggleDoseByKey(dose.med, dose.item, dose.doseIdx)"/>
+              <span class="rmd-chk__face" [style.--cc]="getCatColor(med.category)">
+                <svg *ngIf="isDoseTaken(med.id, dose.itemId, dose.doseIdx) && !isDoseSaving(med.id, dose.itemId, dose.doseIdx)" viewBox="0 0 20 20" fill="none">
+                  <polyline points="4,10 8,14 16,6" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg *ngIf="isDoseSaving(med.id, dose.itemId, dose.doseIdx)" class="rmd-spin" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="7" stroke="white" stroke-width="2.5" stroke-dasharray="26" stroke-dashoffset="13"/>
+                </svg>
+              </span>
+            </label>
+          </div>
+
+          <div class="rmd-col-moment"><span class="rmd-moment-tag">{{ getDoseMoment(dose.time, dose.doseIdx) }}</span></div>
+          <div class="rmd-col-time"><span class="rmd-time-val">{{ dose.time }}</span></div>
+          <div class="rmd-col-dose"><span class="rmd-dose-num">Dose {{ dose.doseLabel }}</span></div>
+          <div class="rmd-col-status">
+            <span class="rmd-pill rmd-pill--done"    *ngIf="isDoseTaken(med.id, dose.itemId, dose.doseIdx)">✓ Pris</span>
+            <span class="rmd-pill rmd-pill--saving"  *ngIf="isDoseSaving(med.id, dose.itemId, dose.doseIdx)">…</span>
+            <span class="rmd-pill rmd-pill--missed"  *ngIf="isDoseMissed(med.id, dose.itemId, dose.doseIdx)">❌ Oubliée</span>
+            <span class="rmd-pill rmd-pill--pending"
+                  *ngIf="!isDoseTaken(med.id, dose.itemId, dose.doseIdx)
+                      && !isDoseSaving(med.id, dose.itemId, dose.doseIdx)
+                      && !isDoseMissed(med.id, dose.itemId, dose.doseIdx)">⏳ En attente</span>
+          </div>
+        </div>
+
+        <div *ngIf="getUniqueDoses(med.id).length === 0" class="rmd-dose-table__empty">
+          Aucune dose planifiée pour aujourd'hui.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

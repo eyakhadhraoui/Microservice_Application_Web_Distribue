@@ -1,0 +1,29 @@
+<!-- Toast notification -->
+@if (notification) {
+  <div
+    class="app-toast app-toast-{{ notification.type }}"
+    role="alert"
+    (click)="closeNotification()"
+  >
+    <span class="app-toast-text">{{ notification.text }}</span>
+    <button type="button" class="app-toast-close" aria-label="Close" (click)="closeNotification(); $event.stopPropagation()">×</button>
+  </div>
+}
+
+<!-- Confirm dialog -->
+@if (confirmDialog) {
+  <div class="app-confirm-overlay" (click)="onConfirm(false)">
+    <div class="app-confirm-box" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" [attr.aria-labelledby]="'confirm-title'">
+      <h2 class="app-confirm-title" id="confirm-title">{{ confirmDialog.title }}</h2>
+      <p class="app-confirm-message">{{ confirmDialog.message }}</p>
+      <div class="app-confirm-actions">
+        <button type="button" class="app-confirm-btn app-confirm-cancel" (click)="onConfirm(false)">
+          {{ confirmDialog.cancelLabel }}
+        </button>
+        <button type="button" class="app-confirm-btn app-confirm-ok" (click)="onConfirm(true)">
+          {{ confirmDialog.confirmLabel }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

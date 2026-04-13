@@ -1,0 +1,130 @@
+<div class="scanner-wrapper">
+
+  <div class="scanner-header">
+    <div class="scanner-icon">📷</div>
+    <div>
+      <h2>Scanner un médicament</h2>
+      <p>Photographiez la boîte et vérifiez qu'il correspond à votre prescription</p>
+      <p *ngIf="loadingPrescriptions" class="scanner-prescriptions-loading">Chargement des prescriptions…</p>
+      <p *ngIf="!loadingPrescriptions && prescriptionItems.length > 0" class="scanner-prescriptions-loaded">{{ prescriptionItems.length }} médicament(s) chargé(s) pour la comparaison</p>
+    </div>
+  </div>
+
+  <!-- Zone upload -->
+  <div *ngIf="!previewUrl"
+       class="drop-zone"
+       [class.drop-zone--active]="isDragging"
+       (dragover)="onDragOver($event)"
+       (dragleave)="onDragLeave($event)"
+       (drop)="onDrop($event)">
+
+    <div class="drop-zone__icon">📦</div>
+    <p class="drop-zone__title">Glissez la photo ici</p>
+    <p class="drop-zone__sub">ou</p>
+
+    <!-- ✅ FIX : label avec for + input avec id séparé -->
+    <label class="drop-zone__btn" for="medScanInput">
+      📷 Choisir une photo
+    </label>
+    <input
+      id="medScanInput"
+      type="file"
+      accept="image/*"
+      (change)="onFileSelected($event)"
+      style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden;">
+
+    <p class="drop-zone__hint">JPG, PNG, WEBP · Max 10MB</p>
+  </div>
+
+  <!-- Prévisualisation -->
+  <div *ngIf="previewUrl" class="preview-section">
+    <img [src]="previewUrl" class="preview-img" alt="Médicament scanné">
+    <button class="btn-reset" (click)="reset()">🔄 Nouvelle photo</button>
+  </div>
+
+  <!-- Chargement OCR -->
+  <div *ngIf="isScanning" class="scanning-loader">
+    <div class="scan-spinner"></div>
+    <p>🔍 Analyse de l'image en cours…</p>
+    <small>Lecture du texte par OCR (peut prendre 10-20 secondes)</small>
+  </div>
+
+  <!-- Erreur -->
+  <div *ngIf="errorMsg" class="scan-error">
+    ⚠️ {{ errorMsg }}
+  </div>
+
+  <!-- Résultat OCR -->
+  <div *ngIf="scanResult && !isScanning" class="scan-result-section">
+
+    <div class="ocr-detected">
+      <h3>🔍 Texte détecté</h3>
+      <div class="ocr-grid">
+        <div class="ocr-field">
+          <span class="ocr-label">Nom détecté</span>
+          <span class="ocr-value">{{ scanResult.detectedName ?? '—' }}</span>
+        </div>
+        <div class="ocr-field">
+          <span class="ocr-label">Dosage détecté</span>
+          <span class="ocr-value">{{ scanResult.detectedDosage ?? '—' }}</span>
+        </div>
+        <div class="ocr-field">
+          <span class="ocr-label">Péremption</span>
+          <span class="ocr-value">{{ scanResult.detectedExpiry ?? '—' }}</span>
+        </div>
+        <div class="ocr-field">
+          <span class="ocr-label">Confiance OCR</span>
+          <span class="ocr-value">{{ scanResult.confidence | number:'1.0-0' }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Résultat comparaison -->
+    <div *ngIf="compareResult" class="compare-result" [ngClass]="getStatusClass()">
+
+      <div class="compare-result__header">
+        <span class="compare-result__icon">{{ getStatusIcon() }}</span>
+        <span class="compare-result__label">{{ getStatusLabel() }}</span>
+      </div>
+
+      <!-- Médicament trouvé -->
+      <div *ngIf="compareResult.matchedItem" class="matched-item">
+        <h4>Médicament correspondant dans la prescription :</h4>
+        <div class="matched-item__body">
+          <span class="matched-name">{{ compareResult.matchedItem.medicationName }}</span>
+          <span class="matched-dose" *ngIf="compareResult.matchedItem.dosage">
+            {{ compareResult.matchedItem.dosage }}
+          </span>
+          <span class="matched-freq" *ngIf="compareResult.matchedItem.frequency">
+            {{ compareResult.matchedItem.frequency }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Problèmes détectés -->
+      <div *ngIf="compareResult.issues.length > 0" class="issues-list">
+        <div *ngFor="let issue of compareResult.issues" class="issue-item">
+          ⚠️ {{ issue }}
+        </div>
+      </div>
+
+      <!-- Conseil selon statut -->
+      <div class="compare-advice">
+        <ng-container *ngIf="compareResult.status === 'MATCH'">
+          ✅ Ce médicament est bien dans votre prescription. Vous pouvez l'administrer.
+        </ng-container>
+        <ng-container *ngIf="compareResult.status === 'WRONG_DOSAGE'">
+          ⚠️ Le dosage est différent de la prescription. Vérifiez avec votre médecin avant d'administrer.
+        </ng-container>
+        <ng-container *ngIf="compareResult.status === 'NOT_FOUND'">
+          ❌ Ce médicament n'est pas dans la prescription active. N'administrez pas sans avis médical.
+        </ng-container>
+      </div>
+
+    </div>
+
+  
+
+  </div>
+
+</div>

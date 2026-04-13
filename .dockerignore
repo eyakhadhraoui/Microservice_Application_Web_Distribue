@@ -1,4 +1,7 @@
-target
+node_modules
+dist
+.angular
 .git
 .idea
-*.iml
+*.md
+coverage

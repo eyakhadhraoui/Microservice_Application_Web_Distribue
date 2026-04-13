@@ -1,0 +1,45 @@
+<!-- NAVBAR commune back -->
+<div class="navbar">
+  <a routerLink="/back" class="logo"><span>🏥</span><span>Kidney Care</span></a>
+  <div class="nav-menu">
+    <a routerLink="/back" routerLinkActive="active" class="nav-item">Dashboard</a>
+    <a routerLink="/affiche-consultation" routerLinkActive="active" class="nav-item">Consultations</a>
+    <a routerLink="/consultation" routerLinkActive="active" class="nav-item">Ajouter consultation</a>
+    <a routerLink="/ajouter-rendezvous" routerLinkActive="active" class="nav-item">Ajouter RDV</a>
+    <a routerLink="/ajouter-rapport" routerLinkActive="active" class="nav-item">Ajouter rapport</a>
+    <a routerLink="/affiche-parametre-vital" routerLinkActive="active" class="nav-item">Paramètres vitaux</a>
+    <a routerLink="/ajouter-constante-vitale" routerLinkActive="active" class="nav-item">Ajouter constante</a>
+    <a routerLink="/ajouter-indicateur-vital" routerLinkActive="active" class="nav-item">Ajouter indicateur</a>
+    <a routerLink="/treatment" routerLinkActive="active" class="nav-item">Traitements</a>
+    <a routerLink="/nutrition-home" routerLinkActive="active" class="nav-item">Nutrition</a>
+  </div>
+  <div class="user-section">
+    <div class="user-info">
+      <div class="user-avatar">{{ doctor.initials }}</div>
+      <div>
+        <div class="user-name">{{ doctor.name }}</div>
+        <div class="user-role">{{ doctor.role }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTAINER + SIDEBAR commune -->
+<div class="container">
+  <div class="sidebar">
+    <a routerLink="/back" routerLinkActive="active" class="sidebar-item"><span>📊</span><span>Dashboard</span></a>
+    <a routerLink="/affiche-consultation" routerLinkActive="active" class="sidebar-item"><span>🩺</span><span>Consultations</span></a>
+    <a routerLink="/consultation" routerLinkActive="active" class="sidebar-item"><span>👨‍⚕️</span><span>Ajouter consultation</span></a>
+    <a routerLink="/ajouter-rendezvous" routerLinkActive="active" class="sidebar-item"><span>📅</span><span>Ajouter RDV</span></a>
+    <a routerLink="/ajouter-rapport" routerLinkActive="active" class="sidebar-item"><span>📝</span><span>Ajouter rapport</span></a>
+    <a routerLink="/affiche-parametre-vital" routerLinkActive="active" class="sidebar-item"><span>💓</span><span>Paramètres vitaux</span></a>
+    <a routerLink="/ajouter-constante-vitale" routerLinkActive="active" class="sidebar-item"><span>🔬</span><span>Ajouter constante</span></a>
+    <a routerLink="/ajouter-indicateur-vital" routerLinkActive="active" class="sidebar-item"><span>📊</span><span>Ajouter indicateur</span></a>
+    <a routerLink="/treatment" routerLinkActive="active" class="sidebar-item"><span>💊</span><span>Traitements</span></a>
+    <a routerLink="/nutrition-home" routerLinkActive="active" class="sidebar-item"><span>🥗</span><span>Nutrition</span></a>
+    <div class="sidebar-item logout" (click)="logout()"><span>🚪</span><span>Déconnexion</span></div>
+  </div>
+  <div class="main-content">
+    <ng-content></ng-content>
+  </div>
+</div>

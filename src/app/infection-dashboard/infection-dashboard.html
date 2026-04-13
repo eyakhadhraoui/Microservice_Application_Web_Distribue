@@ -1,0 +1,742 @@
+<div class="db-wrapper">
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="logo">KidneyCare <span class="logo-sub">Analytics</span></div>
+    <div class="nav-links">
+      <a routerLink="/home">Home</a>
+      <a routerLink="/back/infections" class="active">Infections</a>
+      <a routerLink="/doctor">Doctor Dashboard</a>
+    </div>
+    <div class="nav-user">
+      <div class="alert-chip" *ngIf="alerts.length > 0">
+        <span class="alert-chip-dot"></span>
+        {{ alerts.length }} alert{{ alerts.length === 1 ? '' : 's' }}
+      </div>
+      <div class="notif">🔔
+        <span class="badge" *ngIf="criticalCount > 0">{{ criticalCount }}</span>
+      </div>
+      <div class="profile">AD</div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <h3>Dashboard</h3>
+      <ul>
+        <li [class.active]="activeSidebarItem==='overview'"   (click)="activeSidebarItem='overview'">Overview</li>
+        <li [class.active]="activeSidebarItem==='infections'" (click)="activeSidebarItem='infections'">Infections</li>
+        <li [class.active]="activeSidebarItem==='vaccines'"   (click)="activeSidebarItem='vaccines'">Vaccinations</li>
+        <li [class.active]="activeSidebarItem==='boosters'"   (click)="activeSidebarItem='boosters'">Boosters</li>
+        <li [class.active]="activeSidebarItem==='alerts'"     (click)="activeSidebarItem='alerts'">
+          Alerts
+          <span *ngIf="alerts.length > 0" class="sidebar-badge">{{ alerts.length }}</span>
+        </li>
+      </ul>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sync-box">
+        <button class="sync-btn" (click)="manualRefresh()">Refresh</button>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <ul>
+        <li (click)="exportData()" class="export-li">Export JSON</li>
+        <li routerLink="/back/infections">Back to CRUD</li>
+      </ul>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- PAGE HEADER -->
+      <div class="page-header">
+        <div>
+          <h1>Infection & Vaccination Dashboard</h1>
+          <p class="page-sub">Real-time analytics from your medical records</p>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <div class="storage-tag">
+            {{ totalInfections }} infections · {{ totalVaccinations }} vaccinations
+          </div>
+          <button class="refresh-btn" (click)="manualRefresh()">Sync Now</button>
+        </div>
+      </div>
+
+      <!-- ALERTS BANNER -->
+      <div *ngIf="alerts.length > 0" class="alerts-banner">
+        <div class="alerts-banner-title">Active Alerts</div>
+        <div *ngFor="let alert of alerts" class="alert-row" [class]="'alert-' + alert.level">
+          <span class="alert-icon">
+            {{ alert.level === 'critical' ? '🔴' : alert.level === 'warning' ? '🟠' : '🔵' }}
+          </span>
+          {{ alert.message }}
+        </div>
+      </div>
+
+      <!-- 9 STAT CARDS — inline grid to avoid needing a new CSS class -->
+      <div class="stats" style="grid-template-columns: repeat(3, 1fr);">
+
+        <div class="card">
+          <div class="card-icon-wrap" style="background:#eff6ff;">🦠</div>
+          <p class="card-label">Total Infections</p>
+          <h2>{{ totalInfections }}</h2>
+          <p class="card-sub">{{ recentInfectionCount }} in last 30 days</p>
+        </div>
+
+        <div class="card alert-card">
+          <div class="card-icon-wrap" style="background:#fff1f2;">🚨</div>
+          <p class="card-label">Severe / Critical</p>
+          <h2>{{ criticalCount }}</h2>
+          <p class="card-sub">Require monitoring</p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon-wrap" style="background:#f0fdf4;">💉</div>
+          <p class="card-label">Vaccinations</p>
+          <h2>{{ totalVaccinations }}</h2>
+          <p class="card-sub">{{ takenCount }} taken · {{ notTakenCount }} pending</p>
+        </div>
+
+        <div class="card" [style.borderTop]="'4px solid ' + getScoreColor(vaccinationScore)">
+          <div class="card-icon-wrap" style="background:#f0fdf4;">📊</div>
+          <p class="card-label">Vaccine Score</p>
+          <h2 [style.color]="getScoreColor(vaccinationScore)">
+            {{ vaccinationScore }}<span style="font-size:14px; font-weight:500;">/100</span>
+          </h2>
+          <p class="card-sub">{{ takenCount }} of {{ totalVaccinations }} taken</p>
+        </div>
+
+        <div class="card" [style.borderTop]="'4px solid ' + getScoreColor(boosterScore)">
+          <div class="card-icon-wrap" style="background:#fff7ed;">🔁</div>
+          <p class="card-label">Booster Score</p>
+          <h2 [style.color]="getScoreColor(boosterScore)">
+            {{ boosterScore }}<span style="font-size:14px; font-weight:500;">/100</span>
+          </h2>
+          <p class="card-sub">{{ boosterTakenCount }} of {{ vaccinationsWithBooster.length }} taken</p>
+        </div>
+
+        <div class="card" [class.alert-card]="overdueVaccinations.length > 0">
+          <div class="card-icon-wrap" style="background:#fff1f2;">🔴</div>
+          <p class="card-label">Overdue Vaccines</p>
+          <h2 [style.color]="overdueVaccinations.length > 0 ? '#ef4444' : '#10b981'">
+            {{ overdueVaccinations.length }}
+          </h2>
+          <p class="card-sub">Past due, not taken</p>
+        </div>
+
+        <div class="card" [class.alert-card]="overdueBoosterList.length > 0">
+          <div class="card-icon-wrap" style="background:#fff7ed;">🟠</div>
+          <p class="card-label">Overdue Boosters</p>
+          <h2 [style.color]="overdueBoosterList.length > 0 ? '#f97316' : '#10b981'">
+            {{ overdueBoosterList.length }}
+          </h2>
+          <p class="card-sub">Past due, not taken</p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon-wrap" style="background:#eff6ff;">🔗</div>
+          <p class="card-label">Coverage</p>
+          <h2 [style.color]="getScoreColor(infectionsCoveragePercent)">
+            {{ infectionsCoveragePercent }}<span style="font-size:14px;">%</span>
+          </h2>
+          <p class="card-sub">Infections with vaccine</p>
+        </div>
+
+        <div class="card"
+             [class.alert-card]="recurringTypes.length > 0"
+             [style.borderTop]="recurringTypes.length > 0 ? '4px solid #ef4444' : '4px solid #e2e8f0'">
+          <div class="card-icon-wrap" style="background:#fff1f2;">🔁</div>
+          <p class="card-label">Recurring Types</p>
+          <h2 [style.color]="recurringTypes.length > 0 ? '#ef4444' : '#10b981'">
+            {{ recurringTypes.length }}
+          </h2>
+          <p class="card-sub">Infection types seen 2+ times</p>
+        </div>
+
+      </div>
+
+      <!-- SEVERITY + MONTHLY BAR CHART -->
+      <div class="chart-row">
+
+        <div class="table-card" style="flex:1;">
+          <h3 class="section-title">Severity Distribution</h3>
+          <div *ngIf="!totalInfections" class="empty">
+            No infections recorded yet.
+          </div>
+          <div *ngFor="let s of severityDistribution" style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px; align-items:center;">
+              <span style="font-size:13px; font-weight:700;" [style.color]="s.color">{{ s.label }}</span>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span style="font-size:12px; color:#718096;">{{ s.count }} case{{ s.count === 1 ? '' : 's' }}</span>
+                <span style="font-size:12px; font-weight:800; min-width:36px; text-align:right;"
+                      [style.color]="s.color">{{ s.pct }}%</span>
+              </div>
+            </div>
+            <div style="background:#e2e8f0; border-radius:99px; height:10px; overflow:hidden;">
+              <div [style.width]="s.pct + '%'" [style.background]="s.color"
+                   style="height:100%; border-radius:99px;
+                          transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card" style="flex:1;">
+          <h3 class="section-title">Infections by Month</h3>
+          <div *ngIf="!infectionsByMonth.length" class="empty">
+            No dated infections yet.
+          </div>
+          <div style="display:flex; align-items:flex-end; gap:8px; height:160px; padding-top:10px;">
+            <div *ngFor="let m of infectionsByMonth"
+                 style="flex:1; display:flex; flex-direction:column;
+                         align-items:center; justify-content:flex-end; height:100%; gap:4px;">
+              <span style="font-size:11px; font-weight:800; color:#5a67d8;">{{ m.count }}</span>
+              <div [style.height]="m.barPct + '%'"
+                   style="width:100%; background:linear-gradient(180deg,#667eea,#5a67d8);
+                          border-radius:6px 6px 0 0; min-height:8px; transition:height 0.6s ease;"
+                   [title]="m.month + ': ' + m.count + ' infection(s)'">
+              </div>
+              <span style="font-size:9px; color:#718096; white-space:nowrap;">{{ m.month }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- LINE CHART ROW 1 — MULTI-LINE TREND + CUMULATIVE -->
+      <div class="chart-row" style="margin-top:20px;">
+
+        <div class="table-card" style="flex:2;">
+          <h3 class="section-title">Monthly Trend — Infections · Vaccinations · Boosters</h3>
+          <div class="chart-legend">
+            <span class="legend-dot" style="background:#ef4444;"></span> Infections
+            <span class="legend-dot" style="background:#3b82f6; margin-left:14px;"></span> Vaccinations
+            <span class="legend-dot" style="background:#f97316; margin-left:14px;"></span> Boosters
+          </div>
+          <div *ngIf="trendChartData.months.length < 2" class="empty">
+            Not enough monthly data yet.
+          </div>
+          <svg *ngIf="trendChartData.months.length >= 2"
+               viewBox="0 0 600 160" xmlns="http://www.w3.org/2000/svg"
+               style="width:100%; height:auto; overflow:visible; margin-top:8px;">
+            <g *ngFor="let g of getSvgGridY(trendChartData.maxVal)">
+              <line [attr.x1]="24" [attr.y1]="g.y" [attr.x2]="576" [attr.y2]="g.y"
+                    stroke="#f1f5f9" stroke-width="1"/>
+              <text [attr.x]="20" [attr.y]="g.y + 4" fill="#cbd5e1" font-size="9" text-anchor="end">{{ g.label }}</text>
+            </g>
+            <path [attr.d]="getSvgAreaPath(trendChartData.boostLine, trendChartData.maxVal)"
+                  fill="#f97316" fill-opacity="0.07"/>
+            <path [attr.d]="getSvgAreaPath(trendChartData.vacLine, trendChartData.maxVal)"
+                  fill="#3b82f6" fill-opacity="0.07"/>
+            <path [attr.d]="getSvgAreaPath(trendChartData.infLine, trendChartData.maxVal)"
+                  fill="#ef4444" fill-opacity="0.08"/>
+            <path [attr.d]="getSvgLinePath(trendChartData.boostLine, trendChartData.maxVal)"
+                  fill="none" stroke="#f97316" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path [attr.d]="getSvgLinePath(trendChartData.vacLine, trendChartData.maxVal)"
+                  fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path [attr.d]="getSvgLinePath(trendChartData.infLine, trendChartData.maxVal)"
+                  fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <g *ngFor="let d of getSvgDots(trendChartData.infLine, trendChartData.maxVal)">
+              <circle [attr.cx]="d.x" [attr.cy]="d.y" r="4" fill="#ef4444" stroke="white" stroke-width="1.5"/>
+              <text *ngIf="d.val > 0" [attr.x]="d.x" [attr.y]="d.y - 8"
+                    fill="#ef4444" font-size="9" text-anchor="middle" font-weight="700">{{ d.val }}</text>
+            </g>
+            <g *ngFor="let d of getSvgDots(trendChartData.vacLine, trendChartData.maxVal)">
+              <circle [attr.cx]="d.x" [attr.cy]="d.y" r="3.5" fill="#3b82f6" stroke="white" stroke-width="1.5"/>
+              <text *ngIf="d.val > 0" [attr.x]="d.x" [attr.y]="d.y - 7"
+                    fill="#3b82f6" font-size="9" text-anchor="middle" font-weight="700">{{ d.val }}</text>
+            </g>
+            <g *ngFor="let d of getSvgDots(trendChartData.boostLine, trendChartData.maxVal)">
+              <circle [attr.cx]="d.x" [attr.cy]="d.y" r="3" fill="#f97316" stroke="white" stroke-width="1.5"/>
+            </g>
+            <g *ngFor="let m of trendChartData.months; let i = index">
+              <text [attr.x]="24 + (trendChartData.months.length === 1 ? 0 : (i / (trendChartData.months.length - 1))) * 512"
+                    [attr.y]="152" fill="#94a3b8" font-size="9" text-anchor="middle">
+                {{ formatMonthLabel(m) }}
+              </text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="table-card" style="flex:1;">
+          <h3 class="section-title">Cumulative Infections</h3>
+          <p style="font-size:12px; color:#94a3b8; margin-bottom:8px;">Running total over time</p>
+          <div *ngIf="cumulativeChartEmpty" class="empty">No infection data yet.</div>
+          <svg *ngIf="cumulativeChartHasData"
+               viewBox="0 0 600 160" xmlns="http://www.w3.org/2000/svg"
+               style="width:100%; height:auto; overflow:visible; margin-top:4px;">
+            <g *ngFor="let g of getSvgGridY(cumulativeChart.maxVal)">
+              <line [attr.x1]="24" [attr.y1]="g.y" [attr.x2]="576" [attr.y2]="g.y"
+                    stroke="#f1f5f9" stroke-width="1"/>
+              <text [attr.x]="20" [attr.y]="g.y + 4" fill="#cbd5e1" font-size="9" text-anchor="end">{{ g.label }}</text>
+            </g>
+            <defs>
+              <linearGradient id="cumulGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#667eea" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#667eea" stop-opacity="0.01"/>
+              </linearGradient>
+            </defs>
+            <path [attr.d]="getSvgAreaPath(cumulativeChart.values, cumulativeChart.maxVal)"
+                  fill="url(#cumulGrad)"/>
+            <path [attr.d]="getSvgLinePath(cumulativeChart.values, cumulativeChart.maxVal)"
+                  fill="none" stroke="#667eea" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <g *ngFor="let d of getSvgDots(cumulativeChart.values, cumulativeChart.maxVal)">
+              <circle [attr.cx]="d.x" [attr.cy]="d.y" r="4" fill="#667eea" stroke="white" stroke-width="1.5"/>
+              <text *ngIf="d.val > 0" [attr.x]="d.x" [attr.y]="d.y - 8"
+                    fill="#667eea" font-size="9" text-anchor="middle" font-weight="700">{{ d.val }}</text>
+            </g>
+            <g *ngFor="let m of cumulativeChart.months; let i = index">
+              <text [attr.x]="24 + (cumulativeChart.months.length === 1 ? 0 : (i / (cumulativeChart.months.length - 1))) * 512"
+                    [attr.y]="152" fill="#94a3b8" font-size="9" text-anchor="middle">
+                {{ formatMonthLabel(m) }}
+              </text>
+            </g>
+          </svg>
+        </div>
+
+      </div>
+
+      <!-- LINE CHART ROW 2 — COMPLIANCE TREND + SEVERITY TREND -->
+      <div class="chart-row" style="margin-top:20px;">
+
+        <div class="table-card" style="flex:1;">
+          <h3 class="section-title">Compliance Rate Over Time (%)</h3>
+          <div class="chart-legend">
+            <span class="legend-dot" style="background:#10b981;"></span> Vaccine taken %
+            <span class="legend-dot" style="background:#f97316; margin-left:14px;"></span> Booster taken %
+          </div>
+          <div *ngIf="complianceTrendEmpty" class="empty">Not enough data yet.</div>
+          <svg *ngIf="complianceTrendHasData"
+               viewBox="0 0 600 160" xmlns="http://www.w3.org/2000/svg"
+               style="width:100%; height:auto; overflow:visible; margin-top:8px;">
+            <g *ngFor="let g of getSvgGridY(100)">
+              <line [attr.x1]="24" [attr.y1]="g.y" [attr.x2]="576" [attr.y2]="g.y"
+                    stroke="#f1f5f9" stroke-width="1"/>
+              <text [attr.x]="20" [attr.y]="g.y + 4" fill="#cbd5e1" font-size="9" text-anchor="end">{{ g.label }}%</text>
+            </g>
+            <path [attr.d]="getSvgAreaPath(complianceTrend.boostPct, 100)"
+                  fill="#f97316" fill-opacity="0.07"/>
+            <path [attr.d]="getSvgAreaPath(complianceTrend.vacPct, 100)"
+                  fill="#10b981" fill-opacity="0.1"/>
+            <path [attr.d]="getSvgLinePath(complianceTrend.boostPct, 100)"
+                  fill="none" stroke="#f97316" stroke-width="2"
+                  stroke-dasharray="5,3" stroke-linejoin="round" stroke-linecap="round"/>
+            <path [attr.d]="getSvgLinePath(complianceTrend.vacPct, 100)"
+                  fill="none" stroke="#10b981" stroke-width="2.5"
+                  stroke-linejoin="round" stroke-linecap="round"/>
+            <g *ngFor="let d of getSvgDots(complianceTrend.vacPct, 100)">
+              <circle [attr.cx]="d.x" [attr.cy]="d.y" r="4" fill="#10b981" stroke="white" stroke-width="1.5"/>
+              <text *ngIf="d.val > 0" [attr.x]="d.x" [attr.y]="d.y - 8"
+                    fill="#10b981" font-size="9" text-anchor="middle" font-weight="700">{{ d.val }}%</text>
+            </g>
+            <g *ngFor="let d of getSvgDots(complianceTrend.boostPct, 100)">
+              <circle [attr.cx]="d.x" [attr.cy]="d.y" r="3.5" fill="#f97316" stroke="white" stroke-width="1.5"/>
+              <text *ngIf="d.val > 0" [attr.x]="d.x" [attr.y]="d.y - 8"
+                    fill="#f97316" font-size="9" text-anchor="middle" font-weight="700">{{ d.val }}%</text>
+            </g>
+            <g *ngFor="let m of complianceTrend.months; let i = index">
+              <text [attr.x]="24 + (complianceTrend.months.length === 1 ? 0 : (i / (complianceTrend.months.length - 1))) * 512"
+                    [attr.y]="152" fill="#94a3b8" font-size="9" text-anchor="middle">
+                {{ formatMonthLabel(m) }}
+              </text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="table-card" style="flex:1;">
+          <h3 class="section-title">Severity Trend Over Time</h3>
+          <div class="chart-legend">
+            <span class="legend-dot" style="background:#7f1d1d;"></span> Critical
+            <span class="legend-dot" style="background:#ef4444; margin-left:14px;"></span> Severe
+            <span class="legend-dot" style="background:#22c55e; margin-left:14px;"></span> Mild/Asymp.
+          </div>
+          <div *ngIf="severityTrendData.months.length < 2" class="empty">
+            Not enough monthly data yet.
+          </div>
+          <svg *ngIf="severityTrendData.months.length >= 2"
+               viewBox="0 0 600 160" xmlns="http://www.w3.org/2000/svg"
+               style="width:100%; height:auto; overflow:visible; margin-top:8px;">
+            <g *ngFor="let g of getSvgGridY(severityTrendData.maxVal)">
+              <line [attr.x1]="24" [attr.y1]="g.y" [attr.x2]="576" [attr.y2]="g.y"
+                    stroke="#f1f5f9" stroke-width="1"/>
+              <text [attr.x]="20" [attr.y]="g.y + 4" fill="#cbd5e1" font-size="9" text-anchor="end">{{ g.label }}</text>
+            </g>
+            <path [attr.d]="getSvgAreaPath(severityTrendData.mild, severityTrendData.maxVal)"
+                  fill="#22c55e" fill-opacity="0.1"/>
+            <path [attr.d]="getSvgAreaPath(severityTrendData.severe, severityTrendData.maxVal)"
+                  fill="#ef4444" fill-opacity="0.1"/>
+            <path [attr.d]="getSvgAreaPath(severityTrendData.critical, severityTrendData.maxVal)"
+                  fill="#7f1d1d" fill-opacity="0.12"/>
+            <path [attr.d]="getSvgLinePath(severityTrendData.mild, severityTrendData.maxVal)"
+                  fill="none" stroke="#22c55e" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path [attr.d]="getSvgLinePath(severityTrendData.severe, severityTrendData.maxVal)"
+                  fill="none" stroke="#ef4444" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path [attr.d]="getSvgLinePath(severityTrendData.critical, severityTrendData.maxVal)"
+                  fill="none" stroke="#7f1d1d" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <g *ngFor="let d of getSvgDots(severityTrendData.critical, severityTrendData.maxVal)">
+              <circle [attr.cx]="d.x" [attr.cy]="d.y" r="4.5" fill="#7f1d1d" stroke="white" stroke-width="1.5"/>
+              <text *ngIf="d.val > 0" [attr.x]="d.x" [attr.y]="d.y - 9"
+                    fill="#7f1d1d" font-size="9" text-anchor="middle" font-weight="800">{{ d.val }}</text>
+            </g>
+            <g *ngFor="let d of getSvgDots(severityTrendData.severe, severityTrendData.maxVal)">
+              <circle [attr.cx]="d.x" [attr.cy]="d.y" r="3.5" fill="#ef4444" stroke="white" stroke-width="1.5"/>
+              <text *ngIf="d.val > 0" [attr.x]="d.x" [attr.y]="d.y - 8"
+                    fill="#ef4444" font-size="9" text-anchor="middle" font-weight="700">{{ d.val }}</text>
+            </g>
+            <g *ngFor="let d of getSvgDots(severityTrendData.mild, severityTrendData.maxVal)">
+              <circle [attr.cx]="d.x" [attr.cy]="d.y" r="3" fill="#22c55e" stroke="white" stroke-width="1.5"/>
+            </g>
+            <g *ngFor="let m of severityTrendData.months; let i = index">
+              <text [attr.x]="24 + (severityTrendData.months.length === 1 ? 0 : (i / (severityTrendData.months.length - 1))) * 512"
+                    [attr.y]="152" fill="#94a3b8" font-size="9" text-anchor="middle">
+                {{ formatMonthLabel(m) }}
+              </text>
+            </g>
+          </svg>
+        </div>
+
+      </div>
+
+      <!-- VAC PROGRESS + BOOSTER PROGRESS -->
+      <div class="chart-row" style="margin-top:20px;">
+
+        <div class="table-card" style="flex:1;">
+          <h3 class="section-title">Vaccination Compliance</h3>
+          <div class="score-row">
+            <span class="score-label">{{ takenCount }} of {{ totalVaccinations }} taken</span>
+            <span class="score-number" [style.color]="getScoreColor(vaccinationScore)">
+              {{ vaccinationScore }}<span style="font-size:14px;">/100</span>
+            </span>
+          </div>
+          <div class="progress-track">
+            <div [style.width]="vaccinationScore + '%'"
+                 [style.background]="getProgressGradient(vaccinationScore)"
+                 class="progress-fill"></div>
+          </div>
+          <div class="pill-row">
+            <div class="stat-pill" style="background:#dcfce7; color:#166534;">Taken — {{ takenCount }}</div>
+            <div class="stat-pill" style="background:#fee2e2; color:#991b1b;">Pending — {{ notTakenCount }}</div>
+            <div class="stat-pill" style="background:#fee2e2; color:#991b1b;" *ngIf="overdueVaccinations.length > 0">
+              Overdue — {{ overdueVaccinations.length }}
+            </div>
+          </div>
+          <div class="mini-section">
+            <div class="mini-section-title">Linked to Infection</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+              <div class="stat-pill" style="background:#e0e7ff; color:#3730a3;">Linked — {{ linkedVaccinationCount }}</div>
+              <div class="stat-pill" style="background:#f3f4f6; color:#374151;">Standalone — {{ unlinkedVaccinationCount }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card" style="flex:1;">
+          <h3 class="section-title">Booster Compliance</h3>
+          <div *ngIf="vaccinationsWithBooster.length === 0" class="empty" style="padding:16px;">
+            No vaccinations have a booster date set.
+          </div>
+          <ng-container *ngIf="vaccinationsWithBooster.length > 0">
+            <div class="score-row">
+              <span class="score-label">{{ boosterTakenCount }} of {{ vaccinationsWithBooster.length }} taken</span>
+              <span class="score-number" [style.color]="getScoreColor(boosterScore)">
+                {{ boosterScore }}<span style="font-size:14px;">/100</span>
+              </span>
+            </div>
+            <div class="progress-track">
+              <div [style.width]="boosterScore + '%'"
+                   [style.background]="getProgressGradient(boosterScore)"
+                   class="progress-fill"></div>
+            </div>
+            <div class="pill-row">
+              <div class="stat-pill" style="background:#dcfce7; color:#166534;">Done — {{ boosterTakenCount }}</div>
+              <div class="stat-pill" style="background:#fff7ed; color:#9a3412;">Pending — {{ boosterPendingCount }}</div>
+              <div class="stat-pill" style="background:#ffedd5; color:#9a3412;" *ngIf="overdueBoosterList.length > 0">
+                Overdue — {{ overdueBoosterList.length }}
+              </div>
+            </div>
+            <div class="mini-section">
+              <div class="mini-section-title">Booster Coverage</div>
+              <div style="margin-top:8px; background:#e2e8f0; border-radius:99px; height:8px; overflow:hidden;">
+                <div [style.width]="((vaccinationsWithBooster.length / (totalVaccinations || 1)) * 100) + '%'"
+                     style="height:100%; background:linear-gradient(90deg,#8b5cf6,#6d28d9);
+                            border-radius:99px; transition:width 0.7s ease;">
+                </div>
+              </div>
+              <div style="font-size:12px; color:#718096; margin-top:4px;">
+                {{ vaccinationsWithBooster.length }} of {{ totalVaccinations }} vaccinations have a booster scheduled
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+      </div>
+
+      <!-- TOP TYPES + OVERDUE -->
+      <div class="chart-row" style="margin-top:20px;">
+
+        <div class="table-card" style="flex:1;">
+          <h3 class="section-title">Top Infection Types</h3>
+          <div *ngIf="!topInfectionTypes.length" class="empty">No data yet.</div>
+          <div *ngFor="let t of topInfectionTypes; let i = index" style="margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px; align-items:center;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="rank-badge">{{ i + 1 }}</span>
+                <span style="font-size:13px; font-weight:700; color:#2d3748;">{{ t.type }}</span>
+              </div>
+              <span style="font-size:12px; color:#718096;">{{ t.count }}x · {{ t.pct }}%</span>
+            </div>
+            <div style="background:#e2e8f0; border-radius:99px; height:7px; overflow:hidden;">
+              <div [style.width]="t.pct + '%'"
+                   style="height:100%; background:linear-gradient(90deg,#667eea,#764ba2);
+                          border-radius:99px; transition:width 0.7s ease;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card" style="flex:1;">
+          <h3 class="section-title">Overdue Items</h3>
+          <div *ngIf="overdueVaccinations.length === 0 && overdueBoosterList.length === 0" class="empty">
+            Nothing overdue — great compliance!
+          </div>
+          <div *ngIf="overdueVaccinations.length > 0">
+            <div class="overdue-section-label" style="color:#991b1b;">Overdue Vaccinations</div>
+            <div *ngFor="let v of overdueVaccinations" class="overdue-row red">
+              <div>
+                <div class="overdue-name">{{ v.name }}</div>
+                <div class="overdue-date">Due: {{ v.vaccination_date | date }}</div>
+              </div>
+              <span class="overdue-days-badge red-badge">
+                {{ -daysUntil(v.vaccination_date) }} day{{ daysUntil(v.vaccination_date) === -1 ? '' : 's' }} ago
+              </span>
+            </div>
+          </div>
+          <div *ngIf="overdueBoosterList.length > 0"
+               [style.marginTop]="overdueVaccinations.length > 0 ? '14px' : '0'">
+            <div class="overdue-section-label" style="color:#9a3412;">Overdue Boosters</div>
+            <div *ngFor="let v of overdueBoosterList" class="overdue-row orange">
+              <div>
+                <div class="overdue-name">{{ v.name }}</div>
+                <div class="overdue-date">Booster due: {{ v.booster_date | date }}</div>
+              </div>
+              <span class="overdue-days-badge orange-badge">
+                {{ -daysUntil(v.booster_date) }} day{{ daysUntil(v.booster_date) === -1 ? '' : 's' }} ago
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- UPCOMING VAC + BOOSTER -->
+      <div class="chart-row" style="margin-top:20px;">
+
+        <div class="table-card" style="flex:1;">
+          <h3 class="section-title">Upcoming Vaccinations <span class="within-label">within 7 days</span></h3>
+          <div *ngIf="!upcomingVaccinations.length" class="empty">None due in the next 7 days.</div>
+          <div *ngFor="let vac of upcomingVaccinations" class="upcoming-row">
+            <div class="upcoming-icon">💉</div>
+            <div style="flex:1;">
+              <div class="upcoming-name">{{ vac.name }}</div>
+              <div class="upcoming-meta">{{ getInfectionName(vac.infectionId) }} · {{ vac.vaccination_date | date }}</div>
+            </div>
+            <span class="days-pill"
+                  [style.background]="daysUntil(vac.vaccination_date) === 0 ? '#fef08a'
+                                    : daysUntil(vac.vaccination_date) <= 2  ? '#fed7d7' : '#e0e7ff'"
+                  [style.color]="daysUntil(vac.vaccination_date) === 0 ? '#854d0e'
+                               : daysUntil(vac.vaccination_date) <= 2  ? '#991b1b' : '#3730a3'">
+              {{ daysUntil(vac.vaccination_date) === 0 ? 'Today' : daysUntil(vac.vaccination_date) + 'd' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="table-card" style="flex:1;">
+          <h3 class="section-title">Upcoming Boosters <span class="within-label">within 7 days</span></h3>
+          <div *ngIf="!upcomingBoosters.length" class="empty">None due in the next 7 days.</div>
+          <div *ngFor="let vac of upcomingBoosters" class="upcoming-row" style="border-left-color:#f97316;">
+            <div class="upcoming-icon" style="background:#fff7ed;">🔁</div>
+            <div style="flex:1;">
+              <div class="upcoming-name">{{ vac.name }}</div>
+              <div class="upcoming-meta">Booster · {{ vac.booster_date | date }}</div>
+            </div>
+            <span class="days-pill"
+                  [style.background]="daysUntil(vac.booster_date) === 0 ? '#fef08a'
+                                    : daysUntil(vac.booster_date) <= 2  ? '#ffedd5' : '#fff7ed'"
+                  [style.color]="daysUntil(vac.booster_date) === 0 ? '#854d0e'
+                               : daysUntil(vac.booster_date) <= 2  ? '#9a3412' : '#c2410c'">
+              {{ daysUntil(vac.booster_date) === 0 ? 'Today' : daysUntil(vac.booster_date) + 'd' }}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RECENT INFECTIONS TABLE -->
+      <div class="table-card" style="margin-top:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;
+                    margin-bottom:16px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+          <h3 class="section-title" style="margin:0; border:none; padding:0;">Recent Infections</h3>
+          <a routerLink="/back/infections"
+             style="font-size:12px; color:#5a67d8; text-decoration:none; font-weight:600;">
+            Manage →
+          </a>
+        </div>
+        <div *ngIf="!recentInfections.length" class="empty">No infections recorded yet.</div>
+        <table *ngIf="recentInfections.length">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Detection Date</th>
+              <th>Severity</th>
+              <th>Recurrences</th>
+              <th>Vaccinated</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let inf of recentInfections">
+              <td style="font-weight:700;">{{ inf.type }}</td>
+              <td>{{ inf.detectionDate | date }}</td>
+              <td>
+                <span class="status"
+                      [style.background]="getSeverityColor(inf.severity) + '22'"
+                      [style.color]="getSeverityColor(inf.severity)"
+                      [style.borderColor]="getSeverityColor(inf.severity) + '44'">
+                  {{ inf.severity }}
+                </span>
+              </td>
+              <td>
+                <span *ngIf="(recurrenceMap[(inf.patientName || '').trim().toLowerCase() + '::' + inf.type.trim().toLowerCase()] || []).length > 1"
+                      style="background:#fee2e2; color:#991b1b; font-size:11px; font-weight:700;
+                             padding:3px 10px; border-radius:99px;">
+                  {{ (recurrenceMap[(inf.patientName || '').trim().toLowerCase() + '::' + inf.type.trim().toLowerCase()] || []).length }}x
+                </span>
+                <span *ngIf="(recurrenceMap[(inf.patientName || '').trim().toLowerCase() + '::' + inf.type.trim().toLowerCase()] || []).length <= 1"
+                      style="color:#a0aec0; font-size:12px;">—</span>
+              </td>
+              <td>
+                <span *ngIf="isVaccinatedForInfection(inf.id)"
+                      class="status" style="background:#dcfce7; color:#166534; border-color:#86efac;">
+                  Yes
+                </span>
+                <span *ngIf="!isVaccinatedForInfection(inf.id)"
+                      class="status" style="background:#f3f4f6; color:#6b7280; border-color:#e5e7eb;">
+                  No
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- RECURRENCES & PREDICTIONS -->
+      <div class="table-card" style="margin-top:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;
+                    margin-bottom:16px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+          <h3 class="section-title" style="margin:0; border:none; padding:0;">Recurrences & Predictions</h3>
+          <span *ngIf="recurringTypes.length > 0"
+                style="background:#fee2e2; color:#991b1b; font-size:12px; font-weight:700;
+                       padding:4px 12px; border-radius:99px; border:1px solid #fca5a5;">
+            {{ recurringTypes.length }} recurring type{{ recurringTypes.length === 1 ? '' : 's' }}
+          </span>
+        </div>
+
+        <div *ngIf="recurringTypes.length === 0" class="empty">
+          No recurring infections detected — all recorded types are unique.
+        </div>
+
+        <div *ngIf="recurringTypes.length > 0" style="display:flex; flex-direction:column; gap:14px;">
+          <div *ngFor="let rec of allPredictions"
+               style="border:1.5px solid #e2e8f0; border-radius:14px; overflow:hidden;">
+
+            <div style="display:flex; align-items:center; justify-content:space-between;
+                        flex-wrap:wrap; gap:10px; padding:12px 16px;
+                        background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div [style.background]="rec.prediction.color"
+                     style="width:10px; height:10px; border-radius:50%;"></div>
+                <span style="font-size:14px; font-weight:800; color:#1e293b;">{{ rec.type }}</span>
+                <span style="font-size:11px; color:#718096; font-weight:600;">
+                  · {{ rec.patient }} · {{ rec.count }} episodes
+                </span>
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <span [style.background]="rec.prediction.color"
+                      style="color:white; font-size:12px; font-weight:800;
+                             padding:4px 14px; border-radius:99px;">
+                  {{ rec.prediction.chance }}% {{ rec.prediction.label }} Risk
+                </span>
+                <span style="font-size:11px; font-weight:700; color:#64748b;
+                             background:#f1f5f9; padding:4px 12px; border-radius:99px;">
+                  {{ rec.prediction.earliest }} — {{ rec.prediction.latest }}
+                </span>
+              </div>
+            </div>
+
+            <div style="padding:14px 16px; display:flex; gap:20px; flex-wrap:wrap;">
+
+              <div style="flex:1; min-width:200px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                  <span style="font-size:11px; font-weight:700; color:#718096;
+                               text-transform:uppercase; letter-spacing:0.05em;">
+                    Recurrence Probability
+                  </span>
+                  <span style="font-size:13px; font-weight:900;"
+                        [style.color]="rec.prediction.color">{{ rec.prediction.chance }}%</span>
+                </div>
+                <div style="background:#e2e8f0; border-radius:99px; height:10px; overflow:hidden;">
+                  <div [style.width]="rec.prediction.chance + '%'"
+                       [style.background]="rec.prediction.color"
+                       style="height:100%; border-radius:99px;
+                              transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);"></div>
+                </div>
+
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
+                  <div *ngFor="let inf of rec.infections; let i = index"
+                       style="font-size:11px; font-weight:700; padding:3px 10px;
+                              border-radius:99px; background:#f1f5f9; color:#475569;
+                              border:1px solid #e2e8f0;">
+                    Ep.{{ i+1 }} · {{ inf.detectionDate | date:'MMM d, y' }}
+                    <span [style.color]="getSeverityColor(inf.severity)" style="margin-left:4px;">
+                      ● {{ inf.severity }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="flex:1; min-width:200px; background:#f8fafc;
+                          border-radius:10px; padding:10px 14px;">
+                <div style="font-size:10px; font-weight:800; text-transform:uppercase;
+                            letter-spacing:0.08em; color:#94a3b8; margin-bottom:8px;">
+                  Reasoning
+                </div>
+                <div *ngFor="let r of rec.prediction.reasons; let i = index"
+                     style="display:flex; gap:8px; align-items:flex-start; margin-bottom:6px;">
+                  <div style="background:#e2e8f0; color:#64748b; font-size:9px; font-weight:800;
+                              min-width:18px; height:18px; border-radius:50%;
+                              display:flex; align-items:center; justify-content:center;
+                              flex-shrink:0; margin-top:1px;">
+                    {{ i + 1 }}
+                  </div>
+                  <span style="font-size:11px; color:#374151; font-weight:600; line-height:1.5;">{{ r }}</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-footer">
+        Auto-syncs every 30 seconds ·
+        <span (click)="exportData()" style="cursor:pointer; color:#5a67d8; font-weight:600;">
+          Export Data
+        </span>
+      </div>
+
+    </div>
+  </div>
+</div>

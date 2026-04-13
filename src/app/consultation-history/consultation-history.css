@@ -1,0 +1,408 @@
+
+/* ==================== HEADER ==================== */
+.page-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 40px 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.page-header h1 {
+  margin: 0 0 15px 0;
+  font-size: 3em;
+  font-weight: 800;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.page-header p {
+  margin: 0;
+  font-size: 1.2em;
+  opacity: 0.95;
+  font-weight: 300;
+}
+
+/* ==================== STATS SECTION ==================== */
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: white;
+  padding: 35px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  border: 3px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.25);
+  border-color: #667eea;
+}
+
+.stat-number {
+  font-size: 2.5em;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.stat-label {
+  color: #6c757d;
+  font-size: 1em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ==================== CONSULTATIONS LIST ==================== */
+.consultations-list {
+  display: grid;
+  gap: 30px;
+}
+
+.no-results {
+  text-align: center;
+  padding: 80px 30px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  color: #6c757d;
+  font-size: 1.3em;
+}
+
+/* ==================== CONSULTATION CARD ==================== */
+.consultation-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.consultation-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+}
+
+/* ==================== CARD HEADER ==================== */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  border-bottom: 3px solid #667eea;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-left h3 {
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+  font-size: 1.8em;
+  font-weight: 700;
+}
+
+.specialty-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 25px;
+  font-size: 0.9em;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.header-right .date {
+  font-size: 1.1em;
+  color: #495057;
+  font-weight: 600;
+  background: white;
+  padding: 10px 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.detail-section {
+  display: grid;
+  gap: 20px;
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 20px;
+  padding: 18px 25px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #667eea;
+  transition: all 0.2s;
+}
+
+.detail-row:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.detail-row .label {
+  font-weight: 700;
+  color: #2c3e50;
+  font-size: 1em;
+  display: flex;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-row .value {
+  color: #495057;
+  line-height: 1.7;
+  font-size: 1em;
+  font-weight: 500;
+}
+
+.diagnosis-text {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* ==================== PRESCRIPTIONS - CARD STYLE ==================== */
+.prescriptions-section {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  padding: 25px;
+  border-radius: 12px;
+  border: 2px solid #4caf50;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+}
+
+.prescriptions-section .label {
+  display: block;
+  font-weight: 700;
+  color: #2e7d32;
+  font-size: 1.1em;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.prescriptions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.prescriptions-list li {
+  background: white;
+  padding: 15px 20px;
+  padding-left: 50px;
+  border-radius: 8px;
+  position: relative;
+  color: #2c3e50;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s;
+}
+
+.prescriptions-list li:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+}
+
+.prescriptions-list li:before {
+  content: "💊";
+  position: absolute;
+  left: 15px;
+  font-size: 1.5em;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ==================== FOLLOW-UP - HIGHLIGHTED ==================== */
+.follow-up {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffe8a1 100%);
+  border-left-color: #ffc107;
+  border-width: 4px;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.follow-up .label {
+  color: #856404;
+}
+
+.follow-up .value {
+  color: #533f03;
+  font-weight: 600;
+}
+
+/* ==================== NOTES SECTION ==================== */
+.notes-section {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  padding: 25px;
+  border-radius: 12px;
+  border: 2px solid #2196f3;
+  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.2);
+}
+
+.notes-section .label {
+  display: block;
+  font-weight: 700;
+  color: #0d47a1;
+  font-size: 1.1em;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.notes-text {
+  margin: 0;
+  color: #1565c0;
+  line-height: 1.8;
+  font-size: 1em;
+  font-weight: 500;
+  font-style: italic;
+  background: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* ==================== CARD ACTIONS ==================== */
+.card-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  padding: 25px 35px;
+  background: #f8f9fa;
+  border-top: 2px solid #e9ecef;
+}
+
+.btn-action {
+  padding: 16px 25px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.05em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-download {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+}
+
+.btn-download:hover {
+  background: linear-gradient(135deg, #218838 0%, #1aa179 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+}
+
+.btn-print {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+}
+
+.btn-print:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 992px) {
+  .detail-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .detail-row .label {
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e9ecef;
+  }
+}
+
+@media (max-width: 768px) {
+
+
+  .page-header h1 {
+    font-size: 2em;
+  }
+
+  .stats-section {
+    grid-template-columns: 1fr;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-left h3 {
+    font-size: 1.4em;
+  }
+
+
+  .card-actions {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  .btn-action {
+    width: 100%;
+  }
+}
+
+/* ==================== PRINT STYLES ==================== */
+@media print {
+  .card-actions,
+  .btn-action {
+    display: none;
+  }
+
+  .consultation-card {
+    page-break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}

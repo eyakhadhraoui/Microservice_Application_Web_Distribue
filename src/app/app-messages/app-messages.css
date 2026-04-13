@@ -1,0 +1,131 @@
+/* Toast */
+.app-toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  min-width: 280px;
+  max-width: 90vw;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  animation: toastIn 0.25s ease-out;
+}
+.app-toast-success {
+  background: #0d9488;
+  color: #fff;
+}
+.app-toast-error {
+  background: #dc2626;
+  color: #fff;
+}
+.app-toast-info {
+  background: #1e293b;
+  color: #fff;
+}
+.app-toast-text {
+  flex: 1;
+  font-size: 0.95rem;
+}
+.app-toast-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.9;
+}
+.app-toast-close:hover {
+  opacity: 1;
+}
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Confirm dialog */
+.app-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: overlayIn 0.2s ease-out;
+}
+.app-confirm-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: boxIn 0.25s ease-out;
+}
+.app-confirm-title {
+  margin: 0 0 12px 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+.app-confirm-message {
+  margin: 0 0 20px 0;
+  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.5;
+}
+.app-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.app-confirm-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+.app-confirm-cancel {
+  background: #e2e8f0;
+  color: #475569;
+}
+.app-confirm-cancel:hover {
+  background: #cbd5e1;
+}
+.app-confirm-ok {
+  background: #0d9488;
+  color: #fff;
+}
+.app-confirm-ok:hover {
+  background: #0f766e;
+}
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes boxIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
