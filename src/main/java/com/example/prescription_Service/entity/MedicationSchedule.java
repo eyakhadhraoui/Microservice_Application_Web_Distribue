@@ -2,6 +2,7 @@ package com.example.prescription_Service.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 public class MedicationSchedule {
@@ -23,6 +24,7 @@ public class MedicationSchedule {
         this.prescriptionItem = prescriptionItem;
         this.scheduledTime = scheduledTime;
     }
+
 
     // Getters & Setters
     public Long getId() { return id; }

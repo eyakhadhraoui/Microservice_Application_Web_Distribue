@@ -1,5 +1,6 @@
 package com.example.prescription_Service.repository;
 
+import com.example.prescription_Service.entity.MedicationSchedule;
 import com.example.prescription_Service.entity.PrescriptionItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -15,7 +16,6 @@ public interface PrescriptionItemRepository extends JpaRepository<PrescriptionIt
 
     // Trouver tous les items contenant un médicament spécifique
     List<PrescriptionItem> findByMedicationId(Long medicationId);
-
     // Trouver les médicaments prioritaires d'une prescription
     List<PrescriptionItem> findByPrescriptionIdAndIsPriority(Long prescriptionId, Boolean isPriority);
 

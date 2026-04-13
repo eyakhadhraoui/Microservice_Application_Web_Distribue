@@ -1,5 +1,6 @@
 package com.example.prescription_Service.service;
 
+import com.example.prescription_Service.dto.PrescriptionDTO;
 import com.example.prescription_Service.dto.PrescriptionItemDTO;
 import com.example.prescription_Service.entity.Medication;
 import com.example.prescription_Service.entity.MedicationSchedule;
@@ -17,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -213,4 +215,40 @@ public class PrescriptionItemService {
         }
         prescriptionItemRepository.deleteById(id);
     }
+    @RequiredArgsConstructor
+    @Service
+    public class PrescriptionService {
+
+        private final PrescriptionRepository prescriptionRepository;
+        private final PrescriptionItemService prescriptionItemService; // injecte ton service d’items
+
+        @Transactional(readOnly = true)
+        public List<PrescriptionDTO> getByMedicalRecordId(Long medicalRecordId) {
+            List<Prescription> prescriptions = prescriptionRepository.findByPatientId(medicalRecordId);
+
+            return prescriptions.stream().map(prescription -> {
+                PrescriptionDTO dto = new PrescriptionDTO();
+                dto.setId(prescription.getId());
+                dto.setPatientId(prescription.getPatientId());
+                dto.setPrescriptionDate(prescription.getPrescriptionDate());
+                dto.setNotes(prescription.getNotes());
+
+                dto.setPrescriptionItems(prescriptionItemService.getByPrescriptionId(prescription.getId()));
+
+                return dto;
+            }).collect(Collectors.toList());
+        }
+    }
+    public int calculateTotalExpectedDoses(PrescriptionItem item) {
+
+        long days = ChronoUnit.DAYS.between(
+                item.getStartDate(),
+                item.getEndDate()
+        ) + 1;
+
+        int dosesPerDay = item.getSchedules().size();
+
+        return (int) days * dosesPerDay;
+    }
+
 }

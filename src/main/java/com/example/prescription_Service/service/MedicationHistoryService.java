@@ -216,4 +216,22 @@ public class MedicationHistoryService {
         }
         medicationHistoryRepository.deleteById(id);
     }
+    public int countTakenDoses(Long prescriptionItemId) {
+        return medicationHistoryRepository
+                .countByPrescriptionItemIdAndStatus(
+                        prescriptionItemId,
+                        "TAKEN"
+                );
+    }
+    public List<MedicationHistory> getLateDoses(Long patientId) {
+
+        LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
+
+        return medicationHistoryRepository
+                .findByPatientIdAndStatusAndTakenAtBefore(
+                        patientId,
+                        "PENDING",
+                        oneHourAgo
+                );
+    }
 }

@@ -40,12 +40,6 @@ public class PrescriptionController {
         return ResponseEntity.ok(prescription);
     }
 
-    // Récupérer les prescriptions d'un dossier médical
-    @GetMapping("/medical-record/{medicalRecordId}")
-    public ResponseEntity<List<PrescriptionDTO>> getByMedicalRecordId(@PathVariable Long medicalRecordId) {
-        List<PrescriptionDTO> prescriptions = prescriptionService.getByMedicalRecordId(medicalRecordId);
-        return ResponseEntity.ok(prescriptions);
-    }
 
     // Récupérer les prescriptions récentes d'un patient
     @GetMapping("/medical-record/{medicalRecordId}/recent")
@@ -76,5 +70,35 @@ public class PrescriptionController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         prescriptionService.deletePrescription(id);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/medical-record/{medicalRecordId}")
+    public List<PrescriptionDTO> getByMedicalRecord(
+            @PathVariable Long medicalRecordId) {
+
+        return prescriptionService.getByMedicalRecord(medicalRecordId);
+    }
+    @GetMapping("/medical-record/{medicalRecordId}/active")
+    public ResponseEntity<List<PrescriptionDTO>> getActivePrescriptions(
+            @PathVariable Long medicalRecordId) {
+        return ResponseEntity.ok(
+                prescriptionService.getActivePrescriptions(medicalRecordId)
+        );
+    }
+    // Récupérer les prescriptions actives par patientId
+    @GetMapping("/patient/{patientId}/active")
+    public ResponseEntity<List<PrescriptionDTO>> getActiveByPatient(
+            @PathVariable Long patientId) {
+        return ResponseEntity.ok(
+                prescriptionService.getActivePrescriptions(patientId)
+        );
+    }
+
+    // Récupérer toutes les prescriptions par patientId
+    @GetMapping("/patient/{patientId}")
+    public ResponseEntity<List<PrescriptionDTO>> getByPatient(
+            @PathVariable Long patientId) {
+        return ResponseEntity.ok(
+                prescriptionService.getByPatientId(patientId)
+        );
     }
 }

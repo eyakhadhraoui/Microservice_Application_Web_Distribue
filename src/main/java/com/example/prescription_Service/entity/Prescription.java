@@ -6,51 +6,51 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "prescription")
 public class Prescription {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ID du MedicalRecord (provenant du microservice MedicalRecord)
-    private Long medicalRecordId;
+    @Column(nullable = false)
+    private Long patientId;              // ← remplace medicalRecordId
 
+    @Column(nullable = false)
     private LocalDate prescriptionDate;
 
-    private String notes; // Notes générales du médecin sur la prescription
+    private String notes;
 
-    // Relation avec les items de prescription (médicaments prescrits)
     @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PrescriptionItem> prescriptionItems = new ArrayList<>();
 
-    // Constructeurs
+    // ─── Constructeurs ────────────────────────────────────────────────
     public Prescription() {}
 
-    public Prescription(Long medicalRecordId, LocalDate prescriptionDate, String notes) {
-        this.medicalRecordId = medicalRecordId;
+    public Prescription(Long patientId, LocalDate prescriptionDate, String notes) {
+        this.patientId = patientId;      // ← remplace medicalRecordId
         this.prescriptionDate = prescriptionDate;
         this.notes = notes;
     }
 
-    // Méthode helper pour ajouter un item
+    // ─── Helpers ──────────────────────────────────────────────────────
     public void addPrescriptionItem(PrescriptionItem item) {
         prescriptionItems.add(item);
         item.setPrescription(this);
     }
 
-    // Méthode helper pour retirer un item
     public void removePrescriptionItem(PrescriptionItem item) {
         prescriptionItems.remove(item);
         item.setPrescription(null);
     }
 
-    // Getters & Setters
+    // ─── Getters & Setters ────────────────────────────────────────────
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Long getMedicalRecordId() { return medicalRecordId; }
-    public void setMedicalRecordId(Long medicalRecordId) {
-        this.medicalRecordId = medicalRecordId;
+    public Long getPatientId() { return patientId; }          // ← nouveau
+    public void setPatientId(Long patientId) {
+        this.patientId = patientId;                           // ← nouveau
     }
 
     public LocalDate getPrescriptionDate() { return prescriptionDate; }
@@ -61,10 +61,8 @@ public class Prescription {
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
 
-    public List<PrescriptionItem> getPrescriptionItems() {
-        return prescriptionItems;
-    }
-    public void setPrescriptionItems(List<PrescriptionItem> prescriptionItems) {
-        this.prescriptionItems = prescriptionItems;
+    public List<PrescriptionItem> getPrescriptionItems() { return prescriptionItems; }
+    public void setPrescriptionItems(List<PrescriptionItem> items) {
+        this.prescriptionItems = items;
     }
 }

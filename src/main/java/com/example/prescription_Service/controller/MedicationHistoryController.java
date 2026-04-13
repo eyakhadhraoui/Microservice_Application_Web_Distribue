@@ -1,6 +1,7 @@
 package com.example.prescription_Service.controller;
 
 import com.example.prescription_Service.dto.MedicationHistoryDTO;
+import com.example.prescription_Service.entity.MedicationHistory;
 import com.example.prescription_Service.service.MedicationHistoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -126,5 +127,14 @@ public class MedicationHistoryController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         medicationHistoryService.deleteMedicationHistory(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/patient/{patientId}/late-doses")
+    public ResponseEntity<List<MedicationHistory>> getLateDoses(
+            @PathVariable Long patientId) {
+
+        return ResponseEntity.ok(
+                medicationHistoryService.getLateDoses(patientId)
+        );
     }
 }

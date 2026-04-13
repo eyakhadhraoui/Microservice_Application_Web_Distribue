@@ -13,4 +13,5 @@ public interface MedicationScheduleRepository extends JpaRepository<MedicationSc
     List<MedicationSchedule> findByPrescriptionItem(PrescriptionItem prescriptionItem);
 
     void deleteByPrescriptionItem(PrescriptionItem prescriptionItem);
+    List<MedicationSchedule> findByPrescriptionItemId(Long prescriptionItemId);
 }

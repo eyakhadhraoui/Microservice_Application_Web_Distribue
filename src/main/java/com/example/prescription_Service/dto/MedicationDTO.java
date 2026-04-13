@@ -58,4 +58,5 @@ public class MedicationDTO {
 
     @Size(max = 500, message = "Les contre-indications ne peuvent pas dépasser 500 caractères")
     private String contraindications;
+
 }
